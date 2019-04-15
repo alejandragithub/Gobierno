@@ -1,0 +1,574 @@
+CREATE OR REPLACE PACKAGE PKG_ADMIN_MANTENEDORES IS
+
+  -- Author  : NMAZZEO_EXT
+  -- Created : 14/11/2018 15:28:45
+  -- Purpose : Administración de datos de Programas
+
+  -- lista los tipos de Pagos
+  PROCEDURE SP_LIST_TIPOS_PAGO(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- lista los Programas
+  PROCEDURE SP_LIST_PROGRAMAS(O_CURSOR OUT SYS_REFCURSOR,
+                              I_FECHA  IN DATE DEFAULT SYSDATE);
+
+  -- lista los Períodos
+  PROCEDURE SP_LIST_PERIODOS(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- lista las tarifas
+  PROCEDURE SP_LIST_TARIFAS(O_CURSOR OUT SYS_REFCURSOR,
+                            I_FECHA  IN DATE DEFAULT SYSDATE);
+
+  -- lista los niveles educativos                         
+  PROCEDURE SP_LIST_NIVELES_EDUCATIVOS(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- alta los tipos de Pagos
+  PROCEDURE SP_ALTA_TIPOS_PAGO(I_TIPO_PAGO   IN T_TIPOS_PAGO.ID_TIPO_PAGO%TYPE,
+                               I_N_TIPO_PAGO IN T_TIPOS_PAGO.N_TIPO_PAGO%TYPE);
+
+  -- alta los programas
+  PROCEDURE SP_ALTA_PROGRAMAS(I_ID_PROGRAMA  IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                              I_N_PROGRAMA   IN T_PROGRAMAS.N_PROGRAMA%TYPE,
+                              I_FEC_DESDE    IN T_PROGRAMAS.FEC_DESDE%TYPE,
+                              I_FEC_HASTA    IN T_PROGRAMAS.FEC_HASTA%TYPE,
+                              I_ID_TIPO_PAGO IN T_PROGRAMAS.ID_TIPO_PAGO%TYPE);
+
+  -- alta periodos                           
+  PROCEDURE SP_ALTA_PERIODO(I_N_PERIODO     IN T_PERIODOS_LIQUIDACION.N_PERIODO%TYPE,
+                            I_FEC_DESDE     IN T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE DEFAULT SYSDATE,
+                            I_FEC_HASTA     IN T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE,
+                            I_ACTIVO        IN T_PERIODOS_LIQUIDACION.ACTIVO%TYPE DEFAULT 'S',
+                            I_DIAS_REAJUSTE IN T_PERIODOS_LIQUIDACION.DIAS_REAJUSTE%TYPE DEFAULT 30);
+
+  -- modificacion de programas                           
+  PROCEDURE SP_CAMBIO_PROGRAMAS(I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                I_FEC_DESDE   IN T_PROGRAMAS.FEC_DESDE%TYPE DEFAULT SYSDATE,
+                                I_FEC_HASTA   IN T_PROGRAMAS.FEC_HASTA%TYPE DEFAULT SYSDATE);
+
+  -- modificacion de periodos                           
+  PROCEDURE SP_CAMBIO_PERIODOS(I_ID_PERIODO    IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                               I_N_PERIODO     IN T_PERIODOS_LIQUIDACION.N_PERIODO%TYPE DEFAULT NULL,
+                               I_FEC_DESDE     IN T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE DEFAULT SYSDATE,
+                               I_FEC_HASTA     IN T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                               I_ACTIVO        IN T_PERIODOS_LIQUIDACION.ACTIVO%TYPE DEFAULT NULL,
+                               I_DIAS_REAJUSTE IN T_PERIODOS_LIQUIDACION.DIAS_REAJUSTE%TYPE DEFAULT NULL);
+
+  -- alta tarifas                                  
+  PROCEDURE SP_ALTA_TARIFAS(I_ID_EMPRESA          IN T_TARIFAS_MUNICIPAL.ID_EMPRESA%TYPE,
+                            I_ID_TIPO_SOLICITANTE IN T_TARIFAS_MUNICIPAL.ID_TIPO_SOLICITANTE%TYPE DEFAULT NULL,
+                            I_FECHA               IN DATE,
+                            I_PRECIO              IN T_TARIFAS_MUNICIPAL.PRECIO%TYPE,
+                            I_NRO_ORDENANZA       IN T_TARIFAS_MUNICIPAL.NRO_ORDENANZA%TYPE);
+
+  -- lista parametros                         
+  PROCEDURE SP_LIST_VARIABLES(I_FECHA_DESDE IN T_VARIABLES.FEC_DESDE%TYPE DEFAULT NULL,
+                              I_FECHA_HASTA IN T_VARIABLES.FEC_HASTA%TYPE DEFAULT NULL,
+                              O_CURSOR      OUT SYS_REFCURSOR);
+
+  -- alta parametros                            
+  PROCEDURE SP_ALTA_VARIABLES(I_FECHA_DESDE IN T_VARIABLES.FEC_DESDE%TYPE DEFAULT NULL,
+                              I_FECHA_HASTA IN T_VARIABLES.FEC_HASTA%TYPE DEFAULT NULL,
+                              I_N_VARIABLE  IN T_VARIABLES.N_VARIABLE%TYPE DEFAULT NULL,
+                              I_VALOR       IN T_VARIABLES.VALOR%TYPE DEFAULT NULL);
+
+  -- baja parametros                            
+  PROCEDURE SP_BAJA_VARIABLES(I_N_VARIABLE IN T_VARIABLES.N_VARIABLE%TYPE DEFAULT NULL);
+
+  PROCEDURE SP_LIST_PERIODOS_RECESO(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_ALTA_PERIODOS_RECESO(I_FEC_DESDE        IN T_PERIODOS_RECESO.FEC_DESDE%TYPE,
+                                    I_FEC_HASTA        IN T_PERIODOS_RECESO.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                                    I_NIVEL_EDUCATIVO  IN T_PERIODOS_RECESO.ID_NIVEL_EDUCATIVO%TYPE,
+                                    I_TIPO_SOLICITANTE IN T_PERIODOS_RECESO.ID_TIPO_SOLICITANTE%TYPE);
+
+  PROCEDURE SP_CAMBIO_PERIODOS_RECESO(I_ID_PERIODO       IN T_PERIODOS_RECESO.ID_PERIODO%TYPE,
+                                      I_FEC_DESDE        IN T_PERIODOS_RECESO.FEC_DESDE%TYPE,
+                                      I_FEC_HASTA        IN T_PERIODOS_RECESO.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                                      I_NIVEL_EDUCATIVO  IN T_PERIODOS_RECESO.ID_NIVEL_EDUCATIVO%TYPE,
+                                      I_TIPO_SOLICITANTE IN T_PERIODOS_RECESO.ID_TIPO_SOLICITANTE%TYPE);
+
+END PKG_ADMIN_MANTENEDORES;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_ADMIN_MANTENEDORES IS
+
+  /***************************
+  * Lista los tipos de pagos *
+  ***************************/
+  PROCEDURE SP_LIST_TIPOS_PAGO(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT ID_TIPO_PAGO, N_TIPO_PAGO FROM T_TIPOS_PAGO;
+  END SP_LIST_TIPOS_PAGO;
+
+  /***************************
+  * Lista los programas      *
+  ***************************/
+  PROCEDURE SP_LIST_PROGRAMAS(O_CURSOR OUT SYS_REFCURSOR,
+                              I_FECHA  IN DATE DEFAULT SYSDATE) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT A.ID_PROGRAMA,
+             A.N_PROGRAMA,
+             A.FEC_DESDE,
+             A.FEC_HASTA,
+             A.ID_TIPO_PAGO,
+             NVL(B.N_TIPO_PAGO, '') N_TIPO_PAGO
+        FROM T_PROGRAMAS A, T_TIPOS_PAGO B
+       WHERE A.ID_TIPO_PAGO = B.ID_TIPO_PAGO(+)
+         AND (I_FECHA BETWEEN A.FEC_DESDE AND NVL(A.FEC_HASTA, I_FECHA) OR
+             I_FECHA IS NULL);
+  END SP_LIST_PROGRAMAS;
+
+  /***************************
+  * Lista los periodos       *
+  ***************************/
+  PROCEDURE SP_LIST_PERIODOS(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT PL.ID_PERIODO,
+             PL.N_PERIODO,
+             PL.FEC_DESDE,
+             PL.FEC_HASTA,
+             PL.ACTIVO,
+             PL.DIAS_REAJUSTE
+        FROM T_PERIODOS_LIQUIDACION PL
+       ORDER BY 1;
+  END SP_LIST_PERIODOS;
+
+  /********************************
+  * Lista las tarifas             *
+  *********************************/
+  PROCEDURE SP_LIST_TARIFAS(O_CURSOR OUT SYS_REFCURSOR,
+                            I_FECHA  IN DATE DEFAULT SYSDATE) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT TF.ID_EMPRESA,
+             E.RAZON_SOCIAL,
+             TF.ID_TIPO_SOLICITANTE,
+             TS.N_TIPO_SOLICITANTE,
+             TF.FEC_DESDE,
+             TF.FEC_HASTA,
+             TF.PRECIO,
+             TF.NRO_ORDENANZA,
+             TF.ID_TARIFA
+        FROM T_TARIFAS_MUNICIPAL   TF,
+             TRANSPORTE.T_EMPRESAS E,
+             T_TIPOS_SOLICITANTE   TS
+       WHERE TF.ID_EMPRESA = E.ID_EMPRESA
+         AND TF.ID_TIPO_SOLICITANTE = TS.ID_TIPO_SOLICITANTE
+         AND (TF.FEC_DESDE >= TRUNC(I_FECHA) OR I_FECHA IS NULL)
+       ORDER BY 2, 4;
+  END SP_LIST_TARIFAS;
+
+  /************************************
+  * Lista los niveles educativos      *
+  ************************************/
+  PROCEDURE SP_LIST_NIVELES_EDUCATIVOS(O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT E.ID_NIVEL_EDUCATIVO, E.N_NIVEL_EDUCATIVO
+        FROM VT_NIVELES_EDUCATIVO E;
+  END SP_LIST_NIVELES_EDUCATIVOS;
+
+  /******************************************************
+  * Alta de un nuevo programa                           *
+  ******************************************************/
+  PROCEDURE SP_ALTA_PROGRAMAS(I_ID_PROGRAMA  IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                              I_N_PROGRAMA   IN T_PROGRAMAS.N_PROGRAMA%TYPE,
+                              I_FEC_DESDE    IN T_PROGRAMAS.FEC_DESDE%TYPE,
+                              I_FEC_HASTA    IN T_PROGRAMAS.FEC_HASTA%TYPE,
+                              I_ID_TIPO_PAGO IN T_PROGRAMAS.ID_TIPO_PAGO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    INSERT INTO T_PROGRAMAS
+      (ID_PROGRAMA, N_PROGRAMA, FEC_DESDE, FEC_HASTA, ID_TIPO_PAGO)
+    VALUES
+      (I_ID_PROGRAMA,
+       I_N_PROGRAMA,
+       I_FEC_DESDE,
+       I_FEC_HASTA,
+       I_ID_TIPO_PAGO);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el programa - ' ||
+                              SQLERRM);
+  END SP_ALTA_PROGRAMAS;
+
+  /*****************************************************
+  * Alta de un nuevo tipo de pago                      *
+  ******************************************************/
+  PROCEDURE SP_ALTA_TIPOS_PAGO(I_TIPO_PAGO   IN T_TIPOS_PAGO.ID_TIPO_PAGO%TYPE,
+                               I_N_TIPO_PAGO IN T_TIPOS_PAGO.N_TIPO_PAGO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    INSERT INTO T_TIPOS_PAGO
+      (ID_TIPO_PAGO, N_TIPO_PAGO)
+    VALUES
+      (I_TIPO_PAGO, I_N_TIPO_PAGO);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al dar de alta el tipo de pago - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_TIPOS_PAGO;
+
+  /******************************************************
+  * Alta de un nuevo periodo                            *
+  ******************************************************/
+  PROCEDURE SP_ALTA_PERIODO(I_N_PERIODO     IN T_PERIODOS_LIQUIDACION.N_PERIODO%TYPE,
+                            I_FEC_DESDE     IN T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE DEFAULT SYSDATE,
+                            I_FEC_HASTA     IN T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE,
+                            I_ACTIVO        IN T_PERIODOS_LIQUIDACION.ACTIVO%TYPE DEFAULT 'S',
+                            I_DIAS_REAJUSTE IN T_PERIODOS_LIQUIDACION.DIAS_REAJUSTE%TYPE DEFAULT 30) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_PERIODO T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE;
+  
+  BEGIN
+  
+    SELECT NVL(MAX(ID_PERIODO), 0) + 1
+      INTO V_ID_PERIODO
+      FROM T_PERIODOS_LIQUIDACION;
+  
+    INSERT INTO T_PERIODOS_LIQUIDACION
+      (ID_PERIODO, N_PERIODO, FEC_DESDE, FEC_HASTA, ACTIVO, DIAS_REAJUSTE)
+    VALUES
+      (V_ID_PERIODO,
+       I_N_PERIODO,
+       I_FEC_DESDE,
+       I_FEC_HASTA,
+       I_ACTIVO,
+       I_DIAS_REAJUSTE);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el periodo - ' ||
+                              SQLERRM);
+  END SP_ALTA_PERIODO;
+
+  /******************************************************
+  * Alta de tarifas                                     *
+  ******************************************************/
+  PROCEDURE SP_ALTA_TARIFAS(I_ID_EMPRESA          IN T_TARIFAS_MUNICIPAL.ID_EMPRESA%TYPE,
+                            I_ID_TIPO_SOLICITANTE IN T_TARIFAS_MUNICIPAL.ID_TIPO_SOLICITANTE%TYPE DEFAULT NULL,
+                            I_FECHA               IN DATE,
+                            I_PRECIO              IN T_TARIFAS_MUNICIPAL.PRECIO%TYPE,
+                            I_NRO_ORDENANZA       IN T_TARIFAS_MUNICIPAL.NRO_ORDENANZA%TYPE) IS
+  
+    V_ID_TARIFA T_TARIFAS_MUNICIPAL.ID_TARIFA%TYPE;
+  
+  BEGIN
+  
+    IF I_ID_TIPO_SOLICITANTE IS NULL THEN
+      FOR REC IN (SELECT ID_TIPO_SOLICITANTE FROM T_TIPOS_SOLICITANTE) LOOP
+      
+        SELECT NVL(MAX(ID_TARIFA), 0) + 1
+          INTO V_ID_TARIFA
+          FROM T_TARIFAS_MUNICIPAL;
+      
+        UPDATE T_TARIFAS_MUNICIPAL
+           SET FEC_HASTA = I_FECHA - 1 / 24 / 60 / 60
+         WHERE ID_EMPRESA = I_ID_EMPRESA
+           AND ID_TIPO_SOLICITANTE = REC.ID_TIPO_SOLICITANTE;
+      
+        INSERT INTO T_TARIFAS_MUNICIPAL
+          (ID_EMPRESA,
+           ID_TIPO_SOLICITANTE,
+           FEC_DESDE,
+           FEC_HASTA,
+           PRECIO,
+           ID_TARIFA,
+           NRO_ORDENANZA)
+        VALUES
+          (I_ID_EMPRESA,
+           REC.ID_TIPO_SOLICITANTE,
+           I_FECHA,
+           TO_DATE('01/01/2050', 'DD/MM/YYYY HH24:MI:SS'),
+           I_PRECIO,
+           V_ID_TARIFA,
+           I_NRO_ORDENANZA);
+      
+      END LOOP;
+    ELSE
+    
+      SELECT NVL(MAX(ID_TARIFA), 0) + 1
+        INTO V_ID_TARIFA
+        FROM T_TARIFAS_MUNICIPAL;
+    
+      UPDATE T_TARIFAS_MUNICIPAL
+         SET FEC_HASTA = I_FECHA - 1 / 24 / 60 / 60
+       WHERE ID_TIPO_SOLICITANTE = I_ID_TIPO_SOLICITANTE
+         AND ID_EMPRESA = I_ID_EMPRESA;
+    
+      INSERT INTO T_TARIFAS_MUNICIPAL
+        (ID_EMPRESA,
+         ID_TIPO_SOLICITANTE,
+         FEC_DESDE,
+         FEC_HASTA,
+         PRECIO,
+         ID_TARIFA,
+         NRO_ORDENANZA)
+      VALUES
+        (I_ID_EMPRESA,
+         I_ID_TIPO_SOLICITANTE,
+         I_FECHA,
+         TO_DATE('01/01/2050', 'DD/MM/YYYY HH24:MI:SS'),
+         I_PRECIO,
+         V_ID_TARIFA,
+         I_NRO_ORDENANZA);
+    END IF;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta la tarifa - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_TARIFAS;
+  /******************************************************
+  * Modificacion de un programa                         *
+  ******************************************************/
+  PROCEDURE SP_CAMBIO_PROGRAMAS(I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                I_FEC_DESDE   IN T_PROGRAMAS.FEC_DESDE%TYPE DEFAULT SYSDATE,
+                                I_FEC_HASTA   IN T_PROGRAMAS.FEC_HASTA%TYPE DEFAULT SYSDATE) IS
+  
+  BEGIN
+  
+    UPDATE T_PROGRAMAS P
+       SET P.FEC_DESDE = NVL(I_FEC_DESDE, P.FEC_DESDE),
+           P.FEC_HASTA = NVL(I_FEC_HASTA, P.FEC_HASTA)
+     WHERE P.ID_PROGRAMA = I_ID_PROGRAMA;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el programa - ' ||
+                              SQLERRM);
+  END SP_CAMBIO_PROGRAMAS;
+
+  /******************************************************
+  * Modificacion de un periodo                         *
+  ******************************************************/
+  PROCEDURE SP_CAMBIO_PERIODOS(I_ID_PERIODO    IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                               I_N_PERIODO     IN T_PERIODOS_LIQUIDACION.N_PERIODO%TYPE DEFAULT NULL,
+                               I_FEC_DESDE     IN T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE DEFAULT SYSDATE,
+                               I_FEC_HASTA     IN T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                               I_ACTIVO        IN T_PERIODOS_LIQUIDACION.ACTIVO%TYPE DEFAULT NULL,
+                               I_DIAS_REAJUSTE IN T_PERIODOS_LIQUIDACION.DIAS_REAJUSTE%TYPE DEFAULT NULL) IS
+  
+  BEGIN
+  
+    UPDATE T_PERIODOS_LIQUIDACION PL
+       SET PL.N_PERIODO     = NVL(I_N_PERIODO, PL.N_PERIODO),
+           PL.FEC_DESDE     = NVL(I_FEC_DESDE, PL.FEC_DESDE),
+           PL.FEC_HASTA     = NVL(I_FEC_HASTA, PL.FEC_HASTA),
+           PL.ACTIVO        = NVL(I_ACTIVO, PL.ACTIVO),
+           PL.DIAS_REAJUSTE = NVL(I_DIAS_REAJUSTE, PL.DIAS_REAJUSTE)
+     WHERE PL.ID_PERIODO = I_ID_PERIODO;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el periodo - ' || SQLERRM);
+    
+  END SP_CAMBIO_PERIODOS;
+
+  /******************************************************
+  * Lista los parametros                               *
+  ******************************************************/
+  PROCEDURE SP_LIST_VARIABLES(I_FECHA_DESDE IN T_VARIABLES.FEC_DESDE%TYPE DEFAULT NULL,
+                              I_FECHA_HASTA IN T_VARIABLES.FEC_HASTA%TYPE DEFAULT NULL,
+                              O_CURSOR      OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT V.N_VARIABLE,
+             V.VALOR,
+             V.FEC_DESDE  FECHA_DESDE,
+             V.FEC_HASTA  FECHA_HASTA
+      
+        FROM T_VARIABLES V
+       WHERE TRUNC(V.FEC_DESDE) >= TRUNC(NVL(I_FECHA_DESDE, V.FEC_DESDE))
+         AND TRUNC(NVL(V.FEC_HASTA, SYSDATE)) <=
+             TRUNC(NVL(I_FECHA_HASTA, SYSDATE));
+  
+  END SP_LIST_VARIABLES;
+
+  /******************************************************
+  * Alta parametros                                    *
+  ******************************************************/
+  PROCEDURE SP_ALTA_VARIABLES(I_FECHA_DESDE IN T_VARIABLES.FEC_DESDE%TYPE DEFAULT NULL,
+                              I_FECHA_HASTA IN T_VARIABLES.FEC_HASTA%TYPE DEFAULT NULL,
+                              I_N_VARIABLE  IN T_VARIABLES.N_VARIABLE%TYPE DEFAULT NULL,
+                              I_VALOR       IN T_VARIABLES.VALOR%TYPE DEFAULT NULL) IS
+  
+  BEGIN
+    UPDATE T_VARIABLES V
+       SET V.FEC_HASTA = SYSDATE
+     WHERE V.FEC_HASTA IS NULL
+       AND V.FEC_ALTA <> (SELECT MAX(FEC_ALTA) FROM T_VARIABLES);
+  
+    COMMIT;
+  
+    INSERT INTO T_VARIABLES
+      (ID_VARIABLE, N_VARIABLE, VALOR, FEC_DESDE, FEC_HASTA)
+    VALUES
+      ((SELECT 1 + NVL((SELECT MAX(ID_VARIABLE) FROM T_VARIABLES), 0) AS ID
+         FROM DUAL),
+       I_N_VARIABLE,
+       I_VALOR,
+       I_FECHA_DESDE,
+       I_FECHA_HASTA);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el parametro - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_VARIABLES;
+
+  /******************************************************
+  * Baja parametros                                    *
+  ******************************************************/
+  PROCEDURE SP_BAJA_VARIABLES(I_N_VARIABLE IN T_VARIABLES.N_VARIABLE%TYPE DEFAULT NULL) IS
+  
+  BEGIN
+    DELETE FROM T_VARIABLES V
+     WHERE V.FEC_ALTA = (SELECT MAX(FEC_ALTA) FROM T_VARIABLES);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de baja el parametro - ' ||
+                              SQLERRM);
+    
+  END SP_BAJA_VARIABLES;
+
+  /******************************************************
+  * Lista periodos de receso                            *
+  ******************************************************/
+
+  PROCEDURE SP_LIST_PERIODOS_RECESO(O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT PR.ID_PERIODO,
+             P.N_PROGRAMA,
+             PR.FEC_DESDE,
+             PR.FEC_HASTA,
+             PR.ID_NIVEL_EDUCATIVO,
+             V.N_NIVEL_EDUCATIVO,
+             PR.ID_TIPO_SOLICITANTE,
+             TS.N_TIPO_SOLICITANTE
+        FROM T_PERIODOS_RECESO    PR,
+             T_PROGRAMAS          P,
+             T_TIPOS_SOLICITANTE  TS,
+             VT_NIVELES_EDUCATIVO V
+       WHERE PR.ID_TIPO_SOLICITANTE = TS.ID_TIPO_SOLICITANTE
+         AND TS.ID_PROGRAMA = P.ID_PROGRAMA
+         AND V.ID_NIVEL_EDUCATIVO = PR.ID_NIVEL_EDUCATIVO
+         AND PR.ID_NIVEL_EDUCATIVO = V.ID_NIVEL_EDUCATIVO;
+  
+  END SP_LIST_PERIODOS_RECESO;
+
+  /******************************************************
+  * Alta periodos de receso                            *
+  ******************************************************/
+
+  PROCEDURE SP_ALTA_PERIODOS_RECESO(I_FEC_DESDE        IN T_PERIODOS_RECESO.FEC_DESDE%TYPE,
+                                    I_FEC_HASTA        IN T_PERIODOS_RECESO.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                                    I_NIVEL_EDUCATIVO  IN T_PERIODOS_RECESO.ID_NIVEL_EDUCATIVO%TYPE,
+                                    I_TIPO_SOLICITANTE IN T_PERIODOS_RECESO.ID_TIPO_SOLICITANTE%TYPE) IS
+  
+    V_PERIODO T_PERIODOS_RECESO.ID_PERIODO%TYPE;
+  
+  BEGIN
+  
+    SELECT MAX(ID_PERIODO) + 1 INTO V_PERIODO FROM T_PERIODOS_RECESO;
+  
+    INSERT INTO T_PERIODOS_RECESO
+      (ID_PERIODO,
+       FEC_DESDE,
+       FEC_HASTA,
+       ID_NIVEL_EDUCATIVO,
+       ID_TIPO_SOLICITANTE)
+    VALUES
+      (V_PERIODO,
+       I_FEC_DESDE,
+       I_FEC_HASTA,
+       I_NIVEL_EDUCATIVO,
+       I_TIPO_SOLICITANTE);
+  
+    COMMIT;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el periodo de receso - ' ||
+                              SQLERRM);
+  END SP_ALTA_PERIODOS_RECESO;
+
+  PROCEDURE SP_CAMBIO_PERIODOS_RECESO(I_ID_PERIODO       IN T_PERIODOS_RECESO.ID_PERIODO%TYPE,
+                                      I_FEC_DESDE        IN T_PERIODOS_RECESO.FEC_DESDE%TYPE,
+                                      I_FEC_HASTA        IN T_PERIODOS_RECESO.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                                      I_NIVEL_EDUCATIVO  IN T_PERIODOS_RECESO.ID_NIVEL_EDUCATIVO%TYPE,
+                                      I_TIPO_SOLICITANTE IN T_PERIODOS_RECESO.ID_TIPO_SOLICITANTE%TYPE) IS
+  
+  BEGIN
+  
+    UPDATE T_PERIODOS_RECESO
+       SET FEC_DESDE           = NVL(I_FEC_DESDE, FEC_DESDE),
+           FEC_HASTA           = NVL(I_FEC_HASTA, FEC_HASTA),
+           ID_NIVEL_EDUCATIVO  = NVL(I_NIVEL_EDUCATIVO, ID_NIVEL_EDUCATIVO),
+           ID_TIPO_SOLICITANTE = NVL(I_TIPO_SOLICITANTE, ID_TIPO_SOLICITANTE)
+     WHERE ID_PERIODO = I_ID_PERIODO;
+  
+    COMMIT;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el periodo de receso - ' ||
+                              SQLERRM);
+  END SP_CAMBIO_PERIODOS_RECESO;
+
+END PKG_ADMIN_MANTENEDORES;
+/

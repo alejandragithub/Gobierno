@@ -1,0 +1,365 @@
+CREATE OR REPLACE PACKAGE PKG_OPERACIONES IS
+
+  -- Author  : PPONTE_EXT
+  -- Created : 6/11/2018 15:37:39
+  -- Purpose : Creacion y consulta de operaciones
+
+  TYPE TAB_BOLETOS IS TABLE OF T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE INDEX BY BINARY_INTEGER;
+
+  PROCEDURE SP_LIST_TIPOS_OPERACION(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_OPERACIONES(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_NUEVA_OPERACION(I_ID_TIPO_OPERACION IN T_OPERACIONES.ID_TIPO_OPERACION%TYPE
+                              ,I_USUARIO           IN T_OPERACIONES.USUARIO_OPERACION%TYPE
+                              ,I_FECHA             IN T_OPERACIONES.FEC_OPERACION%TYPE DEFAULT SYSDATE
+                              ,I_OBSERVACIONES     IN T_OPERACIONES.OBSERVACIONES%TYPE
+                              ,O_ID_OPERACION      OUT T_OPERACIONES.ID_OPERACION%TYPE);
+
+  PROCEDURE SP_VINCULAR_BOLETO(I_ID_OPERACION  IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE
+                              ,I_ID_MOVIMIENTO IN T_OPERACIONES_MOVIMIENTO.ID_MOVIMIENTO%TYPE);
+
+  PROCEDURE SP_VINCULAR_BOLETOS(I_ID_OPERACION IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE
+                               ,I_TAB_BOLETOS  IN PKG_OPERACIONES.TAB_BOLETOS);
+
+  PROCEDURE SP_ARMAR_LOTE(I_FEC_MOVIMIENTO_DESDE      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE
+                         ,I_FEC_MOVIMIENTO_HASTA      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE
+                         ,I_LISTA_ID_EMPRESA          IN VARCHAR2 DEFAULT NULL
+                         ,I_LISTA_ID_ORIGEN           IN VARCHAR2 DEFAULT NULL
+                         ,I_LISTA_ID_DESTINO          IN VARCHAR2 DEFAULT NULL
+                         ,I_LISTA_ID_ADMINISTRADORA   IN VARCHAR2 DEFAULT NULL
+                         ,I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL
+                         ,I_LISTA_ID_TIPO_EMPRESA     IN VARCHAR2 DEFAULT NULL
+                         ,I_LISTA_ID_TIPO_SOLICITANTE IN VARCHAR2 DEFAULT NULL
+                         ,I_LISTA_ID_RESULTADO        IN VARCHAR2 DEFAULT NULL
+                         ,I_LISTA_ID_VALIDACIONES     IN VARCHAR2 DEFAULT NULL
+                         ,I_LIQUIDADO_SN              IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL
+                         ,I_CUIT_EMPRESA              IN VARCHAR2 DEFAULT NULL
+                         ,I_RECTIFICADO_SN            IN VARCHAR2 DEFAULT NULL
+                         ,I_OPERACION                 IN T_OPERACIONES.ID_OPERACION%TYPE DEFAULT NULL
+                         ,O_TAB_BOLETOS               OUT PKG_OPERACIONES.TAB_BOLETOS);
+
+END PKG_OPERACIONES;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_OPERACIONES IS
+
+  /*********************************************
+  * Devuelve la lista de tipos de operaciones  *
+  * Se usa para filtros en pantalla            *
+  *********************************************/
+  PROCEDURE SP_LIST_TIPOS_OPERACION(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT ID_TIPO_OPERACION
+            ,N_TIPO_OPERACION
+        FROM T_TIPOS_OPERACION
+       ORDER BY ID_TIPO_OPERACION;
+  END SP_LIST_TIPOS_OPERACION;
+
+  /************************************************************************
+  * Devuelve la lista de operaciones con la cantidad de boletos afectados *
+  * Se usa en la pantalla de operaciones                                  *
+  ************************************************************************/
+  PROCEDURE SP_LIST_OPERACIONES(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT O.ID_OPERACION
+            ,T.N_TIPO_OPERACION
+            ,O.USUARIO_OPERACION
+            ,O.FEC_OPERACION
+            ,O.OBSERVACIONES
+            ,COUNT(M.ID_MOVIMIENTO) BOLETOS_AFECTADOS
+        FROM T_OPERACIONES            O
+            ,T_TIPOS_OPERACION        T
+            ,T_OPERACIONES_MOVIMIENTO M
+       WHERE O.ID_TIPO_OPERACION = T.ID_TIPO_OPERACION
+         AND O.ID_OPERACION = M.ID_OPERACION
+       GROUP BY O.ID_OPERACION
+               ,T.N_TIPO_OPERACION
+               ,O.USUARIO_OPERACION
+               ,O.FEC_OPERACION
+               ,O.OBSERVACIONES
+       ORDER BY ID_OPERACION DESC;
+  END SP_LIST_OPERACIONES;
+
+  /**************************************************************
+  * Da de alta una nueva operacion devolviendo el identificador *
+  * Se usa en scripts y en la pantalla de consulta para generar *
+  * preliquidaciones                                            *
+  **************************************************************/
+  PROCEDURE SP_NUEVA_OPERACION(I_ID_TIPO_OPERACION IN T_OPERACIONES.ID_TIPO_OPERACION%TYPE
+                              ,I_USUARIO           IN T_OPERACIONES.USUARIO_OPERACION%TYPE
+                              ,I_FECHA             IN T_OPERACIONES.FEC_OPERACION%TYPE DEFAULT SYSDATE
+                              ,I_OBSERVACIONES     IN T_OPERACIONES.OBSERVACIONES%TYPE
+                              ,O_ID_OPERACION      OUT T_OPERACIONES.ID_OPERACION%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    O_ID_OPERACION := SEQ_OPERACIONES.NEXTVAL;
+  
+    INSERT INTO T_OPERACIONES
+      (ID_OPERACION
+      ,ID_TIPO_OPERACION
+      ,USUARIO_OPERACION
+      ,FEC_OPERACION
+      ,OBSERVACIONES)
+    VALUES
+      (O_ID_OPERACION
+      ,I_ID_TIPO_OPERACION
+      ,I_USUARIO
+      ,I_FECHA
+      ,I_OBSERVACIONES);
+  
+    COMMIT;
+  
+  END SP_NUEVA_OPERACION;
+
+  /**************************************************
+  * Vincula un boleto a una operacion en particular *
+  **************************************************/
+  PROCEDURE SP_VINCULAR_BOLETO(I_ID_OPERACION  IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE
+                              ,I_ID_MOVIMIENTO IN T_OPERACIONES_MOVIMIENTO.ID_MOVIMIENTO%TYPE) IS
+  
+    T_BOLETOS PKG_OPERACIONES.TAB_BOLETOS;
+  
+  BEGIN
+  
+    T_BOLETOS(1) := I_ID_MOVIMIENTO;
+    SP_VINCULAR_BOLETOS(I_ID_OPERACION => I_ID_OPERACION
+                       ,I_TAB_BOLETOS  => T_BOLETOS);
+  
+  END SP_VINCULAR_BOLETO;
+
+  /************************************************************
+  * vincula un grupo de boletos a una operacion en particular *
+  ************************************************************/
+  PROCEDURE SP_VINCULAR_BOLETOS(I_ID_OPERACION IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE
+                               ,I_TAB_BOLETOS  IN PKG_OPERACIONES.TAB_BOLETOS) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    FORALL I IN I_TAB_BOLETOS.FIRST .. I_TAB_BOLETOS.LAST
+      INSERT INTO T_OPERACIONES_MOVIMIENTO
+        (ID_OPERACION
+        ,ID_MOVIMIENTO)
+      VALUES
+        (I_ID_OPERACION
+        ,I_TAB_BOLETOS(I));
+  
+    COMMIT;
+  
+  END SP_VINCULAR_BOLETOS;
+
+  /**************************************************************
+  * Arma un lote de boletos acorde a los parametros indicados   *
+  * Asocia ese mismo lote a una operacion en caso de indicarse  *
+  * Usa los mismos filtros que la consulta principal de boletos *
+  **************************************************************/
+  PROCEDURE SP_ARMAR_LOTE(I_FEC_MOVIMIENTO_DESDE      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE
+                         ,I_FEC_MOVIMIENTO_HASTA      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE
+                         ,I_LISTA_ID_EMPRESA          IN VARCHAR2 DEFAULT NULL
+                         ,I_LISTA_ID_ORIGEN           IN VARCHAR2 DEFAULT NULL
+                         ,I_LISTA_ID_DESTINO          IN VARCHAR2 DEFAULT NULL
+                         ,I_LISTA_ID_ADMINISTRADORA   IN VARCHAR2 DEFAULT NULL
+                         ,I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL
+                         ,I_LISTA_ID_TIPO_EMPRESA     IN VARCHAR2 DEFAULT NULL
+                         ,I_LISTA_ID_TIPO_SOLICITANTE IN VARCHAR2 DEFAULT NULL
+                         ,I_LISTA_ID_RESULTADO        IN VARCHAR2 DEFAULT NULL
+                         ,I_LISTA_ID_VALIDACIONES     IN VARCHAR2 DEFAULT NULL
+                         ,I_LIQUIDADO_SN              IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL
+                         ,I_CUIT_EMPRESA              IN VARCHAR2 DEFAULT NULL
+                         ,I_RECTIFICADO_SN            IN VARCHAR2 DEFAULT NULL
+                         ,I_OPERACION                 IN T_OPERACIONES.ID_OPERACION%TYPE DEFAULT NULL
+                         ,O_TAB_BOLETOS               OUT PKG_OPERACIONES.TAB_BOLETOS) IS
+  
+    V_SQL        VARCHAR2(20000);
+    V_SQLFILTROS VARCHAR2(10000);
+    T_BOLETOS    PKG_OPERACIONES.TAB_BOLETOS;
+  
+  BEGIN
+  
+    IF I_FEC_MOVIMIENTO_DESDE IS NULL
+       OR I_FEC_MOVIMIENTO_HASTA IS NULL
+    THEN
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'Deben indicarse los parámetros de fecha para consumir esta funcionalidad');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_EMPRESA, '^(\d+(,\d+)*)?$')
+       AND I_LISTA_ID_EMPRESA IS NOT NULL
+    THEN
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'El parametro i_LISTA_ID_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ORIGEN, '^(\d+(,\d+)*)?$')
+       AND I_LISTA_ID_ORIGEN IS NOT NULL
+    THEN
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'El parametro i_LISTA_ID_ORIGEN tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_DESTINO, '^(\d+(,\d+)*)?$')
+       AND I_LISTA_ID_DESTINO IS NOT NULL
+    THEN
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'El parametro i_LISTA_ID_DESTINO tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ADMINISTRADORA, '^(\d+(,\d+)*)?$')
+       AND I_LISTA_ID_ADMINISTRADORA IS NOT NULL
+    THEN
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'El parametro i_LISTA_ID_ADMINISTRADORA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_EMPRESA, '^(\d+(,\d+)*)?$')
+       AND I_LISTA_ID_TIPO_EMPRESA IS NOT NULL
+    THEN
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'El parametro i_LISTA_ID_TIPO_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_SOLICITANTE, '^(\d+(,\d+)*)?$')
+       AND I_LISTA_ID_TIPO_SOLICITANTE IS NOT NULL
+    THEN
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'El parametro i_LISTA_ID_TIPO_SOLICITANTE tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_RESULTADO, '^(\d+(,\d+)*)?$')
+       AND I_LISTA_ID_RESULTADO IS NOT NULL
+    THEN
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'El parametro i_LISTA_ID_RESULTADO tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_VALIDACIONES, '^(\d+(,\d+)*)?$')
+       AND I_LISTA_ID_VALIDACIONES IS NOT NULL
+    THEN
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'El parametro I_LISTA_ID_VALIDACIONES tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF I_LISTA_ID_EMPRESA IS NOT NULL
+    THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.id_empresa in( ' ||
+                      I_LISTA_ID_EMPRESA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_ADMINISTRADORA IS NOT NULL
+    THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_ADMINISTRADORA in( ' ||
+                      I_LISTA_ID_ADMINISTRADORA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_RESULTADO IS NOT NULL
+    THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_RESULTADO in( ' ||
+                      I_LISTA_ID_RESULTADO || ' )';
+    END IF;
+  
+    IF I_CUIL IS NOT NULL
+    THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.CUIL = ''' || I_CUIL || '''';
+    END IF;
+  
+    IF I_LISTA_ID_ORIGEN IS NOT NULL
+    THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_ORIGEN in( ' ||
+                      I_LISTA_ID_ORIGEN || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_DESTINO IS NOT NULL
+    THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_DESTINO in( ' ||
+                      I_LISTA_ID_DESTINO || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_TIPO_EMPRESA IS NOT NULL
+    THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_TIPO_EMPRESA in( ' ||
+                      I_LISTA_ID_TIPO_EMPRESA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_TIPO_SOLICITANTE IS NOT NULL
+    THEN
+      V_SQLFILTROS := V_SQLFILTROS ||
+                      ' AND mv.Id_Autorizacion in ( select id_autorizacion 
+                                 from TARJUNI_TRANSP.t_autorizaciones a
+                                where a.id_autorizacion = mv.Id_Autorizacion
+                                  and a.tipo_solicitante IN (' ||
+                      I_LISTA_ID_TIPO_SOLICITANTE || ' ))';
+    END IF;
+  
+    IF I_LISTA_ID_VALIDACIONES IS NOT NULL
+    THEN
+      V_SQLFILTROS := V_SQLFILTROS ||
+                      'AND mv.ID_MOVIMIENTO in( SELECT
+                                                           id_movimiento
+                                                         FROM
+                                                           T_MOVIMIENTO_RECHAZO
+                                                         WHERE
+                                                           id_movimiento = mv.id_movimiento
+                                                           AND
+                                                           id_validacion IN(' ||
+                      I_LISTA_ID_VALIDACIONES || ' ) )';
+    END IF;
+  
+    IF I_LIQUIDADO_SN IS NOT NULL
+    THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' and NVL(LIQUIDADO_SN,''N'') = ''' ||
+                      I_LIQUIDADO_SN || ''' ';
+    END IF;
+  
+    IF I_CUIT_EMPRESA IS NOT NULL
+    THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.CUIT_TRANSPORTISTA = ''' ||
+                      I_CUIT_EMPRESA || '''';
+    END IF;
+  
+    IF I_RECTIFICADO_SN IS NOT NULL
+    THEN
+      IF I_RECTIFICADO_SN = 'S'
+      THEN
+        V_SQLFILTROS := V_SQLFILTROS || ' and mv.NRO_VERSION > 1';
+      ELSIF I_RECTIFICADO_SN = 'N'
+      THEN
+        V_SQLFILTROS := V_SQLFILTROS || ' and mv.NRO_VERSION = 1';
+      END IF;
+    END IF;
+  
+    V_SQL := 'SELECT MV.ID_MOVIMIENTO
+                FROM T_MOVIMIENTOS MV
+               WHERE mv.fec_movimiento between to_date(''' ||
+             TO_CHAR(I_FEC_MOVIMIENTO_DESDE, 'dd/mm/yyyy') ||
+             ''',''dd/mm/yyyy'')
+               and trunc(to_date(''' ||
+             TO_CHAR(I_FEC_MOVIMIENTO_HASTA, 'dd/mm/yyyy') ||
+             ''',''dd/mm/yyyy'')+1) -1/24/60/60 
+                 AND mv.ID_TIPO_MOVIMIENTO = 1 
+                 AND mv.ID_ESTADO = 1 ' || V_SQLFILTROS;
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    EXECUTE IMMEDIATE V_SQL BULK COLLECT
+      INTO T_BOLETOS;
+  
+    DBMS_OUTPUT.PUT_LINE(T_BOLETOS.COUNT);
+  
+    IF I_OPERACION IS NOT NULL
+    THEN
+      SP_VINCULAR_BOLETOS(I_ID_OPERACION => I_OPERACION
+                         ,I_TAB_BOLETOS  => T_BOLETOS);
+    END IF;
+  
+    O_TAB_BOLETOS := T_BOLETOS;
+  
+  END SP_ARMAR_LOTE;
+
+END PKG_OPERACIONES;
+/

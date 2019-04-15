@@ -1,0 +1,643 @@
+CREATE OR REPLACE PACKAGE PKG_INTEGRACIONES IS
+
+  -- Author  : PPONTE_EXT
+  -- Created : 7/2/2019 16:36:02
+  -- Purpose : integraciones con bases de gobierno para consutla de datos de otras agencias
+
+  PROCEDURE SP_GET_DATOS_ESTUDIANTE_GEDUC(I_CUIL   IN VARCHAR2
+                                         ,O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_GET_DATOS_META4(I_CUIL   IN VARCHAR2
+                              ,O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_GET_DATOS_UPC(I_CUIL   IN VARCHAR2
+                            ,O_CURSOR OUT SYS_REFCURSOR);
+
+ PROCEDURE SP_GET_DATOS_ESTU_GEDUC_PK(I_CUIL   IN VARCHAR2
+                                         ,O_CURSOR OUT SYS_REFCURSOR) ;
+
+END PKG_INTEGRACIONES;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_INTEGRACIONES IS
+
+  PROCEDURE SP_GET_DATOS_ESTUDIANTE_GEDUC(I_CUIL   IN VARCHAR2
+                                         ,O_CURSOR OUT SYS_REFCURSOR) IS
+  
+    V_FILTRAR NUMBER := 0;
+  
+  BEGIN
+  
+    DECLARE
+    
+      V_EMPRESA   VARCHAR2(20);
+      V_GRADO     VARCHAR2(100);
+      V_MAX_GRADO VARCHAR2(100);
+      vciclo number(5);
+      V_NIVEL_EDUCATIVO VARCHAR2(100);
+    
+    BEGIN
+    
+    
+/*verifico que si es nivel superior */    
+select  NIVEL_EDUCATIVO  into V_NIVEL_EDUCATIVO from (
+              select b.NIVEL_EDUCATIVO   
+              FROM GEDUC.VT_ESTUDIANTES_PARA_BEG B where b.cuil=I_CUIL 
+                   and not b.NIVEL_EDUCATIVO is null AND CICLO>2017
+              order by b.CICLO desc)
+ where  rownum =1 ; 
+
+
+
+    if V_NIVEL_EDUCATIVO='SUPERIOR' then 
+    
+     OPEN O_CURSOR FOR
+    select * from ( 
+      SELECT V.CUIL
+            ,V.DNI
+            ,V.SEXO
+            ,V.NOMBRE
+            ,V.APELLIDO
+            ,V.CODIGO_EMPRESA
+            ,V.EMPRESA
+            ,V.NIVEL_EDUCATIVO
+            ,V.CICLO
+            ,V.SECTOR
+            ,V.GRADO_ANIO
+            ,V.DIVISION
+            ,V.TURNO
+        FROM GEDUC.VT_ESTUDIANTES_PARA_BEG V
+       WHERE V.CUIL = I_CUIL
+        AND CICLO>2017
+                 ORDER BY CICLO desc)
+                where  rownum =1 ; 
+    
+    else
+      
+    
+    
+            select CODIGO_EMPRESA,grado, CICLO  INTO V_EMPRESA
+                    ,V_GRADO, vciclo from  (
+              SELECT B.CODIGO_EMPRESA
+                    ,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(B.GRADO_ANIO
+                                                                            ,'PRIMER'
+                                                                            ,1)
+                                                                    ,'SEGUNDO'
+                                                                    ,2)
+                                                            ,'TERCER'
+                                                            ,3)
+                                                    ,'CUARTO'
+                                                    ,4)
+                                            ,'QUINTO'
+                                            ,5)
+                                    ,'SEXTO'
+                                    ,6)
+                            ,'SEPTIMO'
+                            ,7) grado, b.CICLO
+               
+                FROM GEDUC.VT_ESTUDIANTES_PARA_BEG B
+               WHERE B.CUIL = I_CUIL
+                 AND B.GRADO_ANIO NOT LIKE '%MODULO%'
+                 AND B.NIVEL_EDUCATIVO = 'SECUNDARIO'
+                 AND EMPRESA NOT LIKE '%CENMA%'
+                 AND EMPRESA NOT LIKE '%C.E.N.M.A%'
+                 AND CICLO>2017
+                 ORDER BY CICLO desc
+                 )
+                 
+                where  rownum =1 ; --- devuelve solo uno en los casos que tenga varios ciclos 
+            
+              --DBMS_OUTPUT.PUT_LINE(V_EMPRESA||' - '||V_GRADO);
+            
+              SELECT MAX(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(B.GRADO_ANIO
+                                                                                ,'PRIMER'
+                                                                                ,1)
+                                                                        ,'SEGUNDO'
+                                                                        ,2)
+                                                                ,'TERCER'
+                                                                ,3)
+                                                        ,'CUARTO'
+                                                        ,4)
+                                                ,'QUINTO'
+                                                ,5)
+                                        ,'SEXTO'
+                                        ,6)
+                                ,'SEPTIMO'
+                                ,7))
+                INTO V_MAX_GRADO
+                FROM GEDUC.VT_ESTUDIANTES_PARA_BEG B
+               WHERE B.CODIGO_EMPRESA = V_EMPRESA;
+            
+              --dbms_output.put_line('Max grado '||v_max_grado);
+            
+              IF V_MAX_GRADO = V_GRADO and vciclo<>2019
+              THEN
+              
+                DBMS_OUTPUT.PUT_LINE('Alumno en el ultimo a?o');
+                V_FILTRAR := 1;
+              else
+                V_FILTRAR := 0;
+              END IF;
+     
+     END IF;
+     
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        NULL;
+    END;
+  
+    OPEN O_CURSOR FOR
+     select * from ( 
+      SELECT V.CUIL
+            ,V.DNI
+            ,V.SEXO
+            ,V.NOMBRE
+            ,V.APELLIDO
+            ,V.CODIGO_EMPRESA
+            ,V.EMPRESA
+            ,V.NIVEL_EDUCATIVO
+            ,V.CICLO
+            ,V.SECTOR
+            ,V.GRADO_ANIO
+            ,V.DIVISION
+            ,V.TURNO
+        FROM GEDUC.VT_ESTUDIANTES_PARA_BEG V
+       WHERE V.CUIL = I_CUIL
+         AND V_FILTRAR = 0
+         AND CICLO>2017
+                 ORDER BY CICLO desc)
+                where  rownum =1 ; 
+         
+           
+  END SP_GET_DATOS_ESTUDIANTE_GEDUC;
+
+  PROCEDURE SP_GET_DATOS_META4(I_CUIL   IN VARCHAR2
+                              ,O_CURSOR OUT SYS_REFCURSOR) IS
+  
+    V_CUIL VARCHAR2(20);
+  
+  BEGIN
+  
+    V_CUIL := REPLACE(I_CUIL, '-', '');
+    V_CUIL := SUBSTR(V_CUIL, 1, 2) || '-' ||
+              SUBSTR(V_CUIL, 3, LENGTH(V_CUIL) - 3) || '-' ||
+              SUBSTR(V_CUIL, -1);
+  
+    OPEN O_CURSOR FOR
+      SELECT M.ID_PERSONA
+            ,M.CUIL
+            ,M.DNI
+            ,M.SEXO
+            ,M.ROL
+            ,M.FEC_INICIO_ROL
+            ,M.FEC_FIN_ROL
+            ,M.NOMBRE
+            ,M.APELLIDO
+            ,M.CODIGO_EMPRESA_CUE
+            ,M.COD_ESTABLECIMIENTO
+            ,M.ESTABLECIMIENTO
+            ,M.NIVEL_EDUCATIVO
+            ,M.CICLO
+            ,M.SECTOR
+            ,M.LUNES
+            ,M.MARTES
+            ,M.MIERCOLES
+            ,M.JUEVES
+            ,M.VIERNES
+            ,M.SABADO
+            ,M.DOMINGO
+            ,M.TURNO
+            , m.DOCENTE
+        FROM PEOPLENET.M4CBA_VW_SEC_TRAN M
+       WHERE M.CUIL = V_CUIL;
+  
+  END SP_GET_DATOS_META4;
+
+  PROCEDURE SP_GET_DATOS_UPC(I_CUIL   IN VARCHAR2
+                            ,O_CURSOR OUT SYS_REFCURSOR) IS
+  
+    V_CUIL VARCHAR2(20) := REPLACE(I_CUIL, '-', '');
+  
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT NOV_APELLIDO
+            ,NOV_NOMBRE
+            ,CUIL
+            ,N_CARRERA
+            ,LISTAGG(DIAS, '') WITHIN GROUP(ORDER BY NULL) DIAS
+        FROM COFEFUP.VT_UPCAGENDA
+       WHERE CUIL = V_CUIL
+       GROUP BY NOV_APELLIDO
+               ,NOV_NOMBRE
+               ,CUIL
+               ,N_CARRERA;
+  
+  END SP_GET_DATOS_UPC;
+  
+  
+   PROCEDURE SP_GET_DATOS_ESTU_GEDUC_PK(I_CUIL   IN VARCHAR2
+                                         ,O_CURSOR OUT SYS_REFCURSOR) IS
+  
+    V_FILTRAR NUMBER := 0;
+  
+  BEGIN
+  
+    DECLARE
+    
+      V_EMPRESA   VARCHAR2(20);
+      V_GRADO     VARCHAR2(100);
+      V_MAX_GRADO VARCHAR2(100);
+      vciclo number(5);
+      V_NIVEL_EDUCATIVO VARCHAR2(100);
+    
+    v_nro_doc varchar2(100);
+        v_sexo varchar2(100);
+            v_cod_pais varchar2(100);
+                v_id_numero varchar2(100);
+    
+   BEGIN 
+
+/*Validacion con pk persona CIDI*/
+/*--------------------------------*/
+ 
+  select   nvl(r.nro_documento,'NO'),nvl(r.id_sexo,'NO'),nvl(r.pai_cod_pais,'NO'),nvl(r.id_numero ,'NO')
+        into v_nro_doc,v_sexo,v_cod_pais,v_id_numero
+  from GESTION_CIUDADANOS.VT_USUARIOS R WHERE R.n_usuario=I_CUIL;
+
+if v_nro_doc<>'NO' and v_sexo <>'NO' and v_cod_pais <>'NO' and v_id_numero<>'NO' then
+  
+    
+    
+/*verifico que si es nivel superior */    
+select  NIVEL_EDUCATIVO  into V_NIVEL_EDUCATIVO from (
+              select b.NIVEL_EDUCATIVO   
+              FROM GEDUC.VT_ESTUDIANTES_PARA_BEG_Prueba B where 
+              b.DNI=v_nro_doc
+              and b.sexo=v_sexo
+              and b.pai_cod_pais=v_cod_pais
+              and b.id_numero =v_id_numero
+              and not b.NIVEL_EDUCATIVO is null AND CICLO>2017
+              order by b.CICLO desc)
+ where  rownum =1 ; 
+
+
+
+    if V_NIVEL_EDUCATIVO='SUPERIOR' then 
+    
+     OPEN O_CURSOR FOR
+    select * from ( 
+      SELECT V.CUIL
+            ,V.DNI
+            ,V.SEXO
+            ,V.NOMBRE
+            ,V.APELLIDO
+            ,V.CODIGO_EMPRESA
+            ,V.EMPRESA
+            ,V.NIVEL_EDUCATIVO
+            ,V.CICLO
+            ,V.SECTOR
+            ,V.GRADO_ANIO
+            ,V.DIVISION
+            ,V.TURNO
+        FROM GEDUC.VT_ESTUDIANTES_PARA_BEG_Prueba V
+       WHERE 
+              v.dni=v_nro_doc
+              and v.sexo=v_sexo
+              and v.pai_cod_pais=v_cod_pais
+              and v.id_numero =v_id_numero       
+       
+        AND CICLO>2017
+                 ORDER BY CICLO desc)
+                where  rownum =1 ; 
+    
+    else
+      
+    
+    
+            select CODIGO_EMPRESA,grado, CICLO  INTO V_EMPRESA
+                    ,V_GRADO, vciclo from  (
+              SELECT B.CODIGO_EMPRESA
+                    ,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(B.GRADO_ANIO
+                                                                            ,'PRIMER'
+                                                                            ,1)
+                                                                    ,'SEGUNDO'
+                                                                    ,2)
+                                                            ,'TERCER'
+                                                            ,3)
+                                                    ,'CUARTO'
+                                                    ,4)
+                                            ,'QUINTO'
+                                            ,5)
+                                    ,'SEXTO'
+                                    ,6)
+                            ,'SEPTIMO'
+                            ,7) grado, b.CICLO
+               
+                FROM GEDUC.Vt_Estudiantes_Para_Beg_Prueba B
+               WHERE 
+                b.dni=v_nro_doc
+                and b.sexo=v_sexo
+                and b.pai_cod_pais=v_cod_pais
+                and b.id_numero =v_id_numero
+                 AND B.GRADO_ANIO NOT LIKE '%MODULO%'
+                 AND B.NIVEL_EDUCATIVO = 'SECUNDARIO'
+                 AND EMPRESA NOT LIKE '%CENMA%'
+                 AND EMPRESA NOT LIKE '%C.E.N.M.A%'
+                 AND CICLO>2017
+                 ORDER BY CICLO desc
+                 )
+                 
+                where  rownum =1 ; --- devuelve solo uno en los casos que tenga varios ciclos 
+            
+              --DBMS_OUTPUT.PUT_LINE(V_EMPRESA||' - '||V_GRADO);
+            
+              SELECT MAX(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(B.GRADO_ANIO
+                                                                                ,'PRIMER'
+                                                                                ,1)
+                                                                        ,'SEGUNDO'
+                                                                        ,2)
+                                                                ,'TERCER'
+                                                                ,3)
+                                                        ,'CUARTO'
+                                                        ,4)
+                                                ,'QUINTO'
+                                                ,5)
+                                        ,'SEXTO'
+                                        ,6)
+                                ,'SEPTIMO'
+                                ,7))
+                INTO V_MAX_GRADO
+                FROM GEDUC.VT_ESTUDIANTES_PARA_BEG_Prueba B
+               WHERE B.CODIGO_EMPRESA = V_EMPRESA;
+            
+              --dbms_output.put_line('Max grado '||v_max_grado);
+            
+              IF V_MAX_GRADO = V_GRADO and vciclo<>2019
+              THEN
+              
+                DBMS_OUTPUT.PUT_LINE('Alumno en el ultimo a?o');
+                V_FILTRAR := 1;
+              else
+                V_FILTRAR := 0;
+              END IF;
+     
+     END IF;
+     
+     
+ elsif v_nro_doc<>'NO' and v_sexo <>'NO' and v_cod_pais ='NO' and v_id_numero='NO' then
+  
+    
+    
+/*verifico que si es nivel superior */    
+select  NIVEL_EDUCATIVO  into V_NIVEL_EDUCATIVO from (
+              select b.NIVEL_EDUCATIVO   
+              FROM GEDUC.VT_ESTUDIANTES_PARA_BEG_Prueba B where 
+              b.dni=v_nro_doc
+              and b.sexo=v_sexo
+              and not b.NIVEL_EDUCATIVO is null AND CICLO>2017
+              order by b.CICLO desc)
+ where  rownum =1 ; 
+
+
+
+    if V_NIVEL_EDUCATIVO='SUPERIOR' then 
+    
+     OPEN O_CURSOR FOR
+    select * from ( 
+      SELECT V.CUIL
+            ,V.DNI
+            ,V.SEXO
+            ,V.NOMBRE
+            ,V.APELLIDO
+            ,V.CODIGO_EMPRESA
+            ,V.EMPRESA
+            ,V.NIVEL_EDUCATIVO
+            ,V.CICLO
+            ,V.SECTOR
+            ,V.GRADO_ANIO
+            ,V.DIVISION
+            ,V.TURNO
+        FROM GEDUC.VT_ESTUDIANTES_PARA_BEG_Prueba V
+       WHERE 
+              v.dni=v_nro_doc
+              and v.sexo=v_sexo
+       
+        AND CICLO>2017
+                 ORDER BY CICLO desc)
+                where  rownum =1 ; 
+    
+    else
+      
+    
+    
+            select CODIGO_EMPRESA,grado, CICLO  INTO V_EMPRESA
+                    ,V_GRADO, vciclo from  (
+              SELECT B.CODIGO_EMPRESA
+                    ,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(B.GRADO_ANIO
+                                                                            ,'PRIMER'
+                                                                            ,1)
+                                                                    ,'SEGUNDO'
+                                                                    ,2)
+                                                            ,'TERCER'
+                                                            ,3)
+                                                    ,'CUARTO'
+                                                    ,4)
+                                            ,'QUINTO'
+                                            ,5)
+                                    ,'SEXTO'
+                                    ,6)
+                            ,'SEPTIMO'
+                            ,7) grado, b.CICLO
+               
+                FROM GEDUC.VT_ESTUDIANTES_PARA_BEG_Prueba B
+               WHERE 
+                b.dni=v_nro_doc
+                and b.sexo=v_sexo
+                 AND B.GRADO_ANIO NOT LIKE '%MODULO%'
+                 AND B.NIVEL_EDUCATIVO = 'SECUNDARIO'
+                 AND EMPRESA NOT LIKE '%CENMA%'
+                 AND EMPRESA NOT LIKE '%C.E.N.M.A%'
+                 AND CICLO>2017
+                 ORDER BY CICLO desc
+                 )
+                 
+                where  rownum =1 ; --- devuelve solo uno en los casos que tenga varios ciclos 
+            
+              --DBMS_OUTPUT.PUT_LINE(V_EMPRESA||' - '||V_GRADO);
+            
+              SELECT MAX(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(B.GRADO_ANIO
+                                                                                ,'PRIMER'
+                                                                                ,1)
+                                                                        ,'SEGUNDO'
+                                                                        ,2)
+                                                                ,'TERCER'
+                                                                ,3)
+                                                        ,'CUARTO'
+                                                        ,4)
+                                                ,'QUINTO'
+                                                ,5)
+                                        ,'SEXTO'
+                                        ,6)
+                                ,'SEPTIMO'
+                                ,7))
+                INTO V_MAX_GRADO
+                FROM GEDUC.VT_ESTUDIANTES_PARA_BEG_Prueba B
+               WHERE B.CODIGO_EMPRESA = V_EMPRESA;
+            
+              --dbms_output.put_line('Max grado '||v_max_grado);
+            
+              IF V_MAX_GRADO = V_GRADO and vciclo<>2019
+              THEN
+              
+                DBMS_OUTPUT.PUT_LINE('Alumno en el ultimo a?o');
+                V_FILTRAR := 1;
+              else
+                V_FILTRAR := 0;
+              END IF;
+     
+     END IF;
+     
+     
+/*FIN Validacion con pk persona CIDI*/
+/*--------------------------------  */
+
+ else    
+ 
+   
+/*verifico que si es nivel superior */    
+select  NIVEL_EDUCATIVO  into V_NIVEL_EDUCATIVO from (
+              select b.NIVEL_EDUCATIVO   
+              FROM GEDUC.VT_ESTUDIANTES_PARA_BEG_Prueba B where b.cuil=I_CUIL 
+                   and not b.NIVEL_EDUCATIVO is null AND CICLO>2017
+              order by b.CICLO desc)
+ where  rownum =1 ; 
+
+
+
+    if V_NIVEL_EDUCATIVO='SUPERIOR' then 
+    
+     OPEN O_CURSOR FOR
+    select * from ( 
+      SELECT V.CUIL
+            ,V.DNI
+            ,V.SEXO
+            ,V.NOMBRE
+            ,V.APELLIDO
+            ,V.CODIGO_EMPRESA
+            ,V.EMPRESA
+            ,V.NIVEL_EDUCATIVO
+            ,V.CICLO
+            ,V.SECTOR
+            ,V.GRADO_ANIO
+            ,V.DIVISION
+            ,V.TURNO
+        FROM GEDUC.VT_ESTUDIANTES_PARA_BEG_Prueba V
+       WHERE V.CUIL = I_CUIL
+        AND CICLO>2017
+                 ORDER BY CICLO desc)
+                where  rownum =1 ; 
+    
+    else
+      
+    
+    
+            select CODIGO_EMPRESA,grado, CICLO  INTO V_EMPRESA
+                    ,V_GRADO, vciclo from  (
+              SELECT B.CODIGO_EMPRESA
+                    ,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(B.GRADO_ANIO
+                                                                            ,'PRIMER'
+                                                                            ,1)
+                                                                    ,'SEGUNDO'
+                                                                    ,2)
+                                                            ,'TERCER'
+                                                            ,3)
+                                                    ,'CUARTO'
+                                                    ,4)
+                                            ,'QUINTO'
+                                            ,5)
+                                    ,'SEXTO'
+                                    ,6)
+                            ,'SEPTIMO'
+                            ,7) grado, b.CICLO
+               
+                FROM GEDUC.VT_ESTUDIANTES_PARA_BEG_Prueba B
+               WHERE B.CUIL = I_CUIL
+                 AND B.GRADO_ANIO NOT LIKE '%MODULO%'
+                 AND B.NIVEL_EDUCATIVO = 'SECUNDARIO'
+                 AND EMPRESA NOT LIKE '%CENMA%'
+                 AND EMPRESA NOT LIKE '%C.E.N.M.A%'
+                 AND CICLO>2017
+                 ORDER BY CICLO desc
+                 )
+                 
+                where  rownum =1 ; --- devuelve solo uno en los casos que tenga varios ciclos 
+            
+              --DBMS_OUTPUT.PUT_LINE(V_EMPRESA||' - '||V_GRADO);
+            
+              SELECT MAX(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(B.GRADO_ANIO
+                                                                                ,'PRIMER'
+                                                                                ,1)
+                                                                        ,'SEGUNDO'
+                                                                        ,2)
+                                                                ,'TERCER'
+                                                                ,3)
+                                                        ,'CUARTO'
+                                                        ,4)
+                                                ,'QUINTO'
+                                                ,5)
+                                        ,'SEXTO'
+                                        ,6)
+                                ,'SEPTIMO'
+                                ,7))
+                INTO V_MAX_GRADO
+                FROM GEDUC.VT_ESTUDIANTES_PARA_BEG_Prueba B
+               WHERE B.CODIGO_EMPRESA = V_EMPRESA;
+            
+              --dbms_output.put_line('Max grado '||v_max_grado);
+            
+              IF V_MAX_GRADO = V_GRADO and vciclo<>2019
+              THEN
+              
+                DBMS_OUTPUT.PUT_LINE('Alumno en el ultimo a?o');
+                V_FILTRAR := 1;
+              else
+                V_FILTRAR := 0;
+              END IF;
+     
+     END IF;
+     
+   end if;      
+
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        NULL;
+    END;
+  
+    OPEN O_CURSOR FOR
+     select * from ( 
+      SELECT V.CUIL
+            ,V.DNI
+            ,V.SEXO
+            ,V.NOMBRE
+            ,V.APELLIDO
+            ,V.CODIGO_EMPRESA
+            ,V.EMPRESA
+            ,V.NIVEL_EDUCATIVO
+            ,V.CICLO
+            ,V.SECTOR
+            ,V.GRADO_ANIO
+            ,V.DIVISION
+            ,V.TURNO
+        FROM GEDUC.VT_ESTUDIANTES_PARA_BEG_Prueba V
+       WHERE V.CUIL = I_CUIL
+         AND V_FILTRAR = 0
+         AND CICLO>2017
+                 ORDER BY CICLO desc)
+                where  rownum =1 ; 
+
+           
+  END SP_GET_DATOS_ESTU_GEDUC_PK;
+  
+
+END PKG_INTEGRACIONES;
+/

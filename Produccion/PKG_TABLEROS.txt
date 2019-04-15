@@ -1,0 +1,176 @@
+CREATE OR REPLACE PACKAGE PKG_TABLEROS IS
+
+  -- Author  : PPONTE_EXT
+  -- Created : 24/7/2018 15:59:15
+  -- Purpose : Tableros de control y seguimiento de procesos
+
+  -- panel general de boletos por periodo
+  PROCEDURE SP_PANEL_CONTROL(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- estado del validador y tarificador
+  PROCEDURE SP_ESTADO_PROCESOS(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- logs del validador y tarificador
+  PROCEDURE SP_LOG_PROCESOS(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- seguimiento de boletos por dia y administradora
+  PROCEDURE SP_SEGUIMIENTO_EXTRACTOR(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- listado consolidado de rechazos por periodo
+  PROCEDURE SP_RECHAZOS(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- listado de validaciones por minuto
+  PROCEDURE SP_VELOCIDAD_VALIDADOR(O_CURSOR OUT SYS_REFCURSOR);
+
+END PKG_TABLEROS;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_TABLEROS IS
+
+  /************************************************
+  * devuelve el estado de los boletos por periodo *
+  ************************************************/
+  PROCEDURE SP_PANEL_CONTROL(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT P.ID_PERIODO
+            ,P.N_PERIODO
+            ,M.ID_RESULTADO
+            ,NVL(R.N_RESULTADO, '(SIN VALIDAR)') N_RESULTADO
+            ,M.VALIDADO_SN VALIDADO
+            ,M.VALORIZAR_SN TARIFICADO
+            ,M.LIQUIDADO_SN LIQUIDADO
+            ,COUNT(8) BOLETOS
+            ,SUM(NVL(PRECIO_GOBIERNO, 0) + NVL(PRECIO_VALORIZADO, 0)) TOTAL_VALORIZADO
+        FROM T_MOVIMIENTOS           M
+            ,T_PERIODOS_LIQUIDACION  P
+            ,T_RESULTADOS_VALIDACION R
+       WHERE M.ID_TIPO_MOVIMIENTO = 1
+         AND M.ID_ESTADO = 1
+         AND M.FEC_MOVIMIENTO BETWEEN P.FEC_DESDE AND
+             (P.FEC_HASTA + 1) - 1 / 24 / 60 / 60
+         AND R.ID_RESULTADO(+) = M.ID_RESULTADO
+       GROUP BY P.ID_PERIODO
+               ,P.N_PERIODO
+               ,M.ID_RESULTADO
+               ,R.N_RESULTADO
+               ,M.VALIDADO_SN
+               ,M.VALORIZAR_SN
+               ,M.LIQUIDADO_SN
+       ORDER BY P.ID_PERIODO
+               ,M.ID_RESULTADO;
+  
+  END SP_PANEL_CONTROL;
+
+  /*************************************************
+  * devuelve el estado del validador y tarificador *
+  *************************************************/
+  PROCEDURE SP_ESTADO_PROCESOS(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT JOB_NAME PROCESO
+            ,DECODE(ENABLED, 'TRUE', 'SI', 'NO') HABILITADO
+            ,DECODE(STATE
+                   ,'SCHEDULED'
+                   ,'AGENDADO'
+                   ,'RUNNING'
+                   ,'CORRIENDO'
+                   ,'STOPED'
+                   ,'DETENIDO'
+                   ,STATE) ESTADO
+            ,TO_CHAR(LAST_START_DATE, 'DD/mm/yyyy hh24:mi') ULTIMO_COMIENZO
+            ,TO_CHAR(LAST_RUN_DURATION, 'hh:mi:ss') ULTIMA_DURACION
+            ,DECODE(STATE
+                   ,'SCHEDULED'
+                   ,TO_CHAR(NEXT_RUN_DATE, 'dd/mm/yyyy hh24:mi')
+                   ,NULL) PROXIMA_EJECUCION
+            ,COMMENTS DESCRIPCION
+        FROM ALL_SCHEDULER_JOBS J
+       WHERE JOB_NAME IN ('VALIDADOR_BEG', 'VALORIZADOR_BEG');
+  END SP_ESTADO_PROCESOS;
+
+  /***********************************************************
+  * Devuelve el log de corridas de validador y tarificador   *
+  * Ordenado por fecha decreciente. No tiene limite se       *
+  * recomienda cortar la cantidad de registros en el cliente *
+  ***********************************************************/
+  PROCEDURE SP_LOG_PROCESOS(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT JOB_NAME        PROCESO
+            ,LOG_DATE        HORA
+            ,STATUS          ESTADO
+            ,RUN_DURATION    DURACION
+            ,ADDITIONAL_INFO INFO
+        FROM ALL_SCHEDULER_JOB_RUN_DETAILS
+       WHERE JOB_NAME IN ('VALIDADOR_BEG', 'VALORIZADOR_BEG')
+       ORDER BY LOG_DATE DESC;
+  END SP_LOG_PROCESOS;
+
+  /************************************************************
+  * Devuelve la cantidad de boletos ingresados por fecha por  *
+  * administradora de los ultimos 15 dias, ordenado por fecha *
+  ************************************************************/
+  PROCEDURE SP_SEGUIMIENTO_EXTRACTOR(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT TRUNC(M.FEC_INGRESO) FECHA
+            ,M.ID_ADMINISTRADORA
+            ,A.N_ADMINISTRADORA
+            ,COUNT(8) BOLETOS
+        FROM T_MOVIMIENTOS                M
+            ,TRANSPORTE.T_ADMINISTRADORAS A
+       WHERE M.FEC_INGRESO BETWEEN TRUNC(SYSDATE - 15) AND SYSDATE
+         AND M.ID_TIPO_MOVIMIENTO = 1
+         AND M.ID_ADMINISTRADORA = A.ID_ADMINISTRADORA
+       GROUP BY TRUNC(M.FEC_INGRESO)
+               ,M.ID_ADMINISTRADORA
+               ,A.N_ADMINISTRADORA
+       ORDER BY 1 DESC
+               ,2;
+  END SP_SEGUIMIENTO_EXTRACTOR;
+
+  /********************************************************************
+  * Consolidado de rechazos por periodo ordenado por cantida de casos *
+  ********************************************************************/
+  PROCEDURE SP_RECHAZOS(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT P.ID_PERIODO
+            ,P.N_PERIODO
+            ,R.ID_VALIDACION
+            ,V.COD_RECHAZO
+            ,V.N_VALIDACION
+            ,COUNT(M.ID_MOVIMIENTO) BOLETOS
+            ,SUM(NVL(PRECIO_GOBIERNO, 0) + NVL(PRECIO_VALORIZADO, 0)) TOTAL_VALORIZADO
+        FROM T_MOVIMIENTO_RECHAZO   R
+            ,T_VALIDACIONES         V
+            ,T_MOVIMIENTOS          M
+            ,T_PERIODOS_LIQUIDACION P
+       WHERE R.ID_VALIDACION = V.ID_VALIDACION
+         AND R.ID_MOVIMIENTO = M.ID_MOVIMIENTO
+         AND TRUNC(M.FEC_MOVIMIENTO) BETWEEN P.FEC_DESDE AND P.FEC_HASTA
+       GROUP BY P.ID_PERIODO
+               ,P.N_PERIODO
+               ,R.ID_VALIDACION
+               ,V.COD_RECHAZO
+               ,V.N_VALIDACION
+       ORDER BY 1
+               ,6 DESC;
+  END SP_RECHAZOS;
+
+  /***********************************************************************
+  * lista la cantidad de validaciones por minuto de las ultimas 72 horas *
+  ***********************************************************************/
+  PROCEDURE SP_VELOCIDAD_VALIDADOR(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT TO_CHAR(FEC_VALIDACION, 'dd/mm/yyyy hh24:mi') HORA
+            ,COUNT(8) BOLETOS
+        FROM T_MOVIMIENTOS
+       WHERE FEC_VALIDACION > SYSDATE - 3
+       GROUP BY TO_CHAR(FEC_VALIDACION, 'dd/mm/yyyy hh24:mi')
+       ORDER BY 1 DESC;
+  END SP_VELOCIDAD_VALIDADOR;
+
+END PKG_TABLEROS;
+/

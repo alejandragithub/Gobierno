@@ -1,0 +1,269 @@
+CREATE OR REPLACE PACKAGE PKG_CONVENIOS IS
+
+  -- Author  : NMAZZEO_EXT
+  -- Created : 29/11/2018 15:28:45
+  -- Purpose : Administración de datos de Convenios
+
+  -- lista los convenios
+  PROCEDURE SP_LIST_CONVENIOS(O_CURSOR OUT SYS_REFCURSOR
+                             ,I_FECHA  IN DATE DEFAULT SYSDATE);
+
+  -- lista las personas asociadas a un convenio
+  PROCEDURE SP_LIST_PERSONAS(O_CURSOR   OUT SYS_REFCURSOR
+                            ,I_CONVENIO IN T_CONVENIOS.ID_CONVENIO%TYPE DEFAULT NULL
+                            ,I_FECHA    IN DATE DEFAULT SYSDATE);
+
+  -- Lista los convenios asociados a una persona                           
+  PROCEDURE SP_LIST_CONVENIOS_PERSONA(O_CURSOR OUT SYS_REFCURSOR
+                                     ,I_CUIL   IN T_PERSONAS_CONVENIO.CUIL%TYPE
+                                     ,I_FECHA  IN DATE DEFAULT SYSDATE);
+
+  -- Alta de un nuevo convenio 
+  PROCEDURE SP_ALTA_CONVENIOS(I_N_CONVENIO IN T_CONVENIOS.N_CONVENIO%TYPE
+                             ,I_FEC_DESDE  IN T_CONVENIOS.FEC_DESDE%TYPE
+                             ,I_FEC_HASTA  IN T_CONVENIOS.FEC_HASTA%TYPE DEFAULT NULL);
+
+  -- Alta de una nueva persona asociada a un convenio
+  PROCEDURE SP_ALTA_PERSONAS(I_CUIL                IN T_PERSONAS_CONVENIO.CUIL%TYPE
+                            ,I_ID_CONVENIO         IN T_PERSONAS_CONVENIO.ID_CONVENIO%TYPE
+                            ,I_FEC_DESDE           IN T_PERSONAS_CONVENIO.FEC_DESDE%TYPE
+                            ,I_FEC_HASTA           IN T_PERSONAS_CONVENIO.FEC_HASTA%TYPE DEFAULT NULL
+                            ,I_ID_TIPO_SOLICITANTE IN T_PERSONAS_CONVENIO.ID_TIPO_SOLICITANTE%TYPE
+                            ,I_ID_NIVEL            IN T_PERSONAS_CONVENIO.ID_NIVEL%TYPE DEFAULT NULL);
+
+  -- Modificacion de un convenio                          
+  PROCEDURE SP_CAMBIO_CONVENIOS(I_ID_CONVENIO IN T_CONVENIOS.ID_CONVENIO%TYPE
+                               ,I_NOMBRE      IN T_CONVENIOS.N_CONVENIO%TYPE DEFAULT NULL
+                               ,I_FEC_DESDE   IN T_CONVENIOS.FEC_DESDE%TYPE DEFAULT NULL
+                               ,I_FEC_HASTA   IN T_CONVENIOS.FEC_HASTA%TYPE DEFAULT NULL);
+
+  -- Modificacion de una persona asociada a un convenio                         
+  PROCEDURE SP_CAMBIO_PERSONAS(I_ID_PERSONA_CONVENIO IN T_PERSONAS_CONVENIO.ID_PERSONA_CONVENIO%TYPE
+                              ,I_FEC_DESDE           IN T_PERSONAS_CONVENIO.FEC_DESDE%TYPE DEFAULT NULL
+                              ,I_FEC_HASTA           IN T_PERSONAS_CONVENIO.FEC_HASTA%TYPE DEFAULT NULL
+                              ,I_ID_TIPO_SOLICITANTE IN T_PERSONAS_CONVENIO.ID_TIPO_SOLICITANTE%TYPE DEFAULT NULL
+                              ,I_ID_NIVEL            IN T_PERSONAS_CONVENIO.ID_NIVEL%TYPE DEFAULT NULL);
+END PKG_CONVENIOS;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_CONVENIOS IS
+
+  /***************************
+  * Lista los convenios      *
+  ***************************/
+  PROCEDURE SP_LIST_CONVENIOS(O_CURSOR OUT SYS_REFCURSOR
+                             ,I_FECHA  IN DATE DEFAULT SYSDATE) IS
+  
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT C.ID_CONVENIO
+            ,C.N_CONVENIO
+            ,C.FEC_DESDE
+            ,C.FEC_HASTA
+        FROM T_CONVENIOS C
+       WHERE (I_FECHA BETWEEN C.FEC_DESDE AND NVL(C.FEC_HASTA, I_FECHA) OR
+             I_FECHA IS NULL);
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002
+                             ,'Error al recuperar los convenios. ' || SQLERRM);
+  END SP_LIST_CONVENIOS;
+
+  /*********************************************
+  * Lista los personas asociadas a un convenio *
+  *********************************************/
+  PROCEDURE SP_LIST_PERSONAS(O_CURSOR   OUT SYS_REFCURSOR
+                            ,I_CONVENIO IN T_CONVENIOS.ID_CONVENIO%TYPE
+                            ,I_FECHA    IN DATE DEFAULT SYSDATE) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT P.ID_PERSONA_CONVENIO
+            ,P.CUIL
+            ,P.ID_CONVENIO
+            ,P.FEC_DESDE
+            ,P.FEC_HASTA
+            ,P.ID_TIPO_SOLICITANTE
+            ,S.N_TIPO_SOLICITANTE
+            ,S.ID_PROGRAMA
+            ,R.N_PROGRAMA
+            ,P.ID_NIVEL
+            ,N.N_NIVEL_EDUCATIVO
+        FROM T_PERSONAS_CONVENIO        P
+            ,T_TIPOS_SOLICITANTE        S
+            ,T_PROGRAMAS                R
+            ,GEDUC.VT_NIVELES_EDUCATIVO N
+       WHERE (I_FECHA BETWEEN P.FEC_DESDE AND NVL(P.FEC_HASTA, I_FECHA) OR
+             I_FECHA IS NULL)
+         AND P.ID_CONVENIO = I_CONVENIO
+         AND P.ID_TIPO_SOLICITANTE = S.ID_TIPO_SOLICITANTE
+         AND R.ID_PROGRAMA = S.ID_PROGRAMA
+         AND P.ID_NIVEL = N.ID_SEQ_NIVEL_EDUCATIVO(+);
+  END SP_LIST_PERSONAS;
+
+  /***********************************************
+  * Lista los convenios asociados a una persona  * 
+  ************************************************/
+  PROCEDURE SP_LIST_CONVENIOS_PERSONA(O_CURSOR OUT SYS_REFCURSOR
+                                     ,I_CUIL   IN T_PERSONAS_CONVENIO.CUIL%TYPE
+                                     ,I_FECHA  IN DATE DEFAULT SYSDATE) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT C.ID_CONVENIO
+            ,C.N_CONVENIO
+            ,PC.FEC_DESDE
+            ,PC.FEC_HASTA
+            ,T.N_TIPO_SOLICITANTE
+            ,P.ID_PROGRAMA
+            ,P.N_PROGRAMA
+        FROM T_CONVENIOS         C
+            ,T_TIPOS_SOLICITANTE T
+            ,T_PROGRAMAS         P
+            ,T_PERSONAS_CONVENIO PC
+       WHERE T.ID_PROGRAMA = P.ID_PROGRAMA
+         AND PC.ID_CONVENIO = C.ID_CONVENIO
+         AND T.ID_TIPO_SOLICITANTE = PC.ID_TIPO_SOLICITANTE
+         AND PC.CUIL = I_CUIL
+         AND (I_FECHA BETWEEN PC.FEC_DESDE AND NVL(PC.FEC_HASTA, I_FECHA) OR
+             I_FECHA IS NULL)
+         AND (I_FECHA BETWEEN C.FEC_DESDE AND NVL(C.FEC_HASTA, I_FECHA) OR
+             I_FECHA IS NULL);
+  
+  END SP_LIST_CONVENIOS_PERSONA;
+
+  /******************************************************
+  * Alta de un nuevo convenio                           *
+  ******************************************************/
+  PROCEDURE SP_ALTA_CONVENIOS(I_N_CONVENIO IN T_CONVENIOS.N_CONVENIO%TYPE
+                             ,I_FEC_DESDE  IN T_CONVENIOS.FEC_DESDE%TYPE
+                             ,I_FEC_HASTA  IN T_CONVENIOS.FEC_HASTA%TYPE DEFAULT NULL) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_CONVENIO T_CONVENIOS.ID_CONVENIO%TYPE;
+  
+  BEGIN
+  
+    V_ID_CONVENIO := SEQ_CONVENIOS.NEXTVAL;
+  
+    INSERT INTO T_CONVENIOS
+      (ID_CONVENIO
+      ,N_CONVENIO
+      ,FEC_DESDE
+      ,FEC_HASTA)
+    VALUES
+      (V_ID_CONVENIO
+      ,I_N_CONVENIO
+      ,I_FEC_DESDE
+      ,I_FEC_HASTA);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'Error al dar de alta el convenio - ' || SQLERRM);
+  END SP_ALTA_CONVENIOS;
+
+  /******************************************************
+  * Alta de una nueva persona asociada a un convenio    *
+  ******************************************************/
+  PROCEDURE SP_ALTA_PERSONAS(I_CUIL                IN T_PERSONAS_CONVENIO.CUIL%TYPE
+                            ,I_ID_CONVENIO         IN T_PERSONAS_CONVENIO.ID_CONVENIO%TYPE
+                            ,I_FEC_DESDE           IN T_PERSONAS_CONVENIO.FEC_DESDE%TYPE
+                            ,I_FEC_HASTA           IN T_PERSONAS_CONVENIO.FEC_HASTA%TYPE DEFAULT NULL
+                            ,I_ID_TIPO_SOLICITANTE IN T_PERSONAS_CONVENIO.ID_TIPO_SOLICITANTE%TYPE
+                            ,I_ID_NIVEL            IN T_PERSONAS_CONVENIO.ID_NIVEL%TYPE DEFAULT NULL) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_PERSONA_CONVENIO T_PERSONAS_CONVENIO.ID_PERSONA_CONVENIO%TYPE;
+  
+  BEGIN
+  
+    V_ID_PERSONA_CONVENIO := SEQ_CONVENIOS.NEXTVAL;
+  
+    INSERT INTO T_PERSONAS_CONVENIO
+      (ID_PERSONA_CONVENIO
+      ,CUIL
+      ,ID_CONVENIO
+      ,FEC_DESDE
+      ,FEC_HASTA
+      ,ID_TIPO_SOLICITANTE
+      ,ID_NIVEL)
+    VALUES
+      (V_ID_PERSONA_CONVENIO
+      ,I_CUIL
+      ,I_ID_CONVENIO
+      ,I_FEC_DESDE
+      ,I_FEC_HASTA
+      ,I_ID_TIPO_SOLICITANTE
+      ,I_ID_NIVEL);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002
+                             ,'Error al dar de alta a la persona - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_PERSONAS;
+
+  /******************************************************
+  * Modificacion de un convenio                         *
+  ******************************************************/
+  PROCEDURE SP_CAMBIO_CONVENIOS(I_ID_CONVENIO IN T_CONVENIOS.ID_CONVENIO%TYPE
+                               ,I_NOMBRE      IN T_CONVENIOS.N_CONVENIO%TYPE DEFAULT NULL
+                               ,I_FEC_DESDE   IN T_CONVENIOS.FEC_DESDE%TYPE DEFAULT NULL
+                               ,I_FEC_HASTA   IN T_CONVENIOS.FEC_HASTA%TYPE DEFAULT NULL) IS
+  BEGIN
+  
+    UPDATE T_CONVENIOS C
+       SET C.FEC_DESDE  = NVL(I_FEC_DESDE, C.FEC_DESDE)
+          ,C.FEC_HASTA  = NVL(I_FEC_HASTA, C.FEC_HASTA)
+          ,C.N_CONVENIO = NVL(I_NOMBRE, C.N_CONVENIO)
+     WHERE C.ID_CONVENIO = I_ID_CONVENIO;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'Error al modificar el convenio - ' || SQLERRM);
+  END SP_CAMBIO_CONVENIOS;
+  /******************************************************
+  * Modificacion de una persona asociada a un convenio  *
+  ******************************************************/
+
+  PROCEDURE SP_CAMBIO_PERSONAS(I_ID_PERSONA_CONVENIO IN T_PERSONAS_CONVENIO.ID_PERSONA_CONVENIO%TYPE
+                              ,I_FEC_DESDE           IN T_PERSONAS_CONVENIO.FEC_DESDE%TYPE DEFAULT NULL
+                              ,I_FEC_HASTA           IN T_PERSONAS_CONVENIO.FEC_HASTA%TYPE DEFAULT NULL
+                              ,I_ID_TIPO_SOLICITANTE IN T_PERSONAS_CONVENIO.ID_TIPO_SOLICITANTE%TYPE DEFAULT NULL
+                              ,I_ID_NIVEL            IN T_PERSONAS_CONVENIO.ID_NIVEL%TYPE DEFAULT NULL) IS
+  
+  BEGIN
+    UPDATE T_PERSONAS_CONVENIO P
+       SET P.FEC_DESDE           = NVL(I_FEC_DESDE, P.FEC_DESDE)
+          ,P.FEC_HASTA           = NVL(I_FEC_HASTA, P.FEC_HASTA)
+          ,P.ID_TIPO_SOLICITANTE = NVL(I_ID_TIPO_SOLICITANTE
+                                      ,P.ID_TIPO_SOLICITANTE)
+          ,P.ID_NIVEL            = NVL(I_ID_NIVEL, P.ID_NIVEL)
+     WHERE P.ID_PERSONA_CONVENIO = I_ID_PERSONA_CONVENIO;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'Error al modificar la persona - ' || SQLERRM);
+    
+  END SP_CAMBIO_PERSONAS;
+
+END PKG_CONVENIOS;
+/

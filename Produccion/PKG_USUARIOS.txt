@@ -1,0 +1,289 @@
+CREATE OR REPLACE PACKAGE PKG_USUARIOS IS
+
+  -- Author  : PPONTE_EXT
+  -- Created : 20/9/2018 10:59:41
+  -- Purpose : Administración de Usuarios de Sistema
+
+  PROCEDURE SP_LIST_ROLES(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_ROLES_USUARIO(I_CUIL        IN T_USUARIOS_ROLES.CUIL%TYPE
+                                 ,I_ID_PROGRAMA IN T_USUARIOS_ROLES.ID_PROGRAMA%TYPE DEFAULT NULL
+                                 ,O_CURSOR      OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_USUARIOS(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_EMPRESAS_USUARIO(I_CUIL   IN T_USUARIOS_EMPRESAS.CUIL%TYPE
+                                    ,O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_ALTA_USUARIO(I_CUIL        IN T_USUARIOS_ROLES.CUIL%TYPE
+                           ,I_ID_ROL      IN T_USUARIOS_ROLES.ID_ROL%TYPE
+                           ,I_ID_PROGRAMA IN T_USUARIOS_ROLES.ID_PROGRAMA%TYPE DEFAULT NULL);
+
+  PROCEDURE SP_BAJA_USUARIO(I_ID_USUARIO_ROL IN T_USUARIOS_ROLES.ID_USUARIO_ROL%TYPE);
+
+  PROCEDURE SP_CAMBIO_ROL(I_ID_USUARIO_ROL IN T_USUARIOS_ROLES.ID_USUARIO_ROL%TYPE
+                         ,I_ID_ROL         IN T_USUARIOS_ROLES.ID_ROL%TYPE);
+
+  PROCEDURE SP_ALTA_EMPRESA_USUARIO(I_CUIL       IN T_USUARIOS_EMPRESAS.CUIL%TYPE
+                                   ,I_ID_EMPRESA IN T_USUARIOS_EMPRESAS.ID_EMPRESA%TYPE);
+
+  PROCEDURE SP_BAJA_EMPRESA_USUARIO(I_ID_USUARIO_EMPRESA IN T_USUARIOS_EMPRESAS.ID_USUARIO_EMPRESA%TYPE);
+
+END PKG_USUARIOS;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_USUARIOS IS
+
+  /******************************************************
+  * Devuelve la lista de roles                          *
+  * Se usa en la pantalla de administracion de usuarios *
+  * para filtrar y para dar de alta nuevos usuarios     *
+  ******************************************************/
+  PROCEDURE SP_LIST_ROLES(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT R.ID_ROL
+            ,R.N_ROL
+        FROM T_ROLES R
+       ORDER BY R.ID_ROL;
+  END SP_LIST_ROLES;
+
+  /****************************************************
+  * Devuelve los roles vigentes para el CUIL indicado *
+  * por programa (o todos en caso de no indicar       *
+  *                                                   *
+  * Se usa al conectarse, para determinar el rol del  *
+  * usuario conectado y otorgar permisos acordes      *
+  ****************************************************/
+  PROCEDURE SP_LIST_ROLES_USUARIO(I_CUIL        IN T_USUARIOS_ROLES.CUIL%TYPE
+                                 ,I_ID_PROGRAMA IN T_USUARIOS_ROLES.ID_PROGRAMA%TYPE DEFAULT NULL
+                                 ,O_CURSOR      OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT U.ID_ROL
+            ,R.N_ROL
+            ,U.ID_PROGRAMA
+            ,P.N_PROGRAMA
+        FROM T_USUARIOS_ROLES U
+            ,T_ROLES          R
+            ,T_PROGRAMAS      P
+       WHERE U.CUIL = I_CUIL
+         AND SYSDATE BETWEEN U.FEC_DESDE AND NVL(U.FEC_HASTA, SYSDATE)
+         AND R.ID_ROL = U.ID_ROL
+         AND U.ID_PROGRAMA = P.ID_PROGRAMA(+)
+         AND NVL(U.ID_PROGRAMA, 0) = NVL(I_ID_PROGRAMA, NVL(U.ID_PROGRAMA, 0));
+  
+  END SP_LIST_ROLES_USUARIO;
+
+  /*******************************************************************
+  * Lista todos los usuarios vigentes con sus correspondientes roles *
+  * para cada programa                                               *
+  * Se usa en la pantalla de administración de usuarios              *
+  *******************************************************************/
+  PROCEDURE SP_LIST_USUARIOS(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT U.ID_USUARIO_ROL
+            ,U.CUIL
+            ,U.ID_ROL
+            ,R.N_ROL
+            ,U.ID_PROGRAMA
+            ,P.N_PROGRAMA
+        FROM T_USUARIOS_ROLES U
+            ,T_ROLES          R
+            ,T_PROGRAMAS      P
+       WHERE U.ID_ROL = R.ID_ROL
+         AND SYSDATE BETWEEN U.FEC_DESDE AND NVL(U.FEC_HASTA, SYSDATE)
+         AND U.ID_PROGRAMA = P.ID_PROGRAMA(+)
+       ORDER BY U.ID_ROL
+               ,U.CUIL
+               ,U.ID_PROGRAMA;
+  
+  END SP_LIST_USUARIOS;
+
+  /*********************************************
+  * Lista las empresas vinculadas a un usuario *
+  * Se usa para validar que empresas puede     *
+  * administrar un usuario                     *
+  *********************************************/
+  PROCEDURE SP_LIST_EMPRESAS_USUARIO(I_CUIL   IN T_USUARIOS_EMPRESAS.CUIL%TYPE
+                                    ,O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT U.ID_USUARIO_EMPRESA
+            ,U.CUIL
+            ,U.ID_EMPRESA
+            ,E.RAZON_SOCIAL
+            ,T.ID_ADMINISTRADORA
+            ,A.N_ADMINISTRADORA
+        FROM T_USUARIOS_EMPRESAS          U
+            ,TRANSPORTE.T_EMPRESAS        E
+            ,TRANSPORTE.T_EMPRESAS_X_TIPO T
+            ,TRANSPORTE.T_ADMINISTRADORAS A
+       WHERE U.CUIL = I_CUIL
+         AND SYSDATE BETWEEN U.FEC_DESDE AND NVL(U.FEC_HASTA, SYSDATE)
+         AND U.ID_EMPRESA = E.ID_EMPRESA
+         AND E.ID_EMPRESA = T.ID_EMPRESA
+         AND A.ID_ADMINISTRADORA = T.ID_ADMINISTRADORA;
+  
+  END SP_LIST_EMPRESAS_USUARIO;
+
+  /******************************************************
+  * Alta de nuevo usuario                               *
+  * Se usa en la pantalla de administración de usuarios *
+  ******************************************************/
+  PROCEDURE SP_ALTA_USUARIO(I_CUIL        IN T_USUARIOS_ROLES.CUIL%TYPE
+                           ,I_ID_ROL      IN T_USUARIOS_ROLES.ID_ROL%TYPE
+                           ,I_ID_PROGRAMA IN T_USUARIOS_ROLES.ID_PROGRAMA%TYPE DEFAULT NULL) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    INSERT INTO T_USUARIOS_ROLES
+      (ID_USUARIO_ROL
+      ,ID_ROL
+      ,CUIL
+      ,FEC_DESDE
+      ,ID_PROGRAMA)
+    VALUES
+      (SEQ_USUARIOS_ROLES.NEXTVAL
+      ,I_ID_ROL
+      ,I_CUIL
+      ,SYSDATE
+      ,I_ID_PROGRAMA);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'Error al dar de alta el usuario - ' || SQLERRM);
+    
+  END SP_ALTA_USUARIO;
+
+  /******************************************************
+  * Baja de usuario                                     *
+  * Se usa en la pantalla de administración de usuarios *
+  ******************************************************/
+  PROCEDURE SP_BAJA_USUARIO(I_ID_USUARIO_ROL IN T_USUARIOS_ROLES.ID_USUARIO_ROL%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_USUARIOS_ROLES U
+       SET U.FEC_HASTA = SYSDATE - 1 / 24 / 60 / 60
+     WHERE U.ID_USUARIO_ROL = I_ID_USUARIO_ROL
+       AND U.FEC_HASTA IS NULL;
+  
+    IF SQL%ROWCOUNT = 0
+    THEN
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'No se encontró un registro vigente para el codigo : ' ||
+                              I_ID_USUARIO_ROL);
+    END IF;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'Error al dar de baja el usuario - ' || SQLERRM);
+  END SP_BAJA_USUARIO;
+
+  /**********************************************************
+  * Cambio de Rol                                           *
+  * Se usa en la pantalla de administración de usuarios     *
+  * No se modifican los datos, se genera una vigencia nueva *
+  **********************************************************/
+  PROCEDURE SP_CAMBIO_ROL(I_ID_USUARIO_ROL IN T_USUARIOS_ROLES.ID_USUARIO_ROL%TYPE
+                         ,I_ID_ROL         IN T_USUARIOS_ROLES.ID_ROL%TYPE) IS
+  
+    R_USUARIOS_ROLES T_USUARIOS_ROLES%ROWTYPE;
+  
+  BEGIN
+  
+    SELECT R.*
+      INTO R_USUARIOS_ROLES
+      FROM T_USUARIOS_ROLES R
+     WHERE R.ID_USUARIO_ROL = I_ID_USUARIO_ROL;
+  
+    SP_BAJA_USUARIO(I_ID_USUARIO_ROL => I_ID_USUARIO_ROL);
+  
+    SP_ALTA_USUARIO(I_CUIL        => R_USUARIOS_ROLES.CUIL
+                   ,I_ID_ROL      => I_ID_ROL
+                   ,I_ID_PROGRAMA => R_USUARIOS_ROLES.ID_PROGRAMA);
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'Error al cambiar el rol del usuario - ' ||
+                              SQLERRM);
+  END SP_CAMBIO_ROL;
+
+  /******************************************
+  * Alta de una empresa para un usuario     *
+  * Se usa en la administracion de usuarios *
+  ******************************************/
+  PROCEDURE SP_ALTA_EMPRESA_USUARIO(I_CUIL       IN T_USUARIOS_EMPRESAS.CUIL%TYPE
+                                   ,I_ID_EMPRESA IN T_USUARIOS_EMPRESAS.ID_EMPRESA%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    INSERT INTO T_USUARIOS_EMPRESAS
+      (ID_USUARIO_EMPRESA
+      ,CUIL
+      ,ID_EMPRESA
+      ,FEC_DESDE)
+    VALUES
+      (SEQ_USUARIOS_ROLES.NEXTVAL
+      ,I_CUIL
+      ,I_ID_EMPRESA
+      ,SYSDATE);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'Error al dar de alta el la empresa para el usuario - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_EMPRESA_USUARIO;
+  /******************************************
+  * Baja de una empresa para un usuario     *
+  * Se usa en la administracion de usuarios *
+  ******************************************/
+  PROCEDURE SP_BAJA_EMPRESA_USUARIO(I_ID_USUARIO_EMPRESA IN T_USUARIOS_EMPRESAS.ID_USUARIO_EMPRESA%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_USUARIOS_EMPRESAS E
+       SET E.FEC_HASTA = SYSDATE
+     WHERE E.ID_USUARIO_EMPRESA = I_ID_USUARIO_EMPRESA;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001
+                             ,'Error al dar de baja la empresa para el usuario - ' ||
+                              SQLERRM);
+    
+  END SP_BAJA_EMPRESA_USUARIO;
+
+END PKG_USUARIOS;
+/

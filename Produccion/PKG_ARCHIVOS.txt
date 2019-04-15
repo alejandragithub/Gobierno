@@ -1,0 +1,2524 @@
+CREATE OR REPLACE PACKAGE PKG_ARCHIVOS IS
+
+  PROCEDURE SP_ALTA_MOVIMIENTO(I_FEC_MOVIMIENTO             IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                               I_PRECIO                     IN T_MOVIMIENTOS.PRECIO%TYPE DEFAULT NULL,
+                               I_FEC_REGISTRACION           IN T_MOVIMIENTOS.FEC_REGISTRACION%TYPE DEFAULT NULL,
+                               I_ID_ORIGEN                  IN T_MOVIMIENTOS.ID_ORIGEN%TYPE DEFAULT NULL,
+                               I_ID_DESTINO                 IN T_MOVIMIENTOS.ID_DESTINO%TYPE DEFAULT NULL,
+                               I_ID_PROGRAMA                IN T_MOVIMIENTOS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                               I_OBSERVACION                IN T_MOVIMIENTOS.OBSERVACION%TYPE DEFAULT NULL,
+                               I_ID_TARJETA                 IN T_MOVIMIENTOS.ID_TARJETA%TYPE DEFAULT NULL,
+                               I_ID_TIPO_MOVIMIENTO         IN T_MOVIMIENTOS.ID_TIPO_MOVIMIENTO%TYPE DEFAULT NULL,
+                               I_ID_EMPRESA                 IN T_MOVIMIENTOS.ID_EMPRESA%TYPE DEFAULT NULL,
+                               I_CUIL                       IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                               I_CODIGO_VERIFICACION        IN T_MOVIMIENTOS.CODIGO_VERIFICACION%TYPE DEFAULT NULL,
+                               I_UID_TARJETA                IN T_MOVIMIENTOS.UID_TARJETA%TYPE DEFAULT NULL,
+                               I_COD_TIPO_MOVIMIENTO        IN T_MOVIMIENTOS.COD_TIPO_MOVIMIENTO%TYPE DEFAULT NULL,
+                               I_ID_ORIGEN_RECE             IN T_MOVIMIENTOS.ID_ORIGEN_RECE%TYPE DEFAULT NULL,
+                               I_ID_DESTINO_RECE            IN T_MOVIMIENTOS.ID_DESTINO_RECE%TYPE DEFAULT NULL,
+                               I_DESCR_ORIGEN_RECE          IN T_MOVIMIENTOS.DESCR_ORIGEN_RECE%TYPE DEFAULT NULL,
+                               I_DESCR_DESTINO_RECE         IN T_MOVIMIENTOS.DESCR_DESTINO_RECE%TYPE DEFAULT NULL,
+                               I_LATITUD                    IN T_MOVIMIENTOS.LATITUD%TYPE DEFAULT NULL,
+                               I_LONGITUD                   IN T_MOVIMIENTOS.LONGITUD%TYPE DEFAULT NULL,
+                               I_ID_AUTORIZACION            IN T_MOVIMIENTOS.ID_AUTORIZACION%TYPE DEFAULT NULL,
+                               I_NRO_BUS                    IN T_MOVIMIENTOS.NRO_BUS%TYPE DEFAULT NULL,
+                               I_NRO_INTERNO                IN T_MOVIMIENTOS.NRO_INTERNO%TYPE DEFAULT NULL,
+                               I_ID_EXPENDEDORA             IN T_MOVIMIENTOS.ID_EXPENDEDORA%TYPE DEFAULT NULL,
+                               I_ID_ADMINISTRADORA          IN T_MOVIMIENTOS.ID_ADMINISTRADORA%TYPE DEFAULT NULL,
+                               I_ID_TIPO_EMPRESA            IN T_MOVIMIENTOS.ID_TIPO_EMPRESA%TYPE DEFAULT NULL,
+                               I_ID_GRUPO                   IN T_MOVIMIENTOS.ID_GRUPO%TYPE DEFAULT NULL,
+                               I_CUIT_TRANSPORTISTA         IN T_MOVIMIENTOS.CUIT_TRANSPORTISTA%TYPE DEFAULT NULL,
+                               I_DATO_AUTORIZADOR           IN T_MOVIMIENTOS.DATO_AUTORIZADOR%TYPE DEFAULT NULL,
+                               I_ID_MOVIMIENTO_A_RECTIFICAR IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE DEFAULT NULL,
+                               I_ID_OPERACION               IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE DEFAULT NULL,
+                               O_ID_MOVIMIENTO              OUT T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE);
+
+  -- ## deprecar
+  PROCEDURE SP_ADD_MOVIMIENTO(I_FEC_MOVIMIENTO            IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE DEFAULT NULL,
+                              I_PASAJES                   IN T_MOVIMIENTOS.PASAJES%TYPE DEFAULT NULL,
+                              I_USUARIO                   IN T_MOVIMIENTOS.USUARIO%TYPE DEFAULT NULL,
+                              I_PRECIO                    IN T_MOVIMIENTOS.PRECIO%TYPE DEFAULT NULL,
+                              I_FEC_INGRESO               IN T_MOVIMIENTOS.FEC_INGRESO%TYPE DEFAULT NULL,
+                              I_FEC_REGISTRACION          IN T_MOVIMIENTOS.FEC_REGISTRACION%TYPE DEFAULT NULL,
+                              I_FEC_VALIDACION            IN T_MOVIMIENTOS.FEC_VALIDACION%TYPE DEFAULT NULL,
+                              I_ID_ORIGEN                 IN T_MOVIMIENTOS.ID_ORIGEN%TYPE DEFAULT NULL,
+                              I_ID_DESTINO                IN T_MOVIMIENTOS.ID_DESTINO%TYPE DEFAULT NULL,
+                              I_ID_PROGRAMA               IN T_MOVIMIENTOS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                              I_OBSERVACION               IN T_MOVIMIENTOS.OBSERVACION%TYPE DEFAULT NULL,
+                              I_ID_BENEFICIARIO_PROG      IN T_MOVIMIENTOS.ID_BENEFICIARIO_PROG%TYPE DEFAULT NULL,
+                              I_ID_TARJETA                IN T_MOVIMIENTOS.ID_TARJETA%TYPE DEFAULT NULL,
+                              I_ID_TIPO_MOVIMIENTO        IN T_MOVIMIENTOS.ID_TIPO_MOVIMIENTO%TYPE DEFAULT NULL,
+                              I_ID_EMPRESA                IN T_MOVIMIENTOS.ID_EMPRESA%TYPE DEFAULT NULL,
+                              I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                              I_CODIGO_TRANSACCION        IN T_MOVIMIENTOS.CODIGO_TRANSACCION%TYPE DEFAULT NULL,
+                              I_CODIGO_VERIFICACION       IN T_MOVIMIENTOS.CODIGO_VERIFICACION%TYPE DEFAULT NULL,
+                              I_UID_TARJETA               IN T_MOVIMIENTOS.UID_TARJETA%TYPE DEFAULT NULL,
+                              I_COD_TIPO_MOVIMIENTO       IN T_MOVIMIENTOS.COD_TIPO_MOVIMIENTO%TYPE DEFAULT NULL,
+                              I_ID_ORIGEN_RECE            IN T_MOVIMIENTOS.ID_ORIGEN_RECE%TYPE DEFAULT NULL,
+                              I_ID_DESTINO_RECE           IN T_MOVIMIENTOS.ID_DESTINO_RECE%TYPE DEFAULT NULL,
+                              I_DESCR_ORIGEN_RECE         IN T_MOVIMIENTOS.DESCR_ORIGEN_RECE%TYPE DEFAULT NULL,
+                              I_DESCR_DESTINO_RECE        IN T_MOVIMIENTOS.DESCR_DESTINO_RECE%TYPE DEFAULT NULL,
+                              I_LATITUD                   IN T_MOVIMIENTOS.LATITUD%TYPE DEFAULT NULL,
+                              I_LONGITUD                  IN T_MOVIMIENTOS.LONGITUD%TYPE DEFAULT NULL,
+                              I_ID_AUTORIZACION           IN T_MOVIMIENTOS.ID_AUTORIZACION%TYPE DEFAULT NULL,
+                              I_NRO_BUS                   IN T_MOVIMIENTOS.NRO_BUS%TYPE DEFAULT NULL,
+                              I_NRO_INTERNO               IN T_MOVIMIENTOS.NRO_INTERNO%TYPE DEFAULT NULL,
+                              I_ID_EXPENDEDORA            IN T_MOVIMIENTOS.ID_EXPENDEDORA%TYPE DEFAULT NULL,
+                              I_ID_ADMINISTRADORA         IN T_MOVIMIENTOS.ID_ADMINISTRADORA%TYPE DEFAULT NULL,
+                              I_ID_TIPO_EMPRESA           IN T_MOVIMIENTOS.ID_TIPO_EMPRESA%TYPE DEFAULT NULL,
+                              I_ID_GRUPO                  IN T_MOVIMIENTOS.ID_GRUPO%TYPE DEFAULT NULL,
+                              I_CUIT_TRANSPORTISTA        IN T_MOVIMIENTOS.CUIT_TRANSPORTISTA%TYPE DEFAULT NULL,
+                              I_DATO_AUTORIZADOR          IN T_MOVIMIENTOS.DATO_AUTORIZADOR%TYPE DEFAULT NULL,
+                              I_COD_AUXILIAR              IN T_MOVIMIENTOS.COD_AUXILIAR%TYPE DEFAULT NULL,
+                              I_TIPO_CONTATO              IN T_MOVIMIENTOS.TIPO_CONTRATO%TYPE DEFAULT NULL,
+                              I_FRANJA_HORARIA            IN T_MOVIMIENTOS.FRANJA_HORARIA%TYPE DEFAULT NULL,
+                              I_TIPO_LINEA                IN T_MOVIMIENTOS.TIPO_LINEA%TYPE DEFAULT NULL,
+                              I_ID_SECUENCIA_A_RECTIFICAR IN T_MOVIMIENTOS.ID_SEC_GOBIERNO%TYPE DEFAULT NULL,
+                              I_ID_OPERACION              IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE DEFAULT NULL);
+
+  PROCEDURE SP_LIST_EMPRESAS(O_CURSOR            OUT SYS_REFCURSOR,
+                             I_ID_ADMINISTRADORA IN TRANSPORTE.T_EMPRESAS_X_TIPO.ID_ADMINISTRADORA%TYPE DEFAULT NULL,
+                             I_ID_TIPO_SERVICIO  IN TRANSPORTE.T_TIPOS_EMPRESA.ID_TIPO_EMPRESA%TYPE DEFAULT NULL,
+                             I_CUIL              IN T_USUARIOS_EMPRESAS.CUIL%TYPE);
+
+  PROCEDURE SP_LIST_TIPOS_EMPRESAS(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_PUNTOS_LINEA(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_MOV_EMP_FEC(I_FEC_MOVIMIENTO_DESDE      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_FEC_MOVIMIENTO_HASTA      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_ID_EMPRESA                IN VARCHAR2,
+                                I_LISTA_ID_ORIGEN           IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_DESTINO          IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_ADMINISTRADORA   IN VARCHAR2 DEFAULT NULL,
+                                I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                                I_LISTA_ID_TIPO_EMPRESA     IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_TIPO_SOLICITANTE IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_RESULTADO        IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_VALIDACIONES     IN VARCHAR2 DEFAULT NULL,
+                                I_LIQUIDADO_SN              IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL,
+                                I_CUIT_EMPRESA              IN VARCHAR2 DEFAULT NULL,
+                                I_RECTIFICADO_SN            IN VARCHAR2 DEFAULT NULL,
+                                I_ID_OPERACION              IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE DEFAULT NULL,
+                                O_CURSOR                    OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_MOV_EMPRESA(I_FEC_MOVIMIENTO_DESDE      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_FEC_MOVIMIENTO_HASTA      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_LISTA_ID_EMPRESA          IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_ORIGEN           IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_DESTINO          IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_ADMINISTRADORA   IN VARCHAR2 DEFAULT NULL,
+                                I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                                I_LISTA_ID_TIPO_EMPRESA     IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_TIPO_SOLICITANTE IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_RESULTADO        IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_VALIDACIONES     IN VARCHAR2 DEFAULT NULL,
+                                I_LIQUIDADO_SN              IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL,
+                                I_CUIT_EMPRESA              IN VARCHAR2 DEFAULT NULL,
+                                I_RECTIFICADO_SN            IN VARCHAR2 DEFAULT NULL,
+                                I_ID_OPERACION              IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE DEFAULT NULL,
+                                I_CUIL_USUARIO              IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                O_CURSOR                    OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_MOV_TOTALES(I_FEC_MOVIMIENTO_DESDE      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_FEC_MOVIMIENTO_HASTA      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_LISTA_ID_EMPRESA          IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_ORIGEN           IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_DESTINO          IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_ADMINISTRADORA   IN VARCHAR2 DEFAULT NULL,
+                                I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                                I_LISTA_ID_TIPO_EMPRESA     IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_TIPO_SOLICITANTE IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_RESULTADO        IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_VALIDACIONES     IN VARCHAR2 DEFAULT NULL,
+                                I_LIQUIDADO_SN              IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL,
+                                I_CUIT_EMPRESA              IN VARCHAR2 DEFAULT NULL,
+                                I_RECTIFICADO_SN            IN VARCHAR2 DEFAULT NULL,
+                                I_ID_OPERACION              IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE DEFAULT NULL,
+                                I_CUIL_USUARIO              IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                O_CURSOR                    OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_MOV_EMP_DET(I_FEC_MOVIMIENTO_DESDE      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_FEC_MOVIMIENTO_HASTA      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_ID_EMPRESA                IN T_MOVIMIENTOS.ID_EMPRESA%TYPE,
+                                I_LISTA_ID_ORIGEN           IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_DESTINO          IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_ADMINISTRADORA   IN VARCHAR2 DEFAULT NULL,
+                                I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                                I_LISTA_ID_TIPO_EMPRESA     IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_TIPO_SOLICITANTE IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_RESULTADO        IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_VALIDACIONES     IN VARCHAR2 DEFAULT NULL,
+                                I_LIQUIDADO_SN              IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL,
+                                I_CUIT_EMPRESA              IN VARCHAR2 DEFAULT NULL,
+                                I_RECTIFICADO_SN            IN VARCHAR2 DEFAULT NULL,
+                                I_ID_OPERACION              IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE DEFAULT NULL,
+                                I_CUIL_USUARIO              IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                O_CURSOR                    OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_MAX_COD_VER_GRU(I_ID_ADMINISTRADORA IN T_MOVIMIENTOS.ID_ADMINISTRADORA%TYPE,
+                                    O_CURSOR            OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_MAX_COD_VER_EMP(I_ID_ADMINISTRADORA IN T_MOVIMIENTOS.ID_ADMINISTRADORA%TYPE,
+                                    O_CURSOR            OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_MAX_SECUENCIA_GRUPO(I_ID_ADMINISTRADORA IN T_MOVIMIENTOS.ID_ADMINISTRADORA%TYPE,
+                                        O_CURSOR            OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_ADMINISTRADORAS(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_VALIDACIONES(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_VAL_TOTALIZADAS(I_FEC_MOVIMIENTO_DESDE      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                    I_FEC_MOVIMIENTO_HASTA      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                    I_LISTA_ID_EMPRESA          IN VARCHAR2 DEFAULT NULL,
+                                    I_LISTA_ID_ADMINISTRADORA   IN VARCHAR2 DEFAULT NULL,
+                                    I_LISTA_ID_RESULTADO        IN VARCHAR2 DEFAULT NULL,
+                                    I_LISTA_ID_TIPO_EMPRESA     IN VARCHAR2 DEFAULT NULL,
+                                    I_LISTA_ID_VALIDACIONES     IN VARCHAR2 DEFAULT NULL,
+                                    I_LISTA_ID_TIPO_SOLICITANTE IN VARCHAR2 DEFAULT NULL,
+                                    I_LIQUIDADO_SN              IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL,
+                                    I_CUIT_EMPRESA              IN VARCHAR2 DEFAULT NULL,
+                                    I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                                    O_CURSOR                    OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_GET_AUTORIZACION_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                                    O_CURSOR        OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_GET_BENEFICIARIO_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                                    O_CURSOR        OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_GET_VALIDACIONES_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                                    O_CURSOR        OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_GET_EMP_AUT_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                               O_CURSOR        OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_GET_TAR_AUT_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                               O_CURSOR        OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_GET_TAR_HIS_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                               O_CURSOR        OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_GET_BOLETO_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                              O_CURSOR        OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_GET_RECTIFICATIVAS_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                                      O_CURSOR        OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_GET_LIQUIDACIONES_LIST(I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                      I_PERIODO     IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE DEFAULT NULL,
+                                      I_TIPO_LIQ    IN T_TIPOS_LIQUIDACION.ID_TIPO_LIQUIDACION%TYPE DEFAULT NULL,
+                                      I_EMPRESA     IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE DEFAULT NULL,
+                                      I_FECHA_DESDE IN DATE DEFAULT NULL,
+                                      I_FECHA_HASTA IN DATE DEFAULT NULL,
+                                      I_CUIL        IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                      O_CURSOR      OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_GET_LIQUIDACIONES_DET(I_LOTE    IN T_LIQUIDACIONES.ID_LOTE_LIQUIDACION%TYPE,
+                                     I_TIPO    IN T_LIQUIDACIONES.ID_TIPO_LIQUIDACION%TYPE,
+                                     I_CUIL    IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                     I_EMPRESA IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE DEFAULT NULL,
+                                     O_CURSOR  OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_BORRAR_VALIDACIONES(I_ID_VALIDACION IN T_VALIDACIONES.ID_VALIDACION%TYPE);
+
+  PROCEDURE SP_ALTA_VALIDACION(I_N_VALIDACION      IN T_VALIDACIONES.N_VALIDACION%TYPE,
+                               I_PROCEDIMIENTO     IN T_VALIDACIONES.PROCEDIMIENTO%TYPE,
+                               I_COD_RECHAZO       IN T_VALIDACIONES.COD_RECHAZO%TYPE,
+                               I_PRIORIDAD         IN T_VALIDACIONES_PROGRAMA.PRIORIDAD%TYPE,
+                               I_RECHAZA_SN        IN T_VALIDACIONES_PROGRAMA.RECHAZA_SN%TYPE,
+                               I_LISTA_ID_PROGRAMA IN VARCHAR2 DEFAULT NULL,
+                               I_VIGENCIA_DESDE    IN T_VALIDACIONES_PROGRAMA.VIGENCIA_DESDE%TYPE,
+                               I_VIGENCIA_HASTA    IN T_VALIDACIONES_PROGRAMA.VIGENCIA_HASTA%TYPE,
+                               O_MENSAJE           OUT VARCHAR2);
+
+  PROCEDURE SP_LIST_TURNOS(I_ID_TIPO_SOLICITANTE NUMBER,
+                           I_ID_NIVEL_EDUCATIVO  NUMBER,
+                           I_ID_TIPO_EMPRESA     NUMBER,
+                           O_CURSOR              OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_TURNOS_HORARIO(I_ID_TIPO_SOLICITANTE NUMBER,
+                                   I_ID_NIVEL_EDUCATIVO  NUMBER,
+                                   I_ID_TIPO_EMPRESA     NUMBER,
+                                   I_ID_TURNO            NUMBER,
+                                   O_CURSOR              OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_ROLES_BEG(I_CUIL VARCHAR2, O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_RECTIFICATIVAS(I_ID_MOVIMIENTO_ORIGINAL IN T_RECTIFICATIVAS.ID_SEQ_ORIGINAL%TYPE,
+                                   O_CURSOR                 OUT SYS_REFCURSOR);
+
+END PKG_ARCHIVOS;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_ARCHIVOS IS
+
+  /*******************************************************************
+  * Agrega un movimiento                                             *
+  * Procesa Rectificativas                                           *
+  * Entrypoint principal de boletos                                  *
+  * Se llama desde la API de insercion de boletos                    *
+  *******************************************************************/
+  PROCEDURE SP_ALTA_MOVIMIENTO(I_FEC_MOVIMIENTO             IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                               I_PRECIO                     IN T_MOVIMIENTOS.PRECIO%TYPE DEFAULT NULL,
+                               I_FEC_REGISTRACION           IN T_MOVIMIENTOS.FEC_REGISTRACION%TYPE DEFAULT NULL,
+                               I_ID_ORIGEN                  IN T_MOVIMIENTOS.ID_ORIGEN%TYPE DEFAULT NULL,
+                               I_ID_DESTINO                 IN T_MOVIMIENTOS.ID_DESTINO%TYPE DEFAULT NULL,
+                               I_ID_PROGRAMA                IN T_MOVIMIENTOS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                               I_OBSERVACION                IN T_MOVIMIENTOS.OBSERVACION%TYPE DEFAULT NULL,
+                               I_ID_TARJETA                 IN T_MOVIMIENTOS.ID_TARJETA%TYPE DEFAULT NULL,
+                               I_ID_TIPO_MOVIMIENTO         IN T_MOVIMIENTOS.ID_TIPO_MOVIMIENTO%TYPE DEFAULT NULL,
+                               I_ID_EMPRESA                 IN T_MOVIMIENTOS.ID_EMPRESA%TYPE DEFAULT NULL,
+                               I_CUIL                       IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                               I_CODIGO_VERIFICACION        IN T_MOVIMIENTOS.CODIGO_VERIFICACION%TYPE DEFAULT NULL,
+                               I_UID_TARJETA                IN T_MOVIMIENTOS.UID_TARJETA%TYPE DEFAULT NULL,
+                               I_COD_TIPO_MOVIMIENTO        IN T_MOVIMIENTOS.COD_TIPO_MOVIMIENTO%TYPE DEFAULT NULL,
+                               I_ID_ORIGEN_RECE             IN T_MOVIMIENTOS.ID_ORIGEN_RECE%TYPE DEFAULT NULL,
+                               I_ID_DESTINO_RECE            IN T_MOVIMIENTOS.ID_DESTINO_RECE%TYPE DEFAULT NULL,
+                               I_DESCR_ORIGEN_RECE          IN T_MOVIMIENTOS.DESCR_ORIGEN_RECE%TYPE DEFAULT NULL,
+                               I_DESCR_DESTINO_RECE         IN T_MOVIMIENTOS.DESCR_DESTINO_RECE%TYPE DEFAULT NULL,
+                               I_LATITUD                    IN T_MOVIMIENTOS.LATITUD%TYPE DEFAULT NULL,
+                               I_LONGITUD                   IN T_MOVIMIENTOS.LONGITUD%TYPE DEFAULT NULL,
+                               I_ID_AUTORIZACION            IN T_MOVIMIENTOS.ID_AUTORIZACION%TYPE DEFAULT NULL,
+                               I_NRO_BUS                    IN T_MOVIMIENTOS.NRO_BUS%TYPE DEFAULT NULL,
+                               I_NRO_INTERNO                IN T_MOVIMIENTOS.NRO_INTERNO%TYPE DEFAULT NULL,
+                               I_ID_EXPENDEDORA             IN T_MOVIMIENTOS.ID_EXPENDEDORA%TYPE DEFAULT NULL,
+                               I_ID_ADMINISTRADORA          IN T_MOVIMIENTOS.ID_ADMINISTRADORA%TYPE DEFAULT NULL,
+                               I_ID_TIPO_EMPRESA            IN T_MOVIMIENTOS.ID_TIPO_EMPRESA%TYPE DEFAULT NULL,
+                               I_ID_GRUPO                   IN T_MOVIMIENTOS.ID_GRUPO%TYPE DEFAULT NULL,
+                               I_CUIT_TRANSPORTISTA         IN T_MOVIMIENTOS.CUIT_TRANSPORTISTA%TYPE DEFAULT NULL,
+                               I_DATO_AUTORIZADOR           IN T_MOVIMIENTOS.DATO_AUTORIZADOR%TYPE DEFAULT NULL,
+                               I_ID_MOVIMIENTO_A_RECTIFICAR IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE DEFAULT NULL,
+                               I_ID_OPERACION               IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE DEFAULT NULL,
+                               O_ID_MOVIMIENTO              OUT T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE) IS
+  
+    V_ID_MOVIMIENTO T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE;
+    V_ID_SECUENCIA  T_MOVIMIENTOS.ID_SEC_GOBIERNO%TYPE;
+    V_VERSION       T_MOVIMIENTOS.NRO_VERSION%TYPE;
+    V_ESTADO        T_MOVIMIENTOS.ID_ESTADO%TYPE := 1;
+    V_OBSERVACION   T_MOVIMIENTOS.OBSERVACION%TYPE;
+  
+  BEGIN
+  
+    V_ID_MOVIMIENTO := SEQ_MOVIMIENTOS.NEXTVAL;
+    V_ID_SECUENCIA  := V_ID_MOVIMIENTO;
+    V_VERSION       := 1;
+  
+    -- checkeo si es una rectificativa y si estoy en condiciones de rectificar
+    IF I_ID_MOVIMIENTO_A_RECTIFICAR IS NOT NULL THEN
+    
+      -- debe existir el boleto anterior vigente no liquidado
+      BEGIN
+      
+        SELECT M.NRO_VERSION + 1
+          INTO V_VERSION
+          FROM T_MOVIMIENTOS M
+         WHERE M.ID_MOVIMIENTO = I_ID_MOVIMIENTO_A_RECTIFICAR
+           AND M.ID_ESTADO = 1
+           AND M.LIQUIDADO_SN IS NULL;
+      
+      EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+        
+          V_ESTADO      := 3;
+          V_OBSERVACION := 'Rectificativa rechazada: El boleto anterior vigente (' ||
+                           I_ID_MOVIMIENTO_A_RECTIFICAR ||
+                           ') no existe o se encuentra ya liquidado. ';
+        
+      END;
+    
+      -- si es una rectificativa en condiciones
+      IF V_ESTADO = 1 THEN
+      
+        -- rectifico el boleto anterior
+        INSERT INTO T_RECTIFICATIVAS
+          (ID_SEQ_ORIGINAL, ID_SEQ_RECTIFICADO)
+        VALUES
+          (I_ID_MOVIMIENTO_A_RECTIFICAR, V_ID_SECUENCIA);
+      
+        UPDATE T_MOVIMIENTOS M
+           SET M.ID_ESTADO = 2
+         WHERE M.ID_MOVIMIENTO = I_ID_MOVIMIENTO_A_RECTIFICAR;
+      
+      END IF;
+    
+    END IF;
+  
+    V_OBSERVACION := V_OBSERVACION || I_OBSERVACION;
+  
+    INSERT INTO T_MOVIMIENTOS
+      (ID_MOVIMIENTO,
+       FEC_MOVIMIENTO,
+       PRECIO,
+       FEC_INGRESO,
+       FEC_REGISTRACION,
+       ID_ORIGEN,
+       ID_DESTINO,
+       ID_PROGRAMA,
+       OBSERVACION,
+       ID_TARJETA,
+       ID_TIPO_MOVIMIENTO,
+       ID_EMPRESA,
+       CUIL,
+       CODIGO_VERIFICACION,
+       UID_TARJETA,
+       COD_TIPO_MOVIMIENTO,
+       ID_ORIGEN_RECE,
+       ID_DESTINO_RECE,
+       DESCR_ORIGEN_RECE,
+       DESCR_DESTINO_RECE,
+       LATITUD,
+       LONGITUD,
+       ID_AUTORIZACION,
+       NRO_BUS,
+       NRO_INTERNO,
+       ID_EXPENDEDORA,
+       ID_ADMINISTRADORA,
+       ID_TIPO_EMPRESA,
+       ID_GRUPO,
+       CUIT_TRANSPORTISTA,
+       DATO_AUTORIZADOR,
+       ID_SEC_GOBIERNO,
+       NRO_VERSION,
+       ID_ESTADO)
+    VALUES
+      (V_ID_MOVIMIENTO,
+       I_FEC_MOVIMIENTO,
+       I_PRECIO,
+       SYSDATE,
+       I_FEC_REGISTRACION,
+       I_ID_ORIGEN,
+       I_ID_DESTINO,
+       I_ID_PROGRAMA,
+       V_OBSERVACION,
+       I_ID_TARJETA,
+       I_ID_TIPO_MOVIMIENTO,
+       I_ID_EMPRESA,
+       I_CUIL,
+       I_CODIGO_VERIFICACION,
+       I_UID_TARJETA,
+       I_COD_TIPO_MOVIMIENTO,
+       I_ID_ORIGEN_RECE,
+       I_ID_DESTINO_RECE,
+       I_DESCR_ORIGEN_RECE,
+       I_DESCR_DESTINO_RECE,
+       I_LATITUD,
+       I_LONGITUD,
+       I_ID_AUTORIZACION,
+       I_NRO_BUS,
+       I_NRO_INTERNO,
+       I_ID_EXPENDEDORA,
+       I_ID_ADMINISTRADORA,
+       I_ID_TIPO_EMPRESA,
+       I_ID_GRUPO,
+       I_CUIT_TRANSPORTISTA,
+       I_DATO_AUTORIZADOR,
+       V_ID_SECUENCIA,
+       V_VERSION,
+       V_ESTADO);
+  
+    IF I_ID_OPERACION IS NOT NULL THEN
+    
+      INSERT INTO T_OPERACIONES_MOVIMIENTO
+        (ID_OPERACION, ID_MOVIMIENTO)
+      VALUES
+        (I_ID_OPERACION, V_ID_MOVIMIENTO);
+    
+    END IF;
+  
+    COMMIT;
+  
+    O_ID_MOVIMIENTO := V_ID_MOVIMIENTO;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al Agregar Movimiento. ' || SQLERRM);
+    
+  END SP_ALTA_MOVIMIENTO;
+
+  /****************************************************
+  * Procedimiento anterior que usaban los extractores *
+  * DEPRECAR!!! ##                                    *
+  ****************************************************/
+  PROCEDURE SP_ADD_MOVIMIENTO(I_FEC_MOVIMIENTO            IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE DEFAULT NULL,
+                              I_PASAJES                   IN T_MOVIMIENTOS.PASAJES%TYPE DEFAULT NULL,
+                              I_USUARIO                   IN T_MOVIMIENTOS.USUARIO%TYPE DEFAULT NULL,
+                              I_PRECIO                    IN T_MOVIMIENTOS.PRECIO%TYPE DEFAULT NULL,
+                              I_FEC_INGRESO               IN T_MOVIMIENTOS.FEC_INGRESO%TYPE DEFAULT NULL,
+                              I_FEC_REGISTRACION          IN T_MOVIMIENTOS.FEC_REGISTRACION%TYPE DEFAULT NULL,
+                              I_FEC_VALIDACION            IN T_MOVIMIENTOS.FEC_VALIDACION%TYPE DEFAULT NULL /*## quitar este parametro*/,
+                              I_ID_ORIGEN                 IN T_MOVIMIENTOS.ID_ORIGEN%TYPE DEFAULT NULL,
+                              I_ID_DESTINO                IN T_MOVIMIENTOS.ID_DESTINO%TYPE DEFAULT NULL,
+                              I_ID_PROGRAMA               IN T_MOVIMIENTOS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                              I_OBSERVACION               IN T_MOVIMIENTOS.OBSERVACION%TYPE DEFAULT NULL,
+                              I_ID_BENEFICIARIO_PROG      IN T_MOVIMIENTOS.ID_BENEFICIARIO_PROG%TYPE DEFAULT NULL,
+                              I_ID_TARJETA                IN T_MOVIMIENTOS.ID_TARJETA%TYPE DEFAULT NULL,
+                              I_ID_TIPO_MOVIMIENTO        IN T_MOVIMIENTOS.ID_TIPO_MOVIMIENTO%TYPE DEFAULT NULL,
+                              I_ID_EMPRESA                IN T_MOVIMIENTOS.ID_EMPRESA%TYPE DEFAULT NULL,
+                              I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                              I_CODIGO_TRANSACCION        IN T_MOVIMIENTOS.CODIGO_TRANSACCION%TYPE DEFAULT NULL,
+                              I_CODIGO_VERIFICACION       IN T_MOVIMIENTOS.CODIGO_VERIFICACION%TYPE DEFAULT NULL,
+                              I_UID_TARJETA               IN T_MOVIMIENTOS.UID_TARJETA%TYPE DEFAULT NULL,
+                              I_COD_TIPO_MOVIMIENTO       IN T_MOVIMIENTOS.COD_TIPO_MOVIMIENTO%TYPE DEFAULT NULL,
+                              I_ID_ORIGEN_RECE            IN T_MOVIMIENTOS.ID_ORIGEN_RECE%TYPE DEFAULT NULL,
+                              I_ID_DESTINO_RECE           IN T_MOVIMIENTOS.ID_DESTINO_RECE%TYPE DEFAULT NULL,
+                              I_DESCR_ORIGEN_RECE         IN T_MOVIMIENTOS.DESCR_ORIGEN_RECE%TYPE DEFAULT NULL,
+                              I_DESCR_DESTINO_RECE        IN T_MOVIMIENTOS.DESCR_DESTINO_RECE%TYPE DEFAULT NULL,
+                              I_LATITUD                   IN T_MOVIMIENTOS.LATITUD%TYPE DEFAULT NULL,
+                              I_LONGITUD                  IN T_MOVIMIENTOS.LONGITUD%TYPE DEFAULT NULL,
+                              I_ID_AUTORIZACION           IN T_MOVIMIENTOS.ID_AUTORIZACION%TYPE DEFAULT NULL,
+                              I_NRO_BUS                   IN T_MOVIMIENTOS.NRO_BUS%TYPE DEFAULT NULL,
+                              I_NRO_INTERNO               IN T_MOVIMIENTOS.NRO_INTERNO%TYPE DEFAULT NULL,
+                              I_ID_EXPENDEDORA            IN T_MOVIMIENTOS.ID_EXPENDEDORA%TYPE DEFAULT NULL,
+                              I_ID_ADMINISTRADORA         IN T_MOVIMIENTOS.ID_ADMINISTRADORA%TYPE DEFAULT NULL,
+                              I_ID_TIPO_EMPRESA           IN T_MOVIMIENTOS.ID_TIPO_EMPRESA%TYPE DEFAULT NULL,
+                              I_ID_GRUPO                  IN T_MOVIMIENTOS.ID_GRUPO%TYPE DEFAULT NULL,
+                              I_CUIT_TRANSPORTISTA        IN T_MOVIMIENTOS.CUIT_TRANSPORTISTA%TYPE DEFAULT NULL,
+                              I_DATO_AUTORIZADOR          IN T_MOVIMIENTOS.DATO_AUTORIZADOR%TYPE DEFAULT NULL,
+                              I_COD_AUXILIAR              IN T_MOVIMIENTOS.COD_AUXILIAR%TYPE DEFAULT NULL,
+                              I_TIPO_CONTATO              IN T_MOVIMIENTOS.TIPO_CONTRATO%TYPE DEFAULT NULL,
+                              I_FRANJA_HORARIA            IN T_MOVIMIENTOS.FRANJA_HORARIA%TYPE DEFAULT NULL,
+                              I_TIPO_LINEA                IN T_MOVIMIENTOS.TIPO_LINEA%TYPE DEFAULT NULL,
+                              I_ID_SECUENCIA_A_RECTIFICAR IN T_MOVIMIENTOS.ID_SEC_GOBIERNO%TYPE DEFAULT NULL,
+                              I_ID_OPERACION              IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE DEFAULT NULL) IS
+  
+    V_ID_MOVIMIENTO T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE;
+    V_ID_SECUENCIA  T_MOVIMIENTOS.ID_SEC_GOBIERNO%TYPE;
+    V_VERSION       T_MOVIMIENTOS.NRO_VERSION%TYPE;
+    V_ESTADO        T_MOVIMIENTOS.ID_ESTADO%TYPE := 1;
+    V_OBSERVACION   T_MOVIMIENTOS.OBSERVACION%TYPE;
+  
+  BEGIN
+  
+    DBMS_APPLICATION_INFO.SET_MODULE(MODULE_NAME => 'EXTRACTOR_BEG',
+                                     ACTION_NAME => 'Insertando Boleto: ' ||
+                                                    I_CODIGO_VERIFICACION);
+  
+    V_ID_MOVIMIENTO := SEQ_MOVIMIENTOS.NEXTVAL;
+    V_ID_SECUENCIA  := V_ID_MOVIMIENTO;
+    V_VERSION       := 1;
+  
+    -- checkeo si es una rectificativa y si estoy en condiciones de rectificar
+    IF I_ID_SECUENCIA_A_RECTIFICAR IS NOT NULL THEN
+    
+      -- debe existir el boleto anterior vigente no liquidado
+      BEGIN
+      
+        SELECT M.NRO_VERSION + 1
+          INTO V_VERSION
+          FROM T_MOVIMIENTOS M
+         WHERE M.ID_SEC_GOBIERNO = I_ID_SECUENCIA_A_RECTIFICAR
+           AND M.ID_ESTADO = 1
+           AND M.LIQUIDADO_SN IS NULL;
+      
+      EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+        
+          V_ESTADO      := 3;
+          V_OBSERVACION := 'Rectificativa rechazada: El boleto anterior vigente (' ||
+                           I_ID_SECUENCIA_A_RECTIFICAR ||
+                           ') no existe o se encuentra ya liquidado. ';
+        
+      END;
+    
+      -- si es una rectificativa en condiciones
+      IF V_ESTADO = 1 THEN
+      
+        -- rectifico el boleto anterior
+        INSERT INTO T_RECTIFICATIVAS
+          (ID_SEQ_ORIGINAL, ID_SEQ_RECTIFICADO)
+        VALUES
+          (I_ID_SECUENCIA_A_RECTIFICAR, V_ID_SECUENCIA);
+      
+        UPDATE T_MOVIMIENTOS M
+           SET M.ID_ESTADO = 2
+         WHERE M.ID_SEC_GOBIERNO = I_ID_SECUENCIA_A_RECTIFICAR;
+      
+      END IF;
+    
+    END IF;
+  
+    V_OBSERVACION := V_OBSERVACION || I_OBSERVACION;
+  
+    INSERT INTO T_MOVIMIENTOS
+      (ID_MOVIMIENTO,
+       FEC_MOVIMIENTO,
+       PASAJES,
+       USUARIO,
+       PRECIO,
+       FEC_INGRESO,
+       FEC_REGISTRACION,
+       ID_ORIGEN,
+       ID_DESTINO,
+       ID_PROGRAMA,
+       OBSERVACION,
+       ID_BENEFICIARIO_PROG,
+       ID_TARJETA,
+       ID_TIPO_MOVIMIENTO,
+       ID_EMPRESA,
+       CUIL,
+       CODIGO_TRANSACCION,
+       CODIGO_VERIFICACION,
+       UID_TARJETA,
+       COD_TIPO_MOVIMIENTO,
+       ID_ORIGEN_RECE,
+       ID_DESTINO_RECE,
+       DESCR_ORIGEN_RECE,
+       DESCR_DESTINO_RECE,
+       LATITUD,
+       LONGITUD,
+       ID_AUTORIZACION,
+       NRO_BUS,
+       NRO_INTERNO,
+       ID_EXPENDEDORA,
+       ID_ADMINISTRADORA,
+       ID_TIPO_EMPRESA,
+       ID_GRUPO,
+       CUIT_TRANSPORTISTA,
+       DATO_AUTORIZADOR,
+       COD_AUXILIAR,
+       TIPO_CONTRATO,
+       FRANJA_HORARIA,
+       TIPO_LINEA,
+       ID_SEC_GOBIERNO,
+       NRO_VERSION,
+       ID_ESTADO)
+    VALUES
+      (V_ID_MOVIMIENTO,
+       I_FEC_MOVIMIENTO,
+       I_PASAJES,
+       I_USUARIO,
+       I_PRECIO,
+       I_FEC_INGRESO,
+       I_FEC_REGISTRACION,
+       I_ID_ORIGEN,
+       I_ID_DESTINO,
+       I_ID_PROGRAMA,
+       V_OBSERVACION,
+       I_ID_BENEFICIARIO_PROG,
+       I_ID_TARJETA,
+       I_ID_TIPO_MOVIMIENTO,
+       I_ID_EMPRESA,
+       I_CUIL,
+       I_CODIGO_TRANSACCION,
+       I_CODIGO_VERIFICACION,
+       I_UID_TARJETA,
+       I_COD_TIPO_MOVIMIENTO,
+       I_ID_ORIGEN_RECE,
+       I_ID_DESTINO_RECE,
+       I_DESCR_ORIGEN_RECE,
+       I_DESCR_DESTINO_RECE,
+       I_LATITUD,
+       I_LONGITUD,
+       I_ID_AUTORIZACION,
+       I_NRO_BUS,
+       I_NRO_INTERNO,
+       I_ID_EXPENDEDORA,
+       I_ID_ADMINISTRADORA,
+       I_ID_TIPO_EMPRESA,
+       I_ID_GRUPO,
+       I_CUIT_TRANSPORTISTA,
+       I_DATO_AUTORIZADOR,
+       I_COD_AUXILIAR,
+       I_TIPO_CONTATO,
+       I_FRANJA_HORARIA,
+       I_TIPO_LINEA,
+       V_ID_SECUENCIA,
+       V_VERSION,
+       V_ESTADO);
+  
+    IF I_ID_OPERACION IS NOT NULL THEN
+    
+      INSERT INTO T_OPERACIONES_MOVIMIENTO
+        (ID_OPERACION, ID_MOVIMIENTO)
+      VALUES
+        (I_ID_OPERACION, V_ID_MOVIMIENTO);
+    
+    END IF;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al Agregar Movimiento. ' || SQLERRM);
+  END SP_ADD_MOVIMIENTO;
+
+  /*************************************************
+  * Lista de Empresas                              *
+  * Se usa para armar los filtros de las consultas *
+  *************************************************/
+  PROCEDURE SP_LIST_EMPRESAS(O_CURSOR            OUT SYS_REFCURSOR,
+                             I_ID_ADMINISTRADORA IN TRANSPORTE.T_EMPRESAS_X_TIPO.ID_ADMINISTRADORA%TYPE DEFAULT NULL,
+                             I_ID_TIPO_SERVICIO  IN TRANSPORTE.T_TIPOS_EMPRESA.ID_TIPO_EMPRESA%TYPE DEFAULT NULL,
+                             I_CUIL              IN T_USUARIOS_EMPRESAS.CUIL%TYPE) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT E.ID_EMPRESA, E.RAZON_SOCIAL, E.CUIT, G.ID_GRUPO, G.N_GRUPO
+        FROM TRANSPORTE.T_EMPRESAS        E,
+             TRANSPORTE.T_EMPRESAS_X_TIPO T,
+             TRANSPORTE.T_GRUPOS          G,
+             T_USUARIOS_EMPRESAS          U
+       WHERE U.CUIL = I_CUIL
+         AND T.ID_EMPRESA = E.ID_EMPRESA
+         AND U.ID_EMPRESA = E.ID_EMPRESA
+         AND T.ID_ADMINISTRADORA =
+             NVL(I_ID_ADMINISTRADORA, T.ID_ADMINISTRADORA)
+         AND T.ID_TIPO_EMPRESA = NVL(I_ID_TIPO_SERVICIO, T.ID_TIPO_EMPRESA)
+         AND T.ID_GRUPO = G.ID_GRUPO(+)
+       ORDER BY 2 DESC;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar el listado de empresas. ' ||
+                              SQLERRM);
+  END SP_LIST_EMPRESAS;
+
+  /*************************************************
+  * Lista de Tipos de Servicio                     *
+  * Se usa para armar los filtros de las consultas *
+  * NO SE USA EN BEG                               *
+  *************************************************/
+  PROCEDURE SP_LIST_TIPOS_EMPRESAS(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT ID_TIPO_EMPRESA, N_TIPO_EMPRESA
+        FROM TRANSPORTE.T_TIPOS_EMPRESA
+       ORDER BY 2 DESC;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar el listado de tipos de empresas. ' ||
+                              SQLERRM);
+  END SP_LIST_TIPOS_EMPRESAS;
+
+  /*************************************************
+  * Lista de puntos de linea                       *
+  * Origenes y Destinos combinada                  *
+  * Se usa para armar los filtros de las consultas *
+  *************************************************/
+  PROCEDURE SP_LIST_PUNTOS_LINEA(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT O.ID_ORIGEN ID_PUNTO, O.N_ORIGEN N_PUNTO
+        FROM TRANSPORTE.T_ORIGENES O
+      UNION
+      SELECT D.ID_DESTINO, D.N_DESTINO
+        FROM TRANSPORTE.T_DESTINOS D
+       ORDER BY 2;
+  END SP_LIST_PUNTOS_LINEA;
+
+  /*********************************************************************
+  * Lista de boletos agrupada por fecha de movimiento para una empresa *
+  * Se usa en el detalle por fecha de la consulta de boletos           *
+  * Se consume obligatoriamente por empresa y rango de fechas          *
+  *********************************************************************/
+  PROCEDURE SP_LIST_MOV_EMP_FEC(I_FEC_MOVIMIENTO_DESDE      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_FEC_MOVIMIENTO_HASTA      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_ID_EMPRESA                IN VARCHAR2,
+                                I_LISTA_ID_ORIGEN           IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_DESTINO          IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_ADMINISTRADORA   IN VARCHAR2 DEFAULT NULL,
+                                I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                                I_LISTA_ID_TIPO_EMPRESA     IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_TIPO_SOLICITANTE IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_RESULTADO        IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_VALIDACIONES     IN VARCHAR2 DEFAULT NULL,
+                                I_LIQUIDADO_SN              IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL,
+                                I_CUIT_EMPRESA              IN VARCHAR2 DEFAULT NULL,
+                                I_RECTIFICADO_SN            IN VARCHAR2 DEFAULT NULL,
+                                I_ID_OPERACION              IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE DEFAULT NULL,
+                                O_CURSOR                    OUT SYS_REFCURSOR) IS
+  
+    V_SQL        VARCHAR2(10000);
+    V_SQLFILTROS VARCHAR2(10000);
+  
+  BEGIN
+  
+    IF I_FEC_MOVIMIENTO_DESDE IS NULL OR I_FEC_MOVIMIENTO_HASTA IS NULL OR
+       I_ID_EMPRESA IS NULL THEN
+    
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Debe indicar obligatoriamente rango de fechas y empresa para consumir esta funcionalidad');
+    
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ORIGEN, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_ORIGEN IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_ORIGEN tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_DESTINO, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_DESTINO IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_DESTINO tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ADMINISTRADORA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_ADMINISTRADORA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_EMPRESA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_TIPO_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_SOLICITANTE, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_TIPO_SOLICITANTE IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_TIPO_SOLICITANTE tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_RESULTADO, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_RESULTADO IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_RESULTADO tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_VALIDACIONES, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_VALIDACIONES IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro I_LISTA_ID_VALIDACIONES tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    -- Armar Filtros
+  
+    IF I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_ADMINISTRADORA in( ' ||
+                      I_LISTA_ID_ADMINISTRADORA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_RESULTADO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_RESULTADO in( ' ||
+                      I_LISTA_ID_RESULTADO || ' )';
+    END IF;
+  
+    IF I_CUIL IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.CUIL = ''' || I_CUIL || '''';
+    END IF;
+  
+    IF I_LISTA_ID_ORIGEN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_ORIGEN in( ' ||
+                      I_LISTA_ID_ORIGEN || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_DESTINO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_DESTINO in( ' ||
+                      I_LISTA_ID_DESTINO || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_TIPO_EMPRESA in( ' ||
+                      I_LISTA_ID_TIPO_EMPRESA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_TIPO_SOLICITANTE IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND a.TIPO_SOLICITANTE in( ' ||
+                      I_LISTA_ID_TIPO_SOLICITANTE || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_VALIDACIONES IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS ||
+                      'AND mv.ID_MOVIMIENTO in( SELECT
+                                                           id_movimiento
+                                                         FROM
+                                                           T_MOVIMIENTO_RECHAZO
+                                                         WHERE
+                                                           id_movimiento = mv.id_movimiento
+                                                           AND
+                                                           id_validacion IN(' ||
+                      I_LISTA_ID_VALIDACIONES || ' ) )';
+    END IF;
+  
+    IF I_LIQUIDADO_SN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' and NVL(LIQUIDADO_SN,''N'') = ''' ||
+                      I_LIQUIDADO_SN || ''' ';
+    END IF;
+  
+    IF I_CUIT_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.CUIT_TRANSPORTISTA = ''' ||
+                      I_CUIT_EMPRESA || '''';
+    END IF;
+  
+    IF I_RECTIFICADO_SN IS NOT NULL THEN
+      IF I_RECTIFICADO_SN = 'S' THEN
+        V_SQLFILTROS := V_SQLFILTROS || ' and mv.NRO_VERSION > 1 ';
+      ELSIF I_RECTIFICADO_SN = 'N' THEN
+        V_SQLFILTROS := V_SQLFILTROS || ' and mv.NRO_VERSION = 1 ';
+      END IF;
+    END IF;
+  
+    IF I_ID_OPERACION IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS ||
+                      ' and mv.id_movimiento in (SELECT O.ID_MOVIMIENTO
+                                                                   FROM T_OPERACIONES_MOVIMIENTO O
+                                                                  WHERE O.ID_OPERACION = ' ||
+                      I_ID_OPERACION || ') ';
+    END IF;
+  
+    V_SQL := '
+    SELECT
+      trunc( mv.FEC_MOVIMIENTO ) as FEC_MOVIMIENTO, 
+      sum( mv.PRECIO ) as ImporteReportadoEmpresa,
+	  sum(CASE  
+        WHEN id_resultado = 1 THEN DECODE(NVL(precio_gobierno,0), 0, precio_valorizado, precio_gobierno )
+				WHEN ID_RESULTADO = 2 THEN DECODE(NVL(PRECIO_GOBIERNO,0), 0, PRECIO_VALORIZADO, PRECIO_GOBIERNO)
+        WHEN id_resultado = 4 THEN DECODE(NVL(precio_gobierno,0), 0, precio_valorizado, precio_gobierno )
+				ELSE 0
+		  END) ImporteAPagar,
+      sum( decode( mv.ID_TIPO_MOVIMIENTO, 1, 1, 2, 0, 0 ) ) as Usos,
+      sum( decode( mv.ID_TIPO_MOVIMIENTO, 1, 0, 2, 1, 0 ) ) as Rechazos,
+      sum( decode( mv.ID_RESULTADO, 1, 1, 0 ) ) as Aprobados,
+      sum( decode( mv.ID_RESULTADO, 4, 1, 0 ) ) as ObservadosAprobados,
+      sum( decode( mv.ID_RESULTADO, 2, 1, 0 ) ) as Observados,
+      sum( decode( mv.ID_RESULTADO, 3, 1, 0 ) ) as Rechazados,
+      count( distinct mv.CUIL ) as beneficiarios
+      ,SUM(DECODE(MV.ID_RESULTADO
+             ,1
+             ,NVL(MV.PRECIO_VALORIZADO, 0) + NVL(MV.PRECIO_GOBIERNO, 0)
+             ,0)) VALOR_APROBADO
+      ,SUM(DECODE(MV.ID_RESULTADO
+             ,2
+             ,NVL(MV.PRECIO_VALORIZADO, 0) + NVL(MV.PRECIO_GOBIERNO, 0)
+             ,0)) VALOR_OBSERVADO
+      ,SUM(DECODE(MV.ID_RESULTADO
+             ,3
+             ,NVL(MV.PRECIO_VALORIZADO, 0) + NVL(MV.PRECIO_GOBIERNO, 0)
+             ,0)) VALOR_RECHAZADO
+      ,SUM(DECODE(MV.ID_RESULTADO
+             ,4
+             ,NVL(MV.PRECIO_VALORIZADO, 0) + NVL(MV.PRECIO_GOBIERNO, 0)
+             ,0)) VALOR_OBSERVADO_APROBADO
+    FROM
+      T_MOVIMIENTOS mv
+      LEFT JOIN
+      MAASP_TUNI_TPTE.T_AUTORIZACIONES a ON( a.ID_AUTORIZACION = mv.ID_AUTORIZACION )
+      /*LEFT JOIN
+      ABONO_ESTUDIANTIL.T_SOLICITUDES s ON( s.ID_SOLICITUD = a.ID_SOLICITUD ) */ 
+    WHERE mv.fec_movimiento between trunc(:FD) and trunc(:FH +1) -1/24/60/60
+      and mv.id_empresa = :E
+      AND mv.ID_TIPO_MOVIMIENTO = 1
+      AND mv.ID_ESTADO = 1
+      ' || V_SQLFILTROS || '
+   GROUP BY
+      trunc( mv.FEC_MOVIMIENTO )
+   ORDER BY
+      1';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL
+      USING I_FEC_MOVIMIENTO_DESDE, I_FEC_MOVIMIENTO_HASTA, I_ID_EMPRESA;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar el listado de movimientos agrupados por empresa y fecha. ' ||
+                              SQLERRM);
+  END SP_LIST_MOV_EMP_FEC;
+
+  /********************************
+  * Boletos agrupados por empresa *
+  * ## Verificar donde se usa     *
+  ********************************/
+  PROCEDURE SP_LIST_MOV_EMPRESA(I_FEC_MOVIMIENTO_DESDE      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_FEC_MOVIMIENTO_HASTA      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_LISTA_ID_EMPRESA          IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_ORIGEN           IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_DESTINO          IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_ADMINISTRADORA   IN VARCHAR2 DEFAULT NULL,
+                                I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                                I_LISTA_ID_TIPO_EMPRESA     IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_TIPO_SOLICITANTE IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_RESULTADO        IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_VALIDACIONES     IN VARCHAR2 DEFAULT NULL,
+                                I_LIQUIDADO_SN              IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL,
+                                I_CUIT_EMPRESA              IN VARCHAR2 DEFAULT NULL,
+                                I_RECTIFICADO_SN            IN VARCHAR2 DEFAULT NULL,
+                                I_ID_OPERACION              IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE DEFAULT NULL,
+                                I_CUIL_USUARIO              IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                O_CURSOR                    OUT SYS_REFCURSOR) IS
+  
+    V_SQL        VARCHAR2(10000);
+    V_SQLFILTROS VARCHAR2(10000);
+  
+  BEGIN
+  
+    IF I_FEC_MOVIMIENTO_DESDE IS NULL OR I_FEC_MOVIMIENTO_HASTA IS NULL THEN
+    
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Los parametros de fechas son obligatorios para consumir esta funcionalidad');
+    
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_EMPRESA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_EMPRESA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ORIGEN, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_ORIGEN IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_ORIGEN tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_DESTINO, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_DESTINO IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_DESTINO tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ADMINISTRADORA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_ADMINISTRADORA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_EMPRESA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_TIPO_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_SOLICITANTE, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_TIPO_SOLICITANTE IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_TIPO_SOLICITANTE tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_RESULTADO, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_RESULTADO IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_RESULTADO tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_VALIDACIONES, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_VALIDACIONES IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro I_LISTA_ID_VALIDACIONES tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    -- Armar Filtros
+  
+    IF I_LISTA_ID_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.id_empresa in( ' ||
+                      I_LISTA_ID_EMPRESA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_ADMINISTRADORA in( ' ||
+                      I_LISTA_ID_ADMINISTRADORA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_RESULTADO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_RESULTADO in( ' ||
+                      I_LISTA_ID_RESULTADO || ' )';
+    END IF;
+  
+    IF I_CUIL IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.CUIL = ''' || I_CUIL || '''';
+    END IF;
+  
+    IF I_LISTA_ID_ORIGEN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_ORIGEN in( ' ||
+                      I_LISTA_ID_ORIGEN || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_DESTINO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_DESTINO in( ' ||
+                      I_LISTA_ID_DESTINO || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_TIPO_EMPRESA in( ' ||
+                      I_LISTA_ID_TIPO_EMPRESA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_TIPO_SOLICITANTE IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND a.TIPO_SOLICITANTE in( ' ||
+                      I_LISTA_ID_TIPO_SOLICITANTE || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_VALIDACIONES IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS ||
+                      'AND mv.ID_MOVIMIENTO in( SELECT
+                                                           id_movimiento
+                                                         FROM
+                                                           T_MOVIMIENTO_RECHAZO
+                                                         WHERE
+                                                           id_movimiento = mv.id_movimiento
+                                                           AND
+                                                           id_validacion IN(' ||
+                      I_LISTA_ID_VALIDACIONES || ' ) )';
+    END IF;
+  
+    IF I_LIQUIDADO_SN IS NOT NULL THEN
+    
+      V_SQLFILTROS := V_SQLFILTROS || ' and NVL(LIQUIDADO_SN,''N'') = ''' ||
+                      I_LIQUIDADO_SN || ''' ';
+    
+    END IF;
+  
+    IF I_CUIT_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.CUIT_TRANSPORTISTA = ''' ||
+                      I_CUIT_EMPRESA || '''';
+    END IF;
+  
+    IF I_RECTIFICADO_SN IS NOT NULL THEN
+      IF I_RECTIFICADO_SN = 'S' THEN
+        V_SQLFILTROS := V_SQLFILTROS || ' and mv.NRO_VERSION > 1 ';
+      ELSIF I_RECTIFICADO_SN = 'N' THEN
+        V_SQLFILTROS := V_SQLFILTROS || ' and mv.NRO_VERSION = 1 ';
+      END IF;
+    END IF;
+  
+    IF I_ID_OPERACION IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS ||
+                      ' and mv.id_movimiento in (SELECT O.ID_MOVIMIENTO
+                                                   FROM T_OPERACIONES_MOVIMIENTO O
+                                                  WHERE O.ID_OPERACION = ' ||
+                      I_ID_OPERACION || ') ';
+    END IF;
+  
+    V_SQL := 'SELECT
+                mv.ID_EMPRESA, 
+                nvl( e.RAZON_SOCIAL, ''EMPRESA sin descripcion'' ) as N_EMPRESA, 
+                sum( mv.PRECIO ) as ImporteReportadoEmpresa,
+				sum(CASE WHEN id_resultado = 1 THEN DECODE(NVL(precio_gobierno,0), 0, precio_valorizado, precio_gobierno )
+						 WHEN id_resultado = 4 THEN DECODE(NVL(precio_gobierno,0), 0, precio_valorizado, precio_gobierno )
+						 ELSE 0
+					END) ImporteAPagar,
+                sum( decode( mv.ID_TIPO_MOVIMIENTO, 1, 1, 2, 0, 0 ) ) as Usos,
+                sum( decode( mv.ID_TIPO_MOVIMIENTO, 1, 0, 2, 1, 0 ) ) as Rechazos,
+                count( distinct mv.CUIL ) as Beneficiarios,
+                count( decode( mv.ID_RESULTADO, 1, 1 ) ) as MovimientosAprobados,
+                count( decode( mv.ID_RESULTADO, 4, 1 ) ) as MovimientosObservadosAprobados,
+                count( decode( mv.ID_RESULTADO, 2, 1 ) ) as MovimientosObservados,
+                count( decode( mv.ID_RESULTADO, 3, 1 ) ) as MovimientosRechazados,
+                SUM(DECODE(MV.ID_RESULTADO
+                 ,2
+                 ,NVL(MV.PRECIO_GOBIERNO, 0) + NVL(MV.PRECIO_VALORIZADO, 0)
+                 ,0)) VALORIZADOOBSERVADOS
+              FROM
+                T_MOVIMIENTOS mv
+                LEFT JOIN
+                TRANSPORTE.T_EMPRESAS e ON( mv.ID_EMPRESA = e.ID_EMPRESA )
+                LEFT JOIN
+                MAASP_TUNI_TPTE.T_AUTORIZACIONES a ON( a.ID_AUTORIZACION = mv.ID_AUTORIZACION )
+                LEFT JOIN
+                MAASP_TUNI_TPTE.T_USUARIOS_EMPRESAS U ON (U.ID_EMPRESA=E.ID_EMPRESA)
+              WHERE mv.fec_movimiento between trunc(:FD) and trunc(:FH +1) -1/24/60/60
+                and mv.id_tipo_movimiento = 1 
+                and mv.id_estado = 1
+                AND U.CUIL=' || I_CUIL_USUARIO || '
+                ' || V_SQLFILTROS || '
+              GROUP BY
+                mv.ID_EMPRESA, 
+                e.RAZON_SOCIAL
+              ORDER BY
+                2';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL
+      USING I_FEC_MOVIMIENTO_DESDE, I_FEC_MOVIMIENTO_HASTA;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar el listado de movimientos agrupados por empresa. ' ||
+                              SQLERRM);
+  END SP_LIST_MOV_EMPRESA;
+
+  /*************************************************************
+  * Lista los totales por resultados                           *
+  * Se usa en las cabeceras de los resultados de las consultas *
+  *************************************************************/
+  PROCEDURE SP_LIST_MOV_TOTALES(I_FEC_MOVIMIENTO_DESDE      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_FEC_MOVIMIENTO_HASTA      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_LISTA_ID_EMPRESA          IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_ORIGEN           IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_DESTINO          IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_ADMINISTRADORA   IN VARCHAR2 DEFAULT NULL,
+                                I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                                I_LISTA_ID_TIPO_EMPRESA     IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_TIPO_SOLICITANTE IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_RESULTADO        IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_VALIDACIONES     IN VARCHAR2 DEFAULT NULL,
+                                I_LIQUIDADO_SN              IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL,
+                                I_CUIT_EMPRESA              IN VARCHAR2 DEFAULT NULL,
+                                I_RECTIFICADO_SN            IN VARCHAR2 DEFAULT NULL,
+                                I_ID_OPERACION              IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE DEFAULT NULL,
+                                I_CUIL_USUARIO              IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                O_CURSOR                    OUT SYS_REFCURSOR) IS
+  
+    V_SQL        VARCHAR2(32000);
+    V_SQLFILTROS VARCHAR2(32000);
+  
+  BEGIN
+  
+    IF I_FEC_MOVIMIENTO_DESDE IS NULL OR I_FEC_MOVIMIENTO_HASTA IS NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Deben indicarse los parámetros de fecha para consumir esta funcionalidad');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_EMPRESA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_EMPRESA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ORIGEN, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_ORIGEN IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_ORIGEN tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_DESTINO, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_DESTINO IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_DESTINO tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ADMINISTRADORA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_ADMINISTRADORA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_EMPRESA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_TIPO_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_SOLICITANTE, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_TIPO_SOLICITANTE IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_TIPO_SOLICITANTE tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_RESULTADO, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_RESULTADO IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_RESULTADO tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_VALIDACIONES, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_VALIDACIONES IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro I_LISTA_ID_VALIDACIONES tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    -- Armar Filtros
+  
+    IF I_LISTA_ID_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.id_empresa in( ' ||
+                      I_LISTA_ID_EMPRESA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_ADMINISTRADORA in( ' ||
+                      I_LISTA_ID_ADMINISTRADORA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_RESULTADO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_RESULTADO in( ' ||
+                      I_LISTA_ID_RESULTADO || ' )';
+    END IF;
+  
+    IF I_CUIL IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.CUIL = ''' || I_CUIL || '''';
+    END IF;
+  
+    IF I_LISTA_ID_ORIGEN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_ORIGEN in( ' ||
+                      I_LISTA_ID_ORIGEN || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_DESTINO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_DESTINO in( ' ||
+                      I_LISTA_ID_DESTINO || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_TIPO_EMPRESA in( ' ||
+                      I_LISTA_ID_TIPO_EMPRESA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_TIPO_SOLICITANTE IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS ||
+                      ' AND mv.Id_Autorizacion in ( select id_autorizacion 
+                                 from MAASP_TUNI_TPTE.t_autorizaciones a
+                                where a.id_autorizacion = mv.Id_Autorizacion
+                                  and a.id_tipo_solicitante IN (' ||
+                      I_LISTA_ID_TIPO_SOLICITANTE || ' ))';
+    END IF;
+  
+    IF I_LISTA_ID_VALIDACIONES IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS ||
+                      'AND mv.ID_MOVIMIENTO in( SELECT
+                                                           id_movimiento
+                                                         FROM
+                                                           T_MOVIMIENTO_RECHAZO
+                                                         WHERE
+                                                           id_movimiento = mv.id_movimiento
+                                                           AND
+                                                           id_validacion IN(' ||
+                      I_LISTA_ID_VALIDACIONES || ' ) )';
+    END IF;
+  
+    IF I_LIQUIDADO_SN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' and NVL(LIQUIDADO_SN,''N'') = ''' ||
+                      I_LIQUIDADO_SN || ''' ';
+    END IF;
+  
+    IF I_CUIT_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.CUIT_TRANSPORTISTA = ''' ||
+                      I_CUIT_EMPRESA || '''';
+    END IF;
+  
+    IF I_RECTIFICADO_SN IS NOT NULL THEN
+      IF I_RECTIFICADO_SN = 'S' THEN
+        V_SQLFILTROS := V_SQLFILTROS || ' and mv.NRO_VERSION > 1 ';
+      ELSIF I_RECTIFICADO_SN = 'N' THEN
+        V_SQLFILTROS := V_SQLFILTROS || ' and mv.NRO_VERSION = 1 ';
+      END IF;
+    END IF;
+  
+    IF I_ID_OPERACION IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS ||
+                      ' and mv.id_movimiento in (SELECT O.ID_MOVIMIENTO
+                                           FROM T_OPERACIONES_MOVIMIENTO O
+                                          WHERE O.ID_OPERACION = ' ||
+                      I_ID_OPERACION || ') ';
+    END IF;
+  
+    V_SQL := 'SELECT SUM(CASE
+             WHEN ID_RESULTADO = 1 THEN
+              DECODE(NVL(PRECIO_GOBIERNO, 0), 0, PRECIO_VALORIZADO, PRECIO_GOBIERNO)
+             WHEN ID_RESULTADO = 4 THEN
+              DECODE(NVL(PRECIO_GOBIERNO, 0), 0, PRECIO_VALORIZADO, PRECIO_GOBIERNO)
+             ELSE
+              0
+           END) IMPORTEAPAGAR
+      ,SUM(DECODE(MV.ID_RESULTADO,1,NVL(MV.PRECIO_GOBIERNO,0)+NVL(MV.PRECIO_VALORIZADO,0),0)) VALORIZADOAPROBADOS
+      ,SUM(DECODE(MV.ID_RESULTADO,2,NVL(MV.PRECIO_GOBIERNO,0)+NVL(MV.PRECIO_VALORIZADO,0),0)) VALORIZADOOBSERVADOS
+      ,SUM(DECODE(MV.ID_RESULTADO,3,NVL(MV.PRECIO_GOBIERNO,0)+NVL(MV.PRECIO_VALORIZADO,0),0)) VALORIZADORECHAZADOS
+      ,SUM(DECODE(MV.ID_RESULTADO,4,NVL(MV.PRECIO_GOBIERNO,0)+NVL(MV.PRECIO_VALORIZADO,0),0)) VALORIZADOOBSERVADOSAPROVADOS
+      ,COUNT(DISTINCT MV.CUIL) AS BENEFICIARIOS
+      ,COUNT(DECODE(MV.ID_RESULTADO, 1, 1)) AS MOVIMIENTOSAPROBADOS
+      ,COUNT(DECODE(MV.ID_RESULTADO, 4, 1)) AS MOVIMIENTOSOBSERVADOSAPROBADOS
+      ,SUM(DECODE(MV.ID_RESULTADO, 2, 1, 0)) AS MOVIMIENTOSOBSERVADOS
+      ,SUM(DECODE(MV.ID_RESULTADO, 3, 1, 0)) AS MOVIMIENTOSRECHAZADOS    
+  FROM T_MOVIMIENTOS MV,T_USUARIOS_EMPRESAS U
+ WHERE mv.fec_movimiento between trunc(:FD) and trunc(:FH+1) -1/24/60/60 
+   AND mv.ID_TIPO_MOVIMIENTO = 1 
+   AND mv.ID_ESTADO = 1 
+   AND U.ID_EMPRESA=MV.ID_EMPRESA
+   AND U.CUIL= '||I_CUIL_USUARIO || V_SQLFILTROS;
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL
+      USING I_FEC_MOVIMIENTO_DESDE, I_FEC_MOVIMIENTO_HASTA;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar los totals de movimientos. ' ||
+                              SQLERRM);
+  END SP_LIST_MOV_TOTALES;
+
+  /*********************************************************
+  * Lista de detalle de boletos por empresa                *
+  * Se usa como detalle en las pantallas de consulta       *
+  * Debe consumirse obligadamente por empresa y por fechas *
+  *********************************************************/
+  PROCEDURE SP_LIST_MOV_EMP_DET(I_FEC_MOVIMIENTO_DESDE      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_FEC_MOVIMIENTO_HASTA      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_ID_EMPRESA                IN T_MOVIMIENTOS.ID_EMPRESA%TYPE,
+                                I_LISTA_ID_ORIGEN           IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_DESTINO          IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_ADMINISTRADORA   IN VARCHAR2 DEFAULT NULL,
+                                I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                                I_LISTA_ID_TIPO_EMPRESA     IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_TIPO_SOLICITANTE IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_RESULTADO        IN VARCHAR2 DEFAULT NULL,
+                                I_LISTA_ID_VALIDACIONES     IN VARCHAR2 DEFAULT NULL,
+                                I_LIQUIDADO_SN              IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL,
+                                I_CUIT_EMPRESA              IN VARCHAR2 DEFAULT NULL,
+                                I_RECTIFICADO_SN            IN VARCHAR2 DEFAULT NULL,
+                                I_ID_OPERACION              IN T_OPERACIONES_MOVIMIENTO.ID_OPERACION%TYPE DEFAULT NULL,
+                                I_CUIL_USUARIO              IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                O_CURSOR                    OUT SYS_REFCURSOR) IS
+  
+    V_SQL        VARCHAR2(10000);
+    V_SQLFILTROS VARCHAR2(10000);
+  
+  BEGIN
+  
+    IF I_ID_EMPRESA IS NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro I_ID_EMPRESA es obligatorio');
+    END IF;
+  
+    IF I_FEC_MOVIMIENTO_DESDE IS NULL OR I_FEC_MOVIMIENTO_HASTA IS NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Deben indicarse rangos de fecha para consumir esta funcionalidad');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ORIGEN, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_ORIGEN IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_ORIGEN tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_DESTINO, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_DESTINO IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_DESTINO tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ADMINISTRADORA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_ADMINISTRADORA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_EMPRESA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_TIPO_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_SOLICITANTE, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_TIPO_SOLICITANTE IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_TIPO_SOLICITANTE tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_RESULTADO, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_RESULTADO IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_RESULTADO tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_VALIDACIONES, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_VALIDACIONES IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro I_LISTA_ID_VALIDACIONES tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    -- Armar Filtros
+  
+    IF I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_ADMINISTRADORA in( ' ||
+                      I_LISTA_ID_ADMINISTRADORA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_RESULTADO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_RESULTADO in( ' ||
+                      I_LISTA_ID_RESULTADO || ' )';
+    END IF;
+  
+    IF I_CUIL IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.CUIL = ''' || I_CUIL || '''';
+    END IF;
+  
+    IF I_LISTA_ID_ORIGEN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_ORIGEN in( ' ||
+                      I_LISTA_ID_ORIGEN || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_DESTINO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_DESTINO in( ' ||
+                      I_LISTA_ID_DESTINO || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.ID_TIPO_EMPRESA in( ' ||
+                      I_LISTA_ID_TIPO_EMPRESA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_TIPO_SOLICITANTE IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND a.TIPO_SOLICITANTE in( ' ||
+                      I_LISTA_ID_TIPO_SOLICITANTE || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_VALIDACIONES IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS ||
+                      'AND mv.ID_MOVIMIENTO in( SELECT
+                                                           id_movimiento
+                                                         FROM
+                                                           T_MOVIMIENTO_RECHAZO
+                                                         WHERE
+                                                           id_movimiento = mv.id_movimiento
+                                                           AND
+                                                           id_validacion IN(' ||
+                      I_LISTA_ID_VALIDACIONES || ' ) )';
+    END IF;
+  
+    IF I_LIQUIDADO_SN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' and NVL(LIQUIDADO_SN,''N'') = ''' ||
+                      I_LIQUIDADO_SN || ''' ';
+    END IF;
+  
+    IF I_CUIT_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND mv.CUIT_TRANSPORTISTA = ''' ||
+                      I_CUIT_EMPRESA || '''';
+    END IF;
+  
+    IF I_RECTIFICADO_SN IS NOT NULL THEN
+      IF I_RECTIFICADO_SN = 'S' THEN
+        V_SQLFILTROS := V_SQLFILTROS || ' and mv.NRO_VERSION > 1 ';
+      ELSIF I_RECTIFICADO_SN = 'N' THEN
+        V_SQLFILTROS := V_SQLFILTROS || ' and mv.NRO_VERSION = 1 ';
+      END IF;
+    END IF;
+  
+    IF I_ID_OPERACION IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS ||
+                      ' and mv.id_movimiento in (SELECT O.ID_MOVIMIENTO
+                                       FROM T_OPERACIONES_MOVIMIENTO O
+                                      WHERE O.ID_OPERACION = ' ||
+                      I_ID_OPERACION || ') ';
+    END IF;
+  
+    V_SQL := '
+    SELECT
+      mv.CUIL, 
+      mv.id_movimiento,
+      mv.FEC_MOVIMIENTO,
+      mv.ID_PROGRAMA,
+      NVL(p.N_PROGRAMA,''S/D'') N_PROGRAMA,
+      mv.ID_ORIGEN_RECE,
+      mv.DESCR_ORIGEN_RECE,
+      mv.ID_DESTINO_RECE,
+      mv.DESCR_DESTINO_RECE,
+      mv.ID_BENEFICIARIO_PROG,
+      mv.ID_EMPRESA,
+      nvl( e.RAZON_SOCIAL, ''EMPRESA sin descripcion'' ) as N_EMPRESA,
+      mv.CUIT_TRANSPORTISTA,
+      mv.ID_GRUPO,
+      NVL(g.N_GRUPO,''S/D'') N_GRUPO,
+      mv.ID_ORIGEN, 
+      o.N_ORIGEN,
+      mv.ID_DESTINO, 
+      d.N_DESTINO,
+      ES.N_ESTABLECIMIENTO_EXT as N_ESTABLECIMIENTO,
+      mv.ID_AUTORIZACION, 
+      mv.PRECIO,
+      decode( mv.ID_ADMINISTRADORA, 1, mv.CODIGO_VERIFICACION, mv.COD_AUXILIAR ) as CODIGO_VERIFICACION,
+      decode(mv.id_tipo_solicitante,1,''ALUMNO'',2,''DOCENTE'',3,''PERSONAL APOYO'',''S/D'') as n_tipo_solicitante,
+      decode(mv.NRO_VERSION, 1, ''ORIGINAL'', ''RECTIFICADO'') as RECTIFICADO,
+      (SELECT LISTAGG(REPLACE(VAL.COD_RECHAZO, ''RECH'', ''*''), '''') WITHIN GROUP(ORDER BY VAL.COD_RECHAZO)
+          FROM T_MOVIMIENTO_RECHAZO MR
+              ,T_VALIDACIONES    VAL
+         WHERE MR.ID_MOVIMIENTO = MV.ID_MOVIMIENTO
+           AND MR.ID_VALIDACION = VAL.ID_VALIDACION
+         GROUP BY MR.ID_MOVIMIENTO) AS ERRORES,
+      ID_RESULTADO,
+      decode(mv.id_resultado,1,''Aprobado'',2,''Observado'',3,''No Aprobado'',4,''Obs. Aprobado'', ''S/D'') as n_resultado,
+      mv.ID_TARJETA,
+      mv.UID_TARJETA,
+      te.N_TIPO_EMPRESA,
+      decode(mv.id_administradora,1,''MICRONAUTA'',2,''COINCONTROL'',''S/D'') as N_ADMINISTRADORA,
+      mv.FEC_REGISTRACION,
+      mv.NRO_BUS,
+      mv.FEC_LIQUIDACION,
+      mv.VALIDADO_SN,
+      mv.VALORIZAR_SN,
+      mv.LIQUIDADO_SN,
+      mv.NRO_VERSION,
+      DECODE(MV.ID_RESULTADO
+             ,1
+             ,NVL(MV.PRECIO_VALORIZADO, 0) + NVL(MV.PRECIO_GOBIERNO, 0)
+             ,NULL) VALOR_APROBADO,
+      DECODE(MV.ID_RESULTADO
+             ,2
+             ,NVL(MV.PRECIO_VALORIZADO, 0) + NVL(MV.PRECIO_GOBIERNO, 0)
+             ,NULL) VALOR_OBSERVADO,
+      DECODE(MV.ID_RESULTADO
+             ,3
+             ,NVL(MV.PRECIO_VALORIZADO, 0) + NVL(MV.PRECIO_GOBIERNO, 0)
+             ,NULL) VALOR_RECHAZADO,
+      DECODE(MV.ID_RESULTADO
+             ,4
+             ,NVL(MV.PRECIO_VALORIZADO, 0) + NVL(MV.PRECIO_GOBIERNO, 0)
+             ,NULL) VALOR_OBSERVADO_APROBADO
+     FROM
+      MAASP_TUNI_TPTE.T_MOVIMIENTOS mv,
+      TRANSPORTE.T_EMPRESAS e ,
+      TRANSPORTE.T_GRUPOS g ,
+      MAASP_TUNI_TPTE.T_PROGRAMAS p,
+      TRANSPORTE.T_ORIGENES o ,
+      TRANSPORTE.T_DESTINOS d,
+      MAASP_TUNI_TPTE.T_AUTORIZACIONES a,
+      MAASP_TUNI_TPTE.T_ESTABLECIMIENTOS_EXT es ,
+      TRANSPORTE.T_TIPOS_EMPRESA te,
+      MAASP_TUNI_TPTE.T_EMPADRONADOS EM,
+      MAASP_TUNI_TPTE.T_EDUCACION_ACTUAL EA,
+      MAASP_TUNI_TPTE.T_USUARIOS_EMPRESAS U
+    WHERE mv.ID_EMPRESA = e.ID_EMPRESA(+)
+    AND mv.ID_GRUPO =  g.ID_GRUPO(+)
+    AND mv.ID_PROGRAMA = p.ID_PROGRAMA
+    AND mv.ID_ORIGEN = o.ID_ORIGEN(+) 
+    AND o.FECHA_BAJA IS NULL
+    AND mv.ID_DESTINO = d.ID_DESTINO(+) 
+    AND d.FECHA_BAJA IS NULL
+    AND U.CUIL= '||I_CUIL_USUARIO||
+    ' AND U.ID_EMPRESA=E.ID_EMPRESA
+    AND a.ID_AUTORIZACION = mv.ID_AUTORIZACION(+)
+    AND mv.ID_TIPO_EMPRESA = te.ID_TIPO_EMPRESA(+)
+    AND EA.ID_ESTABLECIMIENTO_EXT=ES.ID_ESTABLECIMIENTO_EXT(+)
+    AND EA.ID_EMPADRONADO(+)=EM.ID_EMPADRONADO
+    AND EM.CUIL(+)=A.CUIL
+    AND MV.FEC_MOVIMIENTO BETWEEN TRUNC( :FD ) AND TRUNC( :FH + 1 ) -1/24/60/60
+    AND MV.ID_EMPRESA = :E 
+    AND MV.ID_TIPO_MOVIMIENTO = 1 
+    AND MV.ID_ESTADO = 1  ' || V_SQLFILTROS;
+  
+   -- DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL
+      USING I_FEC_MOVIMIENTO_DESDE, I_FEC_MOVIMIENTO_HASTA, I_ID_EMPRESA;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar el detalle de movimientos por empresa y fecha. ' ||
+                              SQLERRM);
+  END SP_LIST_MOV_EMP_DET;
+
+  /******************************************************************************
+  * Devuelve el maximo codigo de verificación por grupo para una administradora *
+  * Se usa para inicializar los extractores                                     *
+  ******************************************************************************/
+  -- ## deprecar
+  PROCEDURE SP_LIST_MAX_COD_VER_GRU(I_ID_ADMINISTRADORA IN T_MOVIMIENTOS.ID_ADMINISTRADORA%TYPE,
+                                    O_CURSOR            OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT ID_GRUPO, MAX(CODIGO_VERIFICACION) AS MAX_CODIGO_VERIFICACION
+        FROM T_MOVIMIENTOS
+       WHERE ID_ADMINISTRADORA = I_ID_ADMINISTRADORA
+       GROUP BY ID_GRUPO;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar el listado de maximo codigo de verificacion por grupo. ' ||
+                              SQLERRM);
+  END SP_LIST_MAX_COD_VER_GRU;
+
+  /********************************************************************************
+  * Devuelve el maximo codigo de verificación por empresa para una administradora *
+  * Se usa para inicializar los extractores                                       *
+  ********************************************************************************/
+  -- ## deprecar
+  PROCEDURE SP_LIST_MAX_COD_VER_EMP(I_ID_ADMINISTRADORA IN T_MOVIMIENTOS.ID_ADMINISTRADORA%TYPE,
+                                    O_CURSOR            OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT ID_EMPRESA,
+             MAX(CODIGO_VERIFICACION) AS MAX_CODIGO_VERIFICACION
+        FROM T_MOVIMIENTOS
+       WHERE ID_ADMINISTRADORA = I_ID_ADMINISTRADORA
+       GROUP BY ID_EMPRESA;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar el listado de maximo codigo de verificacion por empresa. ' ||
+                              SQLERRM);
+  END SP_LIST_MAX_COD_VER_EMP;
+
+  /**********************************************************
+  * Devuelve la maxima secuencia por administradora y grupo *
+  * Se usa para inicializar los extractores                 *
+  **********************************************************/
+  PROCEDURE SP_LIST_MAX_SECUENCIA_GRUPO(I_ID_ADMINISTRADORA IN T_MOVIMIENTOS.ID_ADMINISTRADORA%TYPE,
+                                        O_CURSOR            OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT M.ID_GRUPO, MAX(M.ID_SEC_GOBIERNO) MAX_SECUENCIA
+        FROM T_MOVIMIENTOS M
+       WHERE ID_ADMINISTRADORA = I_ID_ADMINISTRADORA
+       GROUP BY M.ID_GRUPO;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar las secuencias maximas por grupo. ' ||
+                              SQLERRM);
+  END SP_LIST_MAX_SECUENCIA_GRUPO;
+
+  /*********************************************
+  * Lista de administaroras                    *
+  * Se usa para armar los filtros de consultas *
+  *********************************************/
+  PROCEDURE SP_LIST_ADMINISTRADORAS(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT A.ID_ADMINISTRADORA, A.N_ADMINISTRADORA, A.DESCRIPCION
+        FROM TRANSPORTE.T_ADMINISTRADORAS A;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar el listado de administradoras. ' ||
+                              SQLERRM);
+  END SP_LIST_ADMINISTRADORAS;
+
+  /***************************************************************************************
+  * Listado de total de boletos y beneficiarios rechazados por validacion                *
+  ****************************************************************************************
+  * Uso Principal:                                                                       *
+  *   Pantalla de Validaciones, dentro de la consulta agrupada de boletos                *
+  *                                                                                      *
+  * Parametros de entrada:                                                               *
+  *   @I_FEC_MOVIMIENTO_DESDE: filtro fecha desde en movimientos                         *
+  *   @I_FEC_MOVIMIENTO_HASTA: filtro fecha hasta en movimientos                         *
+  *   @I_LISTA_ID_EMPRESA    : lista separada por comas de codigos de empresas           *
+  *                            a filtrar en movimientos                                  *
+  *   @I_LISTA_ID_ADMINISTRADORA: lista separada por comas de codigos de administadoras  *
+  *                               a filtrar en movimientos                               *
+  *   @I_LISTA_ID_RESULTADO     : lista separada por comas de codigos de resultados      *
+  *                               a filtrar en movimientos                               *
+  *   @I_LISTA_ID_TIPO_EMPRESA  : lista separada por comas de tipos de empresas          *
+  *                               a filtrar en movimientos                               *
+  *   @I_LISTA_ID_MOTIVO_RECHAZO: lista separada por comas de codigos de motivo de       *
+  *                               rechazo a filtrar en movimiento_rechazo                *
+  *   @I_LISTA_ID_TIPO_SOLICITANTE: lista separada por comas de tipos de solicitante     *
+  *                                 a filtrar en movimientos                             *
+  *   @I_LIQUIDADO_SN             : filtro de liquidación (S/N)                          *
+  *   @I_CUIT_EMPRESA             : filtro de cuit de empresa informado en el            *
+  *                                 movimiento                                           *
+  *   @I_CUIL                     : filtro de cuil del beneficiario informado en el      *
+  *                                 movimiento                                           *
+  *                                                                                      *
+  * Parametros de salida:                                                                *
+  *   @O_CURSOR : Cursor con la consulta resultante de aplicar todos los filtros         *
+  *               Tiene la siguiente estructura:                                         * 
+  *                                                                                      * 
+  *     - ID_VALIDACION         : Numerico, es el codigo identificador de la validacion  *
+  *     - DESCRIPCION_VALIDACION: Alfanumerico, contiene la descripcion de la validacion *
+  *     - BOLETOS               : Numerico, es la cantidad de boletos unicos rechazados  *
+  *                               por esa validacion                                     *
+  *     - BENEFICIARIOS         : Numerico, es la cantidad de beneficierios unicos       *
+  *                               rechazados por esa validacion                          *
+  *                                                                                      *
+  * Usos y recomendaciones:                                                              *
+  *   Se recomienda usar usando al menos uno de los filtros indexados en la tabla de     *
+  *   movimientos, caso contrario el proceso no va a ser preformante                     *
+  *                                                                                      *
+  ***************************************************************************************/
+  PROCEDURE SP_LIST_VAL_TOTALIZADAS(I_FEC_MOVIMIENTO_DESDE      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                    I_FEC_MOVIMIENTO_HASTA      IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                    I_LISTA_ID_EMPRESA          IN VARCHAR2 DEFAULT NULL,
+                                    I_LISTA_ID_ADMINISTRADORA   IN VARCHAR2 DEFAULT NULL,
+                                    I_LISTA_ID_RESULTADO        IN VARCHAR2 DEFAULT NULL,
+                                    I_LISTA_ID_TIPO_EMPRESA     IN VARCHAR2 DEFAULT NULL,
+                                    I_LISTA_ID_VALIDACIONES     IN VARCHAR2 DEFAULT NULL,
+                                    I_LISTA_ID_TIPO_SOLICITANTE IN VARCHAR2 DEFAULT NULL,
+                                    I_LIQUIDADO_SN              IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL,
+                                    I_CUIT_EMPRESA              IN VARCHAR2 DEFAULT NULL,
+                                    I_CUIL                      IN T_MOVIMIENTOS.CUIL%TYPE DEFAULT NULL,
+                                    O_CURSOR                    OUT SYS_REFCURSOR) IS
+  
+    V_SQL        VARCHAR2(32000);
+    V_SQLFILTROS VARCHAR2(32000);
+  
+  BEGIN
+  
+    IF I_FEC_MOVIMIENTO_DESDE IS NULL OR I_FEC_MOVIMIENTO_HASTA IS NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Debe indicarse ambas fechas de vigencia para consumir esta funcionalidad');
+    END IF;
+  
+    -- controles de consistencia de parametros
+    IF NOT REGEXP_LIKE(I_LISTA_ID_EMPRESA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_EMPRESA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ADMINISTRADORA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_ADMINISTRADORA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_RESULTADO, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_RESULTADO IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_ADMINISTRADORA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_EMPRESA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_TIPO_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_VALIDACIONES, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_VALIDACIONES IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro I_LISTA_ID_VALIDACIONES tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_SOLICITANTE, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_TIPO_SOLICITANTE IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_TIPO_SOLICITANTE tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    -- Filtros
+  
+    -- lista de empresas
+    IF I_LISTA_ID_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' and t.id_empresa in( ' ||
+                      I_LISTA_ID_EMPRESA || ' )';
+    END IF;
+  
+    -- lista de empresas administradoras
+    IF I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' and T.ID_ADMINISTRADORA in( ' ||
+                      I_LISTA_ID_ADMINISTRADORA || ' )';
+    END IF;
+  
+    -- lista de resultados
+    IF I_LISTA_ID_RESULTADO IS NOT NULL THEN
+    
+      V_SQLFILTROS := V_SQLFILTROS || ' and t.ID_RESULTADO in( ' ||
+                      I_LISTA_ID_RESULTADO || ' )';
+    END IF;
+  
+    -- lista de tipo de empresa
+    IF I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+    
+      V_SQLFILTROS := V_SQLFILTROS || ' and ID_TIPO_EMPRESA in( ' ||
+                      I_LISTA_ID_TIPO_EMPRESA || ' )';
+    END IF;
+  
+    -- lista de tipos de solicitante
+    IF I_LISTA_ID_TIPO_SOLICITANTE IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' and t.ID_TIPO_SOLICITANTE in( ' ||
+                      I_LISTA_ID_TIPO_SOLICITANTE || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_VALIDACIONES IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND V.ID_VALIDACION IN(' ||
+                      I_LISTA_ID_VALIDACIONES || ')';
+    END IF;
+  
+    IF I_CUIL IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' and T.CUIL = ''' || I_CUIL || '''';
+    END IF;
+  
+    IF I_LIQUIDADO_SN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' and NVL(LIQUIDADO_SN,''N'') = ''' ||
+                      I_LIQUIDADO_SN || ''' ';
+    END IF;
+  
+    IF I_CUIT_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' and T.CUIT_TRANSPORTISTA = ''' ||
+                      I_CUIT_EMPRESA || '''';
+    END IF;
+  
+    V_SQL := '
+    SELECT V.ID_VALIDACION
+          ,V.N_VALIDACION DESCRIPCION_VALIDACION
+          ,COUNT(T.ID_MOVIMIENTO) BOLETOS
+          ,COUNT(DISTINCT T.CUIL) BENEFICIARIOS
+      FROM T_VALIDACIONES       V
+          ,T_MOVIMIENTO_RECHAZO M
+          ,T_MOVIMIENTOS        T
+     WHERE T.FEC_MOVIMIENTO BETWEEN TRUNC(:FD) AND TRUNC(:FH+1) -1/24/60/60
+       AND M.ID_VALIDACION = V.ID_VALIDACION
+       AND M.ID_MOVIMIENTO = T.ID_MOVIMIENTO
+       ' || V_SQLFILTROS || '
+     GROUP BY V.ID_VALIDACION
+             ,V.N_VALIDACION
+     ORDER BY 1';
+  
+    OPEN O_CURSOR FOR V_SQL
+      USING I_FEC_MOVIMIENTO_DESDE, I_FEC_MOVIMIENTO_HASTA;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de validaciones totalizadas. ' ||
+                              SQLERRM);
+    
+  END SP_LIST_VAL_TOTALIZADAS;
+
+  /****************************************************************** 
+  * Devuelve los detalles de una autorizacion a partir de un boleto *
+  * Se usa en las ventanas de detalle                               *
+  ******************************************************************/
+  PROCEDURE SP_GET_AUTORIZACION_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                                    O_CURSOR        OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR WITH T_PUNTOS_LINEA AS(
+      SELECT O.ID_ORIGEN ID_PUNTO, O.N_ORIGEN N_PUNTO
+        FROM TRANSPORTE.T_ORIGENES O
+      UNION
+      SELECT D.ID_DESTINO, D.N_DESTINO
+        FROM TRANSPORTE.T_DESTINOS D)
+      SELECT A.ID_AUTORIZACION,
+             A.FEC_DESDE FECHA_ALTA
+             -- ,A.ID_SOLICITUD
+            ,
+             TS.ID_PROGRAMA
+             -- ,A.PRECIO
+            ,
+             A.ID_EMPRESA,
+             NVL(E.RAZON_SOCIAL, 'SIN DATOS') RAZON_SOCIAL,
+             EXT.ID_TIPO_EMPRESA,
+             T.N_TIPO_EMPRESA,
+             EXT.ID_GRUPO,
+             NVL(G.N_GRUPO, 'SIN DATOS') N_GRUPO,
+             A.INICIO_FRANJA_HORARIA,
+             A.FINAL_FRANJA_HORARIA,
+             A.ID_ORIGEN,
+             NVL((SELECT P.N_PUNTO
+                   FROM T_PUNTOS_LINEA P
+                  WHERE ID_PUNTO = A.ID_ORIGEN),
+                 'SIN DATOS') N_ORIGEN,
+             A.ID_DESTINO,
+             NVL((SELECT P.N_PUNTO
+                   FROM T_PUNTOS_LINEA P
+                  WHERE ID_PUNTO = A.ID_DESTINO),
+                 'SIN DATOS') N_DESTINO
+             --,A.COMPLEMENTO  ---VER
+             -- ,A.VENCIMIENTO_TRAMO
+            ,
+             A.FEC_HASTA          VENCIMIENTO_TRAMO,
+             A.CANT_USO_X_DIA,
+             A.CANT_USO_X_MES,
+             A.CANT_USO_X_DIA_SEM
+        FROM T_MOVIMIENTOS                       M,
+             MAASP_TUNI_TPTE.T_AUTORIZACIONES    A,
+             TRANSPORTE.T_EMPRESAS               E,
+             TRANSPORTE.T_EMPRESAS_X_TIPO        EXT,
+             TRANSPORTE.T_TIPOS_EMPRESA          T,
+             TRANSPORTE.T_GRUPOS                 G,
+             MAASP_TUNI_TPTE.T_TIPOS_SOLICITANTE TS
+       WHERE M.ID_MOVIMIENTO = I_ID_MOVIMIENTO
+         AND A.ID_AUTORIZACION = M.ID_AUTORIZACION
+         AND EXT.ID_EMPRESA(+) = A.ID_EMPRESA
+         AND T.ID_TIPO_EMPRESA = EXT.ID_TIPO_EMPRESA
+         AND E.ID_EMPRESA(+) = A.ID_EMPRESA
+         AND G.ID_GRUPO(+) = EXT.ID_GRUPO
+         AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE;
+  
+  END SP_GET_AUTORIZACION_DET;
+
+  /*************************************************************** 
+  * Devuelve los detalles del beneficiario a partir de un boleto *
+  * Se usa en las ventanas de detalle                            *
+  ***************************************************************/
+  PROCEDURE SP_GET_BENEFICIARIO_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE 
+                                   ,
+                                    O_CURSOR        OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    -- los datos que faltan han de buscarse en el front con la API de CIDI
+    OPEN O_CURSOR FOR
+    /*  SELECT S.ID_BENEFICIARIO,
+                                                         A.CUIL,
+                                                         S.ID_TIPO_SOLICITANTE,
+                                                         S.ID_NIVEL_EDUCATIVO,
+                                                         S.ID_ESTABLECIMIENTO,
+                                                         S.GRADO_ANIO,
+                                                         S.ID_TURNO,
+                                                         S.CICLO_LECTIVO,
+                                                         S.ID_FACULTAD,
+                                                         NVL(U.N_FACULTAD, 'SIN DATOS') N_FACULTAD,
+                                                         S.ID_CARRERA,
+                                                         NVL(U.N_CARRERA, 'SIN DATOS') N_CARRERA,
+                                                         S.EXCEPTUADA
+                                                    FROM T_MOVIMIENTOS                       M,
+                                                         TARJUNI_TRANSP.T_AUTORIZACIONES     A,
+                                                         ABONO_ESTUDIANTIL.T_SOLICITUDES     S,
+                                                         T_COMUNES.VT_UNIVERSIDADES_CARRERAS U
+                                                   WHERE M.ID_MOVIMIENTO = I_ID_MOVIMIENTO
+                                                     AND M.ID_AUTORIZACION = A.ID_AUTORIZACION
+                                                     AND A.ID_SOLICITUD = S.ID_SOLICITUD
+                                                     AND U.ID_FACULTAD(+) = S.ID_FACULTAD
+                                                     AND U.ID_CARRERA(+) = S.ID_CARRERA;*/
+    
+      SELECT EM.ID_EMPADRONADO,
+             EM.CUIL,
+             A.ID_TIPO_SOLICITANTE,
+             A.ID_NIVEL_EDUCATIVO,
+             E.ID_ESTABLECIMIENTO_EXT,
+             EA.CURSO,
+             AG.HORA_DESDE,
+             AG.HORA_HASTA,
+             EA.CICLO,
+             F.ID_FACULTAD_EXT,
+             F.N_FACULTAD_EXT,
+             C.ID_CARRERA_EXT,
+             C.N_CARRERA_EXT
+        FROM MAASP_TUNI_TPTE.T_EMPADRONADOS         EM,
+             MAASP_TUNI_TPTE.T_EDUCACION_ACTUAL     EA,
+             MAASP_TUNI_TPTE.T_ESTABLECIMIENTOS_EXT E,
+             MAASP_TUNI_TPTE.T_FACULTADES_EXT       F,
+             MAASP_TUNI_TPTE.T_CARRERAS_EXT         C,
+             MAASP_TUNI_TPTE.T_AUTORIZACIONES       A,
+             MAASP_TUNI_TPTE.T_MOVIMIENTOS          M,
+             MAASP_TUNI_TPTE.T_AGENDA_EDUCATIVA     AG
+       WHERE EM.ID_EMPADRONADO = EA.ID_EMPADRONADO(+)
+         AND EA.ID_ESTABLECIMIENTO_EXT = E.ID_ESTABLECIMIENTO_EXT(+)
+         AND EA.ID_FACULTAD_EXT = F.ID_FACULTAD_EXT(+)
+         AND EA.ID_CARRERA_EXT = C.ID_CARRERA_EXT(+)
+         AND EM.CUIL(+) = A.CUIL
+         AND M.ID_AUTORIZACION(+) = A.ID_AUTORIZACION
+         AND AG.ID_EDUCACION_ACTUAL(+) = EA.ID_EDUCACION_ACTUAL
+         AND M.ID_MOVIMIENTO = I_ID_MOVIMIENTO;
+  
+  END SP_GET_BENEFICIARIO_DET;
+
+  /****************************************************************** 
+  * Devuelve los detalles de las validaciones que no paso un boleto *
+  * Se usa en las ventanas de detalle                               *
+  ******************************************************************/
+  PROCEDURE SP_GET_VALIDACIONES_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                                    O_CURSOR        OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT V.COD_RECHAZO, V.ID_VALIDACION, V.N_VALIDACION
+        FROM T_MOVIMIENTO_RECHAZO M, T_VALIDACIONES V
+       WHERE M.ID_MOVIMIENTO = I_ID_MOVIMIENTO
+         AND M.ID_VALIDACION = V.ID_VALIDACION;
+  
+  END SP_GET_VALIDACIONES_DET;
+
+  /*********************************************************** 
+  * Devuelve los detalles de la empresa autorizada de boleto *
+  * Se usa en las ventanas de detalle                        *
+  ***********************************************************/
+  PROCEDURE SP_GET_EMP_AUT_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                               O_CURSOR        OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT E.ID_EMPRESA,
+             E.RAZON_SOCIAL,
+             G.ID_GRUPO ID_GRUPO,
+             NVL(G.N_GRUPO, 'SIN DATOS') N_GRUPO,
+             X.ID_TIPO_EMPRESA,
+             D.N_ADMINISTRADORA
+        FROM T_MOVIMIENTOS                    M,
+             MAASP_TUNI_TPTE.T_AUTORIZACIONES A,
+             TRANSPORTE.T_EMPRESAS            E,
+             TRANSPORTE.T_EMPRESAS_X_TIPO     X,
+             TRANSPORTE.T_GRUPOS              G,
+             TRANSPORTE.T_ADMINISTRADORAS     D
+       WHERE M.ID_MOVIMIENTO = I_ID_MOVIMIENTO
+         AND M.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND A.ID_EMPRESA = E.ID_EMPRESA
+         AND E.ID_EMPRESA = X.ID_EMPRESA
+         AND X.ID_GRUPO = G.ID_GRUPO(+)
+         AND X.ID_ADMINISTRADORA = D.ID_ADMINISTRADORA;
+  
+  END SP_GET_EMP_AUT_DET;
+
+  /*********************************************************** 
+  * Devuelve los detalles de la tarjeta autorizada de boleto *
+  * Se usa en las ventanas de detalle                        *
+  ***********************************************************/
+  PROCEDURE SP_GET_TAR_AUT_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                               O_CURSOR        OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT T.UIDS,
+             T.NRO_SERIE       NUMERO_SERIE,
+             T.FEC_VENCIMIENTO VENCIMIENTO_PLASTICO,
+             T.FEC_GRABACION   FECHA_GRABACION
+        FROM MAASP_TUNI_TPTE.T_MOVIMIENTOS           M,
+             MAASP_TUNI_TPTE.T_AUTORIZACIONES        A,
+             MAASP_TUNI_TPTE.T_TARJETAS_AUTORIZACION TA,
+             MAASP_TUNI_TPTE.T_TARJETAS              T
+       WHERE M.ID_MOVIMIENTO = I_ID_MOVIMIENTO
+         AND M.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND TA.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND TA.ID_TARJETA = T.ID_TARJETA
+         AND TA.FEC_HASTA IS NULL;
+  
+  END SP_GET_TAR_AUT_DET;
+
+  /******************************************************************* 
+  * Devuelve el historico de tarjetas para la solicitud de un boleto *
+  * Se usa en las ventanas de detalle                                *
+  *******************************************************************/
+  PROCEDURE SP_GET_TAR_HIS_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                               O_CURSOR        OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT T.NRO_SERIE, T.UIDS, TA.FEC_DESDE, TA.FEC_HASTA
+        FROM T_MOVIMIENTOS                           M,
+             MAASP_TUNI_TPTE.T_AUTORIZACIONES        A,
+             MAASP_TUNI_TPTE.T_TARJETAS_AUTORIZACION TA,
+             MAASP_TUNI_TPTE.T_TARJETAS              T
+       WHERE M.ID_MOVIMIENTO = I_ID_MOVIMIENTO
+         AND M.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND A.ID_AUTORIZACION = TA.ID_AUTORIZACION
+         AND TA.ID_TARJETA = T.ID_TARJETA
+       ORDER BY FEC_DESDE DESC;
+  
+  END SP_GET_TAR_HIS_DET;
+
+  /************************************* 
+  * Devuelve los detalles de un boleto *
+  * Se usa en las ventanas de detalle  *
+  *************************************/
+  PROCEDURE SP_GET_BOLETO_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                              O_CURSOR        OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR WITH T_PUNTOS_LINEA AS(
+      SELECT O.ID_ORIGEN ID_PUNTO, O.N_ORIGEN N_PUNTO
+        FROM TRANSPORTE.T_ORIGENES O
+      UNION
+      SELECT D.ID_DESTINO, D.N_DESTINO
+        FROM TRANSPORTE.T_DESTINOS D)
+      SELECT M.FEC_MOVIMIENTO,
+             M.ID_AUTORIZACION,
+             M.CUIL,
+             M.ID_EMPRESA,
+             (SELECT E.RAZON_SOCIAL
+                FROM TRANSPORTE.T_EMPRESAS E
+               WHERE E.ID_EMPRESA = M.ID_EMPRESA) RAZON_SOCIAL,
+             M.ID_ADMINISTRADORA,
+             (SELECT A.N_ADMINISTRADORA
+                FROM TRANSPORTE.T_ADMINISTRADORAS A
+               WHERE A.ID_ADMINISTRADORA = M.ID_ADMINISTRADORA) N_ADMINISTRADORA,
+             M.ID_GRUPO,
+             NVL(M.PRECIO_GOBIERNO, 0) + NVL(M.PRECIO_VALORIZADO, 0) MONTO,
+             M.VALIDADO_SN,
+             M.VALORIZAR_SN,
+             M.LIQUIDADO_SN,
+             M.OBSERVACION,
+             M.ID_RESULTADO,
+             M.ID_PROGRAMA,
+             M.CODIGO_VERIFICACION,
+             M.FEC_REGISTRACION,
+             M.ID_ORIGEN,
+             NVL((SELECT N_PUNTO
+                   FROM T_PUNTOS_LINEA
+                  WHERE ID_PUNTO = M.ID_ORIGEN),
+                 'SIN DATOS') DESC_ORIGEN,
+             M.ID_DESTINO,
+             NVL((SELECT N_PUNTO
+                   FROM T_PUNTOS_LINEA
+                  WHERE ID_PUNTO = M.ID_DESTINO),
+                 'SIN DATOS') DESC_DESTINO,
+             M.ID_TARJETA,
+             M.NRO_BUS,
+             M.FEC_LIQUIDACION,
+             M.NRO_VERSION
+        FROM T_MOVIMIENTOS M
+       WHERE M.ID_MOVIMIENTO = I_ID_MOVIMIENTO;
+  
+  END SP_GET_BOLETO_DET;
+
+  /******************************************************* 
+  * Devuelve el historial de Rectificativas de un boleto *
+  * Se usa en las ventanas de detalle                    *
+  *******************************************************/
+  PROCEDURE SP_GET_RECTIFICATIVAS_DET(I_ID_MOVIMIENTO IN T_MOVIMIENTOS.ID_MOVIMIENTO%TYPE,
+                                      O_CURSOR        OUT SYS_REFCURSOR) IS
+  
+    V_ID_SECUENCIA T_MOVIMIENTOS.ID_SEC_GOBIERNO%TYPE;
+  
+  BEGIN
+  
+    SELECT M.ID_SEC_GOBIERNO
+      INTO V_ID_SECUENCIA
+      FROM T_MOVIMIENTOS M
+     WHERE M.ID_MOVIMIENTO = I_ID_MOVIMIENTO;
+  
+    -- ## falta definir cuales campos se van a devolver
+  
+    OPEN O_CURSOR FOR WITH HISTORIAL AS(
+      SELECT ID_SEQ_ORIGINAL, ID_SEQ_RECTIFICADO
+        FROM T_RECTIFICATIVAS R
+       START WITH R.ID_SEQ_RECTIFICADO = V_ID_SECUENCIA
+      CONNECT BY PRIOR R.ID_SEQ_ORIGINAL = R.ID_SEQ_RECTIFICADO)
+        SELECT DISTINCT M.ID_MOVIMIENTO,
+              M.ID_SEC_GOBIERNO,
+              M.NRO_VERSION,
+              M.ID_ESTADO,
+              ID_TIPO_MOVIMIENTO,
+              ID_EMPRESA,
+              ID_TIPO_EMPRESA
+          FROM T_MOVIMIENTOS M, HISTORIAL H
+         WHERE M.ID_SEC_GOBIERNO IN
+               (H.ID_SEQ_ORIGINAL, H.ID_SEQ_RECTIFICADO)
+         ORDER BY M.NRO_VERSION;
+  
+  
+  END SP_GET_RECTIFICATIVAS_DET;
+
+  /*******************************************************
+  * Devuelve todas las liquidaciones agrupadas por lote. *
+  * Se usa en la pantalla de consulta de liquidaciones   *
+  *******************************************************/
+  PROCEDURE SP_GET_LIQUIDACIONES_LIST(I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                      I_PERIODO     IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE DEFAULT NULL,
+                                      I_TIPO_LIQ    IN T_TIPOS_LIQUIDACION.ID_TIPO_LIQUIDACION%TYPE DEFAULT NULL,
+                                      I_EMPRESA     IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE DEFAULT NULL,
+                                      I_FECHA_DESDE IN DATE DEFAULT NULL,
+                                      I_FECHA_HASTA IN DATE DEFAULT NULL,
+                                      I_CUIL        IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                      O_CURSOR      OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+    /*  SELECT L.ID_PROGRAMA,
+                         R.N_PROGRAMA,
+                         L.ID_PERIODO,
+                         P.N_PERIODO,
+                         L.ID_LOTE_LIQUIDACION,
+                         L.ID_TIPO_LIQUIDACION,
+                         T.N_TIPO_LIQUIDACION,
+                         MIN(TRUNC(L.FEC_LIQUIDACION)) FECHA_LIQUIDACION,
+                         L.USR_LIQUIDACION,
+                         SUM(L.CANT_USOS + L.CANT_OBS_APROB) BOLETOS_LIQUIDADOS,
+                         SUM(L.MONTO_LIQUIDADO) MONTO
+                    FROM T_LIQUIDACIONES        L,
+                         T_PERIODOS_LIQUIDACION P,
+                         T_TIPOS_LIQUIDACION    T,
+                         T_PROGRAMAS            R
+                   WHERE P.ID_PERIODO = L.ID_PERIODO
+                     AND T.ID_TIPO_LIQUIDACION = L.ID_TIPO_LIQUIDACION
+                     AND L.ID_PROGRAMA = R.ID_PROGRAMA
+                     AND L.ID_PROGRAMA = NVL(I_ID_PROGRAMA, L.ID_PROGRAMA)
+                   GROUP BY L.ID_PROGRAMA,
+                            R.N_PROGRAMA,
+                            L.ID_PERIODO,
+                            P.N_PERIODO,
+                            L.ID_LOTE_LIQUIDACION,
+                            L.ID_TIPO_LIQUIDACION,
+                            T.N_TIPO_LIQUIDACION,
+                            L.USR_LIQUIDACION
+                   ORDER BY L.ID_PERIODO, L.ID_LOTE_LIQUIDACION;*/
+      SELECT L.ID_PROGRAMA,
+             R.N_PROGRAMA,
+             L.ID_PERIODO,
+             P.N_PERIODO,
+             L.ID_LOTE_LIQUIDACION,
+             L.ID_TIPO_LIQUIDACION,
+             T.N_TIPO_LIQUIDACION,
+             MIN(TRUNC(L.FEC_LIQUIDACION)) FECHA_LIQUIDACION,
+             L.USR_LIQUIDACION,
+             SUM(L.CANT_USOS + L.CANT_OBS_APROB) BOLETOS_LIQUIDADOS,
+             SUM(L.MONTO_LIQUIDADO) MONTO
+        FROM T_LIQUIDACIONES        L,
+             T_PERIODOS_LIQUIDACION P,
+             T_TIPOS_LIQUIDACION    T,
+             T_PROGRAMAS            R,
+             TRANSPORTE.T_EMPRESAS  E,
+             T_USUARIOS_EMPRESAS    U
+       WHERE P.ID_PERIODO = L.ID_PERIODO
+         AND U.CUIL = I_CUIL
+         AND E.ID_EMPRESA = U.ID_EMPRESA
+         AND T.ID_TIPO_LIQUIDACION = L.ID_TIPO_LIQUIDACION
+         AND L.ID_PROGRAMA = R.ID_PROGRAMA
+         AND L.ID_EMPRESA = E.ID_EMPRESA
+         AND L.ID_PROGRAMA = NVL(I_ID_PROGRAMA, L.ID_PROGRAMA)
+         AND P.ID_PERIODO = NVL(I_PERIODO, P.ID_PERIODO)
+         AND T.ID_TIPO_LIQUIDACION = NVL(I_TIPO_LIQ, T.ID_TIPO_LIQUIDACION)
+         AND L.ID_EMPRESA = NVL(I_EMPRESA, L.ID_EMPRESA)
+         AND TRUNC(L.FEC_LIQUIDACION) BETWEEN
+             TRUNC(NVL(I_FECHA_DESDE, L.FEC_LIQUIDACION)) AND
+             TRUNC(NVL(I_FECHA_HASTA, SYSDATE))
+       GROUP BY L.ID_PROGRAMA,
+                R.N_PROGRAMA,
+                L.ID_PERIODO,
+                P.N_PERIODO,
+                L.ID_LOTE_LIQUIDACION,
+                L.ID_TIPO_LIQUIDACION,
+                T.N_TIPO_LIQUIDACION,
+                L.USR_LIQUIDACION
+       ORDER BY L.ID_PERIODO, L.ID_LOTE_LIQUIDACION;
+  
+  END SP_GET_LIQUIDACIONES_LIST;
+
+  /*****************************************************
+  * Devuelve el detalle de un lote de liquidación.     *
+  * Se usa en la pantalla de consulta de liquidaciones *
+  *****************************************************/
+  PROCEDURE SP_GET_LIQUIDACIONES_DET(I_LOTE    IN T_LIQUIDACIONES.ID_LOTE_LIQUIDACION%TYPE,
+                                     I_TIPO    IN T_LIQUIDACIONES.ID_TIPO_LIQUIDACION%TYPE,
+                                     I_CUIL    IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                     I_EMPRESA IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE DEFAULT NULL,
+                                     O_CURSOR  OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT T.N_TIPO_EMPRESA, E.CUIT, E.RAZON_SOCIAL, L.MONTO_LIQUIDADO
+        FROM T_LIQUIDACIONES              L,
+             TRANSPORTE.T_EMPRESAS        E,
+             TRANSPORTE.T_EMPRESAS_X_TIPO X,
+             TRANSPORTE.T_TIPOS_EMPRESA   T,
+             T_USUARIOS_EMPRESAS          U
+       WHERE L.ID_LOTE_LIQUIDACION = I_LOTE
+         AND L.ID_TIPO_LIQUIDACION = I_TIPO
+         AND U.CUIL = I_CUIL
+         AND U.ID_EMPRESA = E.ID_EMPRESA
+         AND E.ID_EMPRESA = L.ID_EMPRESA
+         AND X.ID_EMPRESA = L.ID_EMPRESA
+         AND T.ID_TIPO_EMPRESA = X.ID_TIPO_EMPRESA
+         AND E.ID_EMPRESA = NVL(I_EMPRESA, E.ID_EMPRESA)
+       ORDER BY 1, 3;
+  END SP_GET_LIQUIDACIONES_DET;
+
+  /***************************************************************
+  * Devuelve la lista de validaciones con sus codigos de rechazo *
+  * Se usa para armar los filtros en las pantallas de consulta   *
+  ***************************************************************/
+  PROCEDURE SP_LIST_VALIDACIONES(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT V.ID_VALIDACION,
+             V.N_VALIDACION,
+             V.COD_RECHAZO,
+             V.PROCEDIMIENTO,
+             VP.PRIORIDAD,
+             VP.RECHAZA_SN,
+             VP.VIGENCIA_HASTA,
+             P.N_PROGRAMA,
+             P.ID_PROGRAMA
+        FROM T_VALIDACIONES V, T_VALIDACIONES_PROGRAMA VP, T_PROGRAMAS P
+       WHERE V.ID_VALIDACION = VP.ID_VALIDACION
+         AND VP.ID_PROGRAMA = P.ID_PROGRAMA;
+  END SP_LIST_VALIDACIONES;
+  /**********************************************************************
+  * Eliminar validaciones                                               *
+  * Se usa para modificar en las pantallas de gestion de validaciones   *
+  ***********************************************************************/
+
+  PROCEDURE SP_BORRAR_VALIDACIONES(I_ID_VALIDACION IN T_VALIDACIONES.ID_VALIDACION%TYPE) IS
+  
+  BEGIN
+  
+    DELETE FROM T_VALIDACIONES_PROGRAMA VP
+     WHERE VP.ID_VALIDACION = I_ID_VALIDACION;
+  
+    DELETE FROM T_VALIDACIONES V WHERE V.ID_VALIDACION = I_ID_VALIDACION;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL ELIMINAR LA VALIDACION' || SQLERRM);
+  END SP_BORRAR_VALIDACIONES;
+
+  PROCEDURE SP_ALTA_VALIDACION(I_N_VALIDACION      IN T_VALIDACIONES.N_VALIDACION%TYPE,
+                               I_PROCEDIMIENTO     IN T_VALIDACIONES.PROCEDIMIENTO%TYPE,
+                               I_COD_RECHAZO       IN T_VALIDACIONES.COD_RECHAZO%TYPE,
+                               I_PRIORIDAD         IN T_VALIDACIONES_PROGRAMA.PRIORIDAD%TYPE,
+                               I_RECHAZA_SN        IN T_VALIDACIONES_PROGRAMA.RECHAZA_SN%TYPE,
+                               I_LISTA_ID_PROGRAMA IN VARCHAR2 DEFAULT NULL,
+                               I_VIGENCIA_DESDE    IN T_VALIDACIONES_PROGRAMA.VIGENCIA_DESDE%TYPE,
+                               I_VIGENCIA_HASTA    IN T_VALIDACIONES_PROGRAMA.VIGENCIA_HASTA%TYPE,
+                               O_MENSAJE           OUT VARCHAR2) IS
+  
+    V_SQL        VARCHAR2(10000);
+  
+  BEGIN
+  
+    V_SQL := '
+    DECLARE 
+      V_ID_VALIDACION T_VALIDACIONES.ID_VALIDACION%TYPE;
+      V_ID_VALIDACION_PROGRAMA T_VALIDACIONES_PROGRAMA.ID_VALIDACION_PROGRAMA%TYPE;
+    BEGIN 
+     SELECT MAX(ID_VALIDACION)+1
+     INTO V_ID_VALIDACION
+     FROM T_VALIDACIONES;
+     
+  
+      
+    INSERT INTO T_VALIDACIONES(ID_VALIDACION, N_VALIDACION,COD_RECHAZO,PROCEDIMIENTO)
+            VALUES(V_ID_VALIDACION, ''' || I_N_VALIDACION ||
+             ''',' || I_COD_RECHAZO || ',''' || I_PROCEDIMIENTO ||
+             ''');
+    
+    FOR REG IN (SELECT ID_PROGRAMA
+               FROM T_PROGRAMAS
+               WHERE ID_PROGRAMA IN (' || I_LISTA_ID_PROGRAMA ||
+             ')) LOOP 
+               
+     SELECT MAX(ID_VALIDACION_PROGRAMA)+1
+     INTO V_ID_VALIDACION_PROGRAMA
+     FROM T_VALIDACIONES_PROGRAMA;
+    
+    INSERT INTO T_VALIDACIONES_PROGRAMA(ID_VALIDACION_PROGRAMA, ID_VALIDACION,ID_PROGRAMA,PRIORIDAD,RECHAZA_SN,VIGENCIA_DESDE)
+    VALUES(V_ID_VALIDACION_PROGRAMA,V_ID_VALIDACION,REG.ID_PROGRAMA,' ||
+             I_PRIORIDAD || ',''' || I_RECHAZA_SN || ''',SYSDATE);
+    
+    END LOOP;
+    
+    COMMIT;
+    
+    END;';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    EXECUTE IMMEDIATE V_SQL;
+    O_MENSAJE := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      O_MENSAJE := 'ERROR AL INSERTAR LA VALIDACION. RECHAZO ' ||
+                   I_COD_RECHAZO || ' EXISTENTE.';
+  END SP_ALTA_VALIDACION;
+
+  /*BEG TRANSPORTE*/
+
+  PROCEDURE SP_LIST_TURNOS(I_ID_TIPO_SOLICITANTE NUMBER,
+                           I_ID_NIVEL_EDUCATIVO  NUMBER,
+                           I_ID_TIPO_EMPRESA     NUMBER,
+                           O_CURSOR              OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT H.ID_TURNO, H.N_TURNO
+        FROM (SELECT T.ID_TIPO_SOLICITANTE,
+                     T.ID_NIVEL_EDUCATIVO,
+                     T.ID_TURNO,
+                     T.ID_TIPO_EMPRESA,
+                     U.N_TURNO
+                FROM T_FRANJAS_HORARIA T, VT_TURNOS U
+               WHERE U.ID_TURNO = T.ID_TURNO
+              UNION ALL
+              
+              SELECT T.ID_TIPO_SOLICITANTE,
+                     T.ID_NIVEL_EDUCATIVO,
+                     T.ID_TURNO,
+                     4,
+                     U.N_TURNO
+                FROM T_FRANJAS_HORARIA T, VT_TURNOS U
+               WHERE U.ID_TURNO = T.ID_TURNO
+                 AND T.ID_TIPO_EMPRESA = 1) H
+       WHERE H.ID_TIPO_SOLICITANTE = I_ID_TIPO_SOLICITANTE
+         AND H.ID_NIVEL_EDUCATIVO = I_ID_NIVEL_EDUCATIVO
+         AND H.ID_TIPO_EMPRESA = I_ID_TIPO_EMPRESA
+      
+      ;
+  
+  END SP_LIST_TURNOS;
+
+  PROCEDURE SP_LIST_TURNOS_HORARIO(I_ID_TIPO_SOLICITANTE NUMBER,
+                                   I_ID_NIVEL_EDUCATIVO  NUMBER,
+                                   I_ID_TIPO_EMPRESA     NUMBER,
+                                   I_ID_TURNO            NUMBER,
+                                   O_CURSOR              OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT (T.HS_DESDE || ' a ' || T.HS_HASTA) as horario,
+             T.HS_DESDE,
+             T.HS_HASTA
+        FROM T_FRANJAS_HORARIA T
+       WHERE T.ID_TIPO_SOLICITANTE = I_ID_TIPO_SOLICITANTE
+         AND T.ID_NIVEL_EDUCATIVO = I_ID_NIVEL_EDUCATIVO
+         AND T.ID_TIPO_EMPRESA = I_ID_TIPO_EMPRESA
+         AND T.ID_TURNO = I_ID_TURNO;
+  
+  END SP_LIST_TURNOS_HORARIO;
+
+  PROCEDURE SP_LIST_ROLES_BEG(I_CUIL VARCHAR2, O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT R.N_ROL,
+             CASE
+               WHEN R.N_ROL = 'Admin' THEN
+                'TRUE'
+               ELSE
+                'FALSE'
+             END ES_ADMINISTRADOR
+        FROM MAASP_TUNI_TPTE.T_USUARIOS_ROLES T, MAASP_TUNI_TPTE.T_ROLES R
+       WHERE T.CUIL = I_CUIL
+         AND R.ID_ROL = T.ID_ROL
+         AND T.ID_PROGRAMA = 1;
+  
+  END SP_LIST_ROLES_BEG;
+
+  PROCEDURE SP_LIST_RECTIFICATIVAS(I_ID_MOVIMIENTO_ORIGINAL IN T_RECTIFICATIVAS.ID_SEQ_ORIGINAL%TYPE,
+                                   O_CURSOR                 OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+    
+      SELECT M.FEC_MOVIMIENTO,
+             M.NRO_VERSION,
+             M.ID_ORIGEN,
+             V1.N_PUNTO        DESC_ORIGEN,
+             M.ID_DESTINO,
+             V2.N_PUNTO        DESC_DESTINO,
+             M.ID_AUTORIZACION,
+             M.CUIL,
+             M.ID_EMPRESA,
+             -- E.RAZON_SOCIAL ,
+             M.ID_GRUPO,
+             M.PRECIO,
+             M.ID_PROGRAMA,
+             P.N_PROGRAMA          PROGRAMA,
+             M.CODIGO_VERIFICACION,
+             M.FEC_REGISTRACION
+        FROM T_MOVIMIENTOS         M,
+             T_RECTIFICATIVAS      R,
+             VT_PUNTOS             V1,
+             VT_PUNTOS             V2,
+             TRANSPORTE.T_EMPRESAS E,
+             T_PROGRAMAS           P
+       WHERE M.ID_MOVIMIENTO = R.ID_SEQ_RECTIFICADO
+         AND M.ID_ORIGEN = V1.ID_PUNTO
+         AND M.ID_DESTINO = V2.ID_PUNTO
+         AND E.ID_EMPRESA = M.ID_EMPRESA
+         AND M.LIQUIDADO_SN = 'S'
+         AND P.ID_PROGRAMA = M.ID_PROGRAMA
+         AND R.ID_SEQ_RECTIFICADO IN
+             (SELECT ID_SEQ_RECTIFICADO
+                FROM MAASP_TUNI_TPTE.T_RECTIFICATIVAS
+               START WITH ID_SEQ_RECTIFICADO = I_ID_MOVIMIENTO_ORIGINAL
+              CONNECT BY PRIOR ID_SEQ_ORIGINAL = ID_SEQ_RECTIFICADO)
+       ORDER BY M.NRO_VERSION;
+  
+  END SP_LIST_RECTIFICATIVAS;
+
+END PKG_ARCHIVOS;
+/

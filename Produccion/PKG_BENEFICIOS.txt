@@ -1,0 +1,748 @@
+CREATE OR REPLACE PACKAGE PKG_BENEFICIOS IS
+
+  -- Author  : PPONTE_EXT
+  -- Created : 23/1/2019 15:54:23
+  -- Purpose : Controles y validaciones sobre los potenciales beneficios de programas de boletos
+
+  PROCEDURE SP_ALTA_PARAMETRO_BENEFICIO(I_COD_PARAMETRO IN T_PARAMETROS_BENEFICIO.COD_PARAMETRO%TYPE,
+                                        I_N_PARAMETRO   IN T_PARAMETROS_BENEFICIO.N_PARAMETRO%TYPE,
+                                        I_VALOR_MINIMO  IN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE,
+                                        I_VALOR_MAXIMO  IN T_PARAMETROS_BENEFICIO.VALOR_MAXIMO%TYPE DEFAULT NULL,
+                                        I_ORDEN         IN T_PARAMETROS_BENEFICIO.ORDEN%TYPE DEFAULT NULL,
+                                        I_FEC_DESDE     IN T_PARAMETROS_BENEFICIO.FEC_DESDE%TYPE,
+                                        I_FEC_HASTA     IN T_PARAMETROS_BENEFICIO.FEC_HASTA%TYPE DEFAULT NULL);
+
+  PROCEDURE SP_BAJA_PARAMETRO_BENEFICIO(I_ID_PARAMETRO IN T_PARAMETROS_BENEFICIO.ID_PARAMETRO%TYPE,
+                                        I_FEC_HASTA    IN T_PARAMETROS_BENEFICIO.FEC_HASTA%TYPE DEFAULT SYSDATE);
+
+  PROCEDURE SP_MODIF_PARAMETRO_BENEFICIO(I_ID_PARAMETRO  IN T_PARAMETROS_BENEFICIO.ID_PARAMETRO%TYPE,
+                                         I_COD_PARAMETRO IN T_PARAMETROS_BENEFICIO.COD_PARAMETRO%TYPE DEFAULT NULL,
+                                         I_N_PARAMETRO   IN T_PARAMETROS_BENEFICIO.N_PARAMETRO%TYPE DEFAULT NULL,
+                                         I_VALOR_MINIMO  IN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE DEFAULT NULL,
+                                         I_VALOR_MAXIMO  IN T_PARAMETROS_BENEFICIO.VALOR_MAXIMO%TYPE DEFAULT NULL,
+                                         I_ORDEN         IN T_PARAMETROS_BENEFICIO.ORDEN%TYPE DEFAULT NULL,
+                                         I_FEC_CAMBIO    IN T_PARAMETROS_BENEFICIO.FEC_DESDE%TYPE DEFAULT SYSDATE);
+
+  PROCEDURE SP_LIST_PARAMETROS_BENEFICIO(O_CURSOR   OUT SYS_REFCURSOR,
+                                         I_VIGENCIA IN DATE DEFAULT SYSDATE);
+
+  FUNCTION FU_GET_CANT_AUTORIZACIONES(I_CUIL        IN T_AUTORIZACIONES.CUIL%TYPE,
+                                      I_ID_PROGRAMA IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE,
+                                      I_SERVICIO    IN VARCHAR2)
+    RETURN NUMBER;
+
+  FUNCTION FU_GET_MAX_BOLETOS_URBANOS_BOS
+    RETURN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+
+  FUNCTION FU_GET_MAX_BOLETOS_INTER_BOS
+    RETURN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+
+  FUNCTION FU_GET_BENEFICIO_DIFERENTE(I_CUIL        IN T_AUTORIZACIONES.CUIL%TYPE,
+                                      I_ID_PROGRAMA IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE)
+    RETURN T_PROGRAMAS.N_PROGRAMA%TYPE;
+
+  PROCEDURE SP_VALIDAR_BOS(I_CUIL                IN T_EMPADRONADOS.CUIL%TYPE,
+                           O_RESULTADO           OUT VARCHAR2,
+                           O_ID_TIPO_SOLICITANTE OUT T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                           O_MENSAJE             OUT VARCHAR2);
+
+  PROCEDURE SP_VALIDAR_FECHAS_BEG(I_INSTITUCION  IN T_PARAMETROS_BENEFICIO.COD_PARAMETRO%TYPE,
+                                  O_FECHA_INICIO OUT VARCHAR2);
+                                  
+   FUNCTION FU_GET_CANT_AUTORIZACIONES_BEG(I_CUIL        IN T_AUTORIZACIONES.CUIL%TYPE,
+                                      I_ID_PROGRAMA IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE,
+                                      I_SERVICIO    IN VARCHAR2)
+    RETURN NUMBER;
+
+  FUNCTION FU_GET_MAX_BOLETOS_URBANOS_BEG
+    RETURN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+
+  FUNCTION FU_GET_MAX_BOL_INT_BEG_MEN100
+    RETURN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+
+  FUNCTION FU_GET_MAX_BOL_INT_BEG_MAS100
+    RETURN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+
+ 
+  PROCEDURE SP_VALIDAR_FECHAS_BEG(I_INSTITUCION  IN T_PARAMETROS_BENEFICIO.COD_PARAMETRO%TYPE,
+                                  O_FECHA_INICIO OUT DATE);
+
+  PROCEDURE SP_VALIDAR_BEG(I_CUIL      IN T_EMPADRONADOS.CUIL%TYPE,
+                           O_RESULTADO OUT VARCHAR2, 
+                           O_MENSAJE   OUT VARCHAR2);                                
+END PKG_BENEFICIOS;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_BENEFICIOS IS
+
+  -- alta de un nuevo parametro 
+  PROCEDURE SP_ALTA_PARAMETRO_BENEFICIO(I_COD_PARAMETRO IN T_PARAMETROS_BENEFICIO.COD_PARAMETRO%TYPE,
+                                        I_N_PARAMETRO   IN T_PARAMETROS_BENEFICIO.N_PARAMETRO%TYPE,
+                                        I_VALOR_MINIMO  IN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE,
+                                        I_VALOR_MAXIMO  IN T_PARAMETROS_BENEFICIO.VALOR_MAXIMO%TYPE DEFAULT NULL,
+                                        I_ORDEN         IN T_PARAMETROS_BENEFICIO.ORDEN%TYPE DEFAULT NULL,
+                                        I_FEC_DESDE     IN T_PARAMETROS_BENEFICIO.FEC_DESDE%TYPE,
+                                        I_FEC_HASTA     IN T_PARAMETROS_BENEFICIO.FEC_HASTA%TYPE DEFAULT NULL) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    INSERT INTO T_PARAMETROS_BENEFICIO
+      (ID_PARAMETRO,
+       COD_PARAMETRO,
+       N_PARAMETRO,
+       VALOR_MINIMO,
+       VALOR_MAXIMO,
+       ORDEN,
+       FEC_DESDE,
+       FEC_HASTA)
+    VALUES
+      (SEQ_OPERACIONES.NEXTVAL,
+       I_COD_PARAMETRO,
+       I_N_PARAMETRO,
+       I_VALOR_MINIMO,
+       I_VALOR_MAXIMO,
+       I_ORDEN,
+       I_FEC_DESDE,
+       I_FEC_HASTA);
+  
+    COMMIT;
+  
+  END SP_ALTA_PARAMETRO_BENEFICIO;
+
+  -- baja de un parametro
+  PROCEDURE SP_BAJA_PARAMETRO_BENEFICIO(I_ID_PARAMETRO IN T_PARAMETROS_BENEFICIO.ID_PARAMETRO%TYPE,
+                                        I_FEC_HASTA    IN T_PARAMETROS_BENEFICIO.FEC_HASTA%TYPE DEFAULT SYSDATE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_PARAMETROS_BENEFICIO
+       SET FEC_HASTA = I_FEC_HASTA
+     WHERE ID_PARAMETRO = I_ID_PARAMETRO;
+  
+    COMMIT;
+  
+  END SP_BAJA_PARAMETRO_BENEFICIO;
+
+  -- modificacion de un parametro
+  PROCEDURE SP_MODIF_PARAMETRO_BENEFICIO(I_ID_PARAMETRO  IN T_PARAMETROS_BENEFICIO.ID_PARAMETRO%TYPE,
+                                         I_COD_PARAMETRO IN T_PARAMETROS_BENEFICIO.COD_PARAMETRO%TYPE DEFAULT NULL,
+                                         I_N_PARAMETRO   IN T_PARAMETROS_BENEFICIO.N_PARAMETRO%TYPE DEFAULT NULL,
+                                         I_VALOR_MINIMO  IN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE DEFAULT NULL,
+                                         I_VALOR_MAXIMO  IN T_PARAMETROS_BENEFICIO.VALOR_MAXIMO%TYPE DEFAULT NULL,
+                                         I_ORDEN         IN T_PARAMETROS_BENEFICIO.ORDEN%TYPE DEFAULT NULL,
+                                         I_FEC_CAMBIO    IN T_PARAMETROS_BENEFICIO.FEC_DESDE%TYPE DEFAULT SYSDATE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_PARAM T_PARAMETROS_BENEFICIO%ROWTYPE;
+  
+  BEGIN
+  
+    SELECT *
+      INTO V_PARAM
+      FROM T_PARAMETROS_BENEFICIO
+     WHERE ID_PARAMETRO = I_ID_PARAMETRO;
+  
+    SP_BAJA_PARAMETRO_BENEFICIO(I_ID_PARAMETRO => I_ID_PARAMETRO,
+                                I_FEC_HASTA    => I_FEC_CAMBIO);
+  
+    SP_ALTA_PARAMETRO_BENEFICIO(I_COD_PARAMETRO => NVL(I_COD_PARAMETRO,
+                                                       V_PARAM.COD_PARAMETRO),
+                                I_N_PARAMETRO   => NVL(I_N_PARAMETRO,
+                                                       V_PARAM.N_PARAMETRO),
+                                I_VALOR_MINIMO  => NVL(I_VALOR_MINIMO,
+                                                       V_PARAM.VALOR_MINIMO),
+                                I_VALOR_MAXIMO  => NVL(I_VALOR_MAXIMO,
+                                                       V_PARAM.VALOR_MAXIMO),
+                                I_ORDEN         => NVL(I_ORDEN,
+                                                       V_PARAM.ORDEN),
+                                I_FEC_DESDE     => I_FEC_CAMBIO +
+                                                   1 / 24 / 60 / 60);
+  
+  END SP_MODIF_PARAMETRO_BENEFICIO;
+
+  -- lista los parametros vigentes 
+  PROCEDURE SP_LIST_PARAMETROS_BENEFICIO(O_CURSOR   OUT SYS_REFCURSOR,
+                                         I_VIGENCIA IN DATE DEFAULT SYSDATE) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT B.ID_PARAMETRO,
+             B.COD_PARAMETRO,
+             B.N_PARAMETRO,
+             B.VALOR_MINIMO,
+             B.VALOR_MAXIMO,
+             B.ORDEN,
+             B.FEC_DESDE,
+             B.FEC_HASTA
+        FROM T_PARAMETROS_BENEFICIO B, T_PROGRAMAS P
+       WHERE I_VIGENCIA BETWEEN B.FEC_DESDE AND
+             NVL(B.FEC_HASTA, I_VIGENCIA)
+          OR I_VIGENCIA IS NULL;
+  
+  END SP_LIST_PARAMETROS_BENEFICIO;
+
+  -- busca la cantidad de autorizaciones vigentes para un cuil por programa y tipo de servicio
+  -- apto para uso en sql
+  FUNCTION FU_GET_CANT_AUTORIZACIONES(I_CUIL        IN T_AUTORIZACIONES.CUIL%TYPE,
+                                      I_ID_PROGRAMA IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE,
+                                      I_SERVICIO    IN VARCHAR2)
+    RETURN NUMBER IS
+  
+    V_AUT_URBANAS      NUMBER;
+    V_AUT_INTERURBANAS NUMBER;
+  
+  BEGIN
+  
+    SELECT NVL(SUM(DECODE(T.ID_TIPO_EMPRESA, 1, 1, 0)), 0) -- urbanos
+          ,
+           NVL(SUM(DECODE(T.ID_TIPO_EMPRESA, 1, 0, 1)), 0) -- interurbano/diferencial         
+      INTO V_AUT_URBANAS, V_AUT_INTERURBANAS
+      FROM T_AUTORIZACIONES             A,
+           T_TIPOS_SOLICITANTE          S,
+           TRANSPORTE.T_EMPRESAS_X_TIPO T
+     WHERE A.CUIL = I_CUIL
+       AND SYSDATE BETWEEN A.FEC_DESDE AND NVL(A.FEC_HASTA, SYSDATE)
+       AND A.ID_TIPO_SOLICITANTE = S.ID_TIPO_SOLICITANTE
+       AND S.ID_PROGRAMA = I_ID_PROGRAMA
+       AND T.ID_EMPRESA = A.ID_EMPRESA;
+  
+    IF I_SERVICIO = 'U' THEN
+      RETURN V_AUT_URBANAS;
+    ELSIF I_SERVICIO = 'I' THEN
+      RETURN V_AUT_INTERURBANAS;
+    ELSE
+      RETURN NULL;
+    END IF;
+  
+  END FU_GET_CANT_AUTORIZACIONES;
+
+  -- busca la cantidad maxima de beneficios urbanos para bos
+  -- apto us sql
+  FUNCTION FU_GET_MAX_BOLETOS_URBANOS_BOS
+    RETURN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE IS
+  
+    V_MAX_BOLETOS_URBANOS_BOS T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+  
+  BEGIN
+  
+    SELECT B.VALOR_MINIMO
+      INTO V_MAX_BOLETOS_URBANOS_BOS
+      FROM T_PARAMETROS_BENEFICIO B
+     WHERE B.COD_PARAMETRO = 'BOS-BOLETOS-URBANOS-MAX'
+       AND SYSDATE BETWEEN B.FEC_DESDE AND NVL(B.FEC_HASTA, SYSDATE);
+  
+    RETURN V_MAX_BOLETOS_URBANOS_BOS;
+  
+  END FU_GET_MAX_BOLETOS_URBANOS_BOS;
+
+  -- busca la cantidad maxima de beneficios interurbanos para bos
+  -- apto us sql
+  FUNCTION FU_GET_MAX_BOLETOS_INTER_BOS
+    RETURN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE IS
+  
+    V_MAX_BOLETOS_INTER_BOS T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+  
+  BEGIN
+  
+    SELECT B.VALOR_MINIMO
+      INTO V_MAX_BOLETOS_INTER_BOS
+      FROM T_PARAMETROS_BENEFICIO B
+     WHERE B.COD_PARAMETRO = 'BOS-BOLETOS-INTERURBANOS-MAX'
+       AND SYSDATE BETWEEN B.FEC_DESDE AND NVL(B.FEC_HASTA, SYSDATE);
+  
+    RETURN V_MAX_BOLETOS_INTER_BOS;
+  
+  END FU_GET_MAX_BOLETOS_INTER_BOS;
+
+  -- busco si tiene un beneficio vigente de un programa diferente
+  -- devuelve el nombre del programa
+  -- apto para uso en SQL
+  FUNCTION FU_GET_BENEFICIO_DIFERENTE(I_CUIL        IN T_AUTORIZACIONES.CUIL%TYPE,
+                                      I_ID_PROGRAMA IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE)
+    RETURN T_PROGRAMAS.N_PROGRAMA%TYPE IS
+  
+  BEGIN
+  
+    FOR R IN (SELECT P.N_PROGRAMA
+                FROM T_AUTORIZACIONES    A,
+                     T_TIPOS_SOLICITANTE T,
+                     T_PROGRAMAS         P
+               WHERE A.CUIL = I_CUIL
+                 AND SYSDATE BETWEEN A.FEC_DESDE AND
+                     NVL(A.FEC_HASTA, SYSDATE)
+                 AND A.ID_TIPO_SOLICITANTE = T.ID_TIPO_SOLICITANTE
+                 AND T.ID_PROGRAMA != I_ID_PROGRAMA
+                 AND T.ID_PROGRAMA = P.ID_PROGRAMA) LOOP
+    
+      RETURN R.N_PROGRAMA;
+    
+    END LOOP;
+  
+    RETURN NULL;
+  
+  END FU_GET_BENEFICIO_DIFERENTE;
+
+  -- validador de beneficio bos
+  PROCEDURE SP_VALIDAR_BOS(I_CUIL                IN T_EMPADRONADOS.CUIL%TYPE,
+                           O_RESULTADO           OUT VARCHAR2,
+                           O_ID_TIPO_SOLICITANTE OUT T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                           O_MENSAJE             OUT VARCHAR2) IS
+  
+    V_EMPADRONADO                  T_EMPADRONADOS.ID_EMPADRONADO%TYPE;
+    V_MONTO_FORMAL                 T_EMPLEOS_FORMAL.MONTO_BRUTO%TYPE;
+    V_BOS_INGRESO_MAXIMO           T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+    V_CATEGORIA_MONOTRIBUTO        T_EMPLEOS_PRESUNTO.CATEGORIA%TYPE;
+    V_CATEGORIA_MINIMA_BOS         T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+    V_CATEGORIA_MAXIMA_BOS         T_PARAMETROS_BENEFICIO.VALOR_MAXIMO%TYPE;
+    V_CUOTAS_DESEMPLEO             NUMBER;
+    V_ULTIMA_LIQUIDACION_DESEMPLEO DATE;
+    V_AUT_URBANAS                  NUMBER;
+    V_AUT_INTERURBANAS             NUMBER;
+    V_MAX_BOLETOS_URBANOS_BOS      T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+    V_MAX_BOLETOS_INTERURBANOS_BOS T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+    V_AUT_URBANAS_DISPONIBLES      NUMBER;
+    V_AUT_INTERURBANAS_DISPONIBLES NUMBER;
+    V_OTRO_PROGRAMA                T_PROGRAMAS.N_PROGRAMA%TYPE;
+  
+  BEGIN
+  
+    BEGIN
+    
+      SELECT E.ID_EMPADRONADO
+        INTO V_EMPADRONADO
+        FROM T_EMPADRONADOS E
+       WHERE E.CUIL = I_CUIL;
+    
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        O_RESULTADO := 'N';
+        O_MENSAJE   := 'No existe el cuil informado en el padrón.';
+        RETURN;
+    END;
+  
+    /* Valida Desempleo */
+    BEGIN
+    
+      SELECT CUOTAS_DESEMPLEO, FEC_LIQUIDACION
+        INTO V_CUOTAS_DESEMPLEO, V_ULTIMA_LIQUIDACION_DESEMPLEO
+        FROM (SELECT D.CANT_CUOTAS - D.CANT_CUOTAS_LIQUIDADAS CUOTAS_DESEMPLEO,
+                     D.FEC_LIQUIDACION
+                FROM T_DESEMPLEOS D, T_ORIGENES_DATOS O
+               WHERE D.ID_EMPADRONADO = V_EMPADRONADO
+                 AND SYSDATE BETWEEN D.FEC_DESDE AND
+                     NVL(D.FEC_HASTA, SYSDATE)
+                 AND O.ID_ORIGEN = D.ID_ORIGEN
+               ORDER BY O.PRIORIDAD)
+       WHERE ROWNUM = 1;
+    
+      IF V_CUOTAS_DESEMPLEO > 0 OR
+         (V_CUOTAS_DESEMPLEO = 0 AND
+         ADD_MONTHS(V_ULTIMA_LIQUIDACION_DESEMPLEO, 1) >= SYSDATE) THEN
+        -- aprueba por desempleo
+        O_RESULTADO           := 'S';
+        O_MENSAJE             := 'Actualmente Desempleado';
+        O_ID_TIPO_SOLICITANTE := 4;
+      END IF;
+    
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        -- no hay datos de desempleo
+        NULL;
+    END;
+  
+    -- si ya tengo beneficio por desempleo no busco los otros
+    IF NVL(O_RESULTADO, 'N') != 'S' THEN
+    
+      /* valida empleo formal */
+      BEGIN
+      
+        SELECT V.SUM_MONTO_FORMAL
+          INTO V_MONTO_FORMAL
+          FROM (SELECT F.ID_ORIGEN,
+                       SUM(F.MONTO_BRUTO) SUM_MONTO_FORMAL,
+                       O.PRIORIDAD
+                  FROM T_EMPLEOS_FORMAL F, T_ORIGENES_DATOS O
+                 WHERE F.ID_EMPADRONADO = V_EMPADRONADO
+                   AND SYSDATE BETWEEN F.FEC_DESDE AND
+                       NVL(F.FEC_HASTA, SYSDATE)
+                   AND F.ID_ORIGEN = O.ID_ORIGEN
+                 GROUP BY F.ID_ORIGEN, O.PRIORIDAD
+                 ORDER BY O.PRIORIDAD) V
+         WHERE ROWNUM = 1;
+        --  si tiene mas de un empleo formal vigente se suman los montos
+      
+        SELECT B.VALOR_MINIMO
+          INTO V_BOS_INGRESO_MAXIMO
+          FROM T_PARAMETROS_BENEFICIO B
+         WHERE B.COD_PARAMETRO = 'BOS-INGRESO-MAXIMO'
+           AND SYSDATE BETWEEN B.FEC_DESDE AND NVL(B.FEC_HASTA, SYSDATE);
+      
+        IF V_MONTO_FORMAL <= TO_NUMBER(V_BOS_INGRESO_MAXIMO) THEN
+          -- si aprueba por formal
+          O_RESULTADO           := 'S';
+          O_MENSAJE             := 'Podes tramitar tu BOS. Dirigite a la empresa de transporte con tu D.N.I.';
+          O_ID_TIPO_SOLICITANTE := 6;
+        END IF;
+      
+      EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+          -- no hay datos de empleo formal
+          NULL;
+      END;
+    
+      /* valida empleo presunto */
+      BEGIN
+      
+        SELECT CATEGORIA
+          INTO V_CATEGORIA_MONOTRIBUTO --## falta la antigüedad
+          FROM (SELECT P.CATEGORIA
+                  FROM T_EMPLEOS_PRESUNTO P, T_ORIGENES_DATOS O
+                 WHERE P.ID_EMPADRONADO = V_EMPADRONADO
+                   AND SYSDATE BETWEEN P.FEC_DESDE AND
+                       NVL(P.FEC_HASTA, SYSDATE)
+                   AND O.ID_ORIGEN = P.ID_ORIGEN
+                 ORDER BY O.PRIORIDAD)
+         WHERE ROWNUM = 1;
+      
+        SELECT B.VALOR_MINIMO, B.VALOR_MAXIMO
+          INTO V_CATEGORIA_MINIMA_BOS, V_CATEGORIA_MAXIMA_BOS
+          FROM T_PARAMETROS_BENEFICIO B
+         WHERE B.COD_PARAMETRO = 'BOS-MONOTRIBUTO-CATEGORIAS'
+           AND SYSDATE BETWEEN B.FEC_DESDE AND NVL(B.FEC_HASTA, SYSDATE);
+      
+        --## falta agregar el control de antiguedad (no esta el dato en sintys)
+      
+        -- si tengo datos de empleo presunto y de empleo formal a la vez rechazo
+        IF V_MONTO_FORMAL IS NOT NULL THEN
+          O_RESULTADO           := 'N';
+          O_MENSAJE             := 'Tiene empleo en relacion de de dependencia y monotributo al mismo tiempo, no puede acceder al beneficio de BOS.';
+          O_ID_TIPO_SOLICITANTE := NULL;
+          RETURN;
+        END IF;
+      
+        IF V_CATEGORIA_MONOTRIBUTO BETWEEN V_CATEGORIA_MINIMA_BOS AND
+           V_CATEGORIA_MAXIMA_BOS THEN
+          -- si aprueba por presunto y no tenia formal        
+          O_RESULTADO           := 'S';
+          O_MENSAJE             := 'Empleado autónomo dentro de las categorías estipuladas para BOS. Recuerde validar la antigüedad superior a dos años.';
+          O_ID_TIPO_SOLICITANTE := 5;
+        END IF;
+      
+      EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+          -- no hay datos de empleo presunto
+          NULL;
+      END;
+    
+    END IF;
+  
+    IF O_RESULTADO IS NULL THEN
+      O_RESULTADO           := 'N';
+      O_MENSAJE             := 'No cumple con ninguna condición para dar el beneficio o bien no existen los datos de empleo';
+      O_ID_TIPO_SOLICITANTE := NULL;
+      RETURN;
+    END IF;
+  
+    -- valido que no tenga beneficios en otro programa
+    V_OTRO_PROGRAMA := FU_GET_BENEFICIO_DIFERENTE(I_CUIL        => I_CUIL,
+                                                  I_ID_PROGRAMA => 2);
+    IF V_OTRO_PROGRAMA IS NOT NULL THEN
+    
+      O_RESULTADO           := 'N';
+      O_MENSAJE             := 'Ya es beneficiario de otro programa: ' ||
+                               V_OTRO_PROGRAMA ||
+                               '. No puede ser beneficiario de BOS.';
+      O_ID_TIPO_SOLICITANTE := NULL;
+      RETURN;
+    
+    END IF;
+  
+    -- validar cuantas autorizaciones vigentes BOS tiene
+  
+    V_AUT_URBANAS      := FU_GET_CANT_AUTORIZACIONES(I_CUIL        => I_CUIL,
+                                                     I_ID_PROGRAMA => 2,
+                                                     I_SERVICIO    => 'U');
+    V_AUT_INTERURBANAS := FU_GET_CANT_AUTORIZACIONES(I_CUIL        => I_CUIL,
+                                                     I_ID_PROGRAMA => 2,
+                                                     I_SERVICIO    => 'I');
+  
+    V_MAX_BOLETOS_URBANOS_BOS := FU_GET_MAX_BOLETOS_URBANOS_BOS;
+  
+    V_MAX_BOLETOS_INTERURBANOS_BOS := FU_GET_MAX_BOLETOS_INTER_BOS;
+  
+    V_AUT_URBANAS_DISPONIBLES      := V_MAX_BOLETOS_URBANOS_BOS -
+                                      V_AUT_URBANAS;
+    V_AUT_INTERURBANAS_DISPONIBLES := V_MAX_BOLETOS_INTERURBANOS_BOS -
+                                      V_AUT_INTERURBANAS;
+  
+    IF V_AUT_URBANAS_DISPONIBLES <= 0 AND
+       V_AUT_INTERURBANAS_DISPONIBLES <= 0 THEN
+      O_RESULTADO           := 'N';
+      O_MENSAJE             := 'No dispone de autorizaciones disponibles, maximo ' ||
+                               V_MAX_BOLETOS_URBANOS_BOS || ' urbanas y ' ||
+                               V_MAX_BOLETOS_INTERURBANOS_BOS ||
+                               ' interurbanas.';
+      O_ID_TIPO_SOLICITANTE := NULL;
+      RETURN;
+    END IF;
+  
+    -- aplica y tiene autorizaciones disponibles
+    O_MENSAJE := O_MENSAJE || ' Dispone de ' ||
+                 GREATEST(V_AUT_URBANAS_DISPONIBLES, 0) ||
+                 ' autorizaciones urbanas y de ' ||
+                 GREATEST(V_AUT_INTERURBANAS_DISPONIBLES, 0) ||
+                 ' autorizaciones interurbanas.';
+  
+  END SP_VALIDAR_BOS;
+
+  PROCEDURE SP_VALIDAR_FECHAS_BEG(I_INSTITUCION  IN T_PARAMETROS_BENEFICIO.COD_PARAMETRO%TYPE,
+                                  O_FECHA_INICIO OUT VARCHAR2) IS
+  
+  BEGIN
+    SELECT B.VALOR_MINIMO
+      INTO O_FECHA_INICIO
+      FROM T_PARAMETROS_BENEFICIO B
+     WHERE B.COD_PARAMETRO = I_INSTITUCION
+       AND SYSDATE BETWEEN B.FEC_DESDE AND NVL(B.FEC_HASTA, SYSDATE);
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar fecha de inicio de actividades ' ||
+                              SQLERRM);
+    
+  END SP_VALIDAR_FECHAS_BEG;
+  
+   -- busca la cantidad de autorizaciones vigentes para un cuil por programa y tipo de servicio
+  -- apto para uso en sql
+  FUNCTION FU_GET_CANT_AUTORIZACIONES_BEG(I_CUIL        IN T_AUTORIZACIONES.CUIL%TYPE,
+                                          I_ID_PROGRAMA IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE,
+                                          I_SERVICIO    IN VARCHAR2)
+    RETURN NUMBER IS
+  
+    V_AUT_URBANAS               NUMBER;
+    V_AUT_INTERURBANAS_MENOS100 NUMBER;
+    V_AUT_INTERURBANAS_MAS100   NUMBER;
+  
+  BEGIN
+    
+     SELECT NVL(SUM(DECODE(T.ID_TIPO_EMPRESA, 1, 1, 0)), 0) -- urbanos      
+      INTO V_AUT_URBANAS
+      FROM T_AUTORIZACIONES             A,
+           T_TIPOS_SOLICITANTE          S,
+           TRANSPORTE.T_EMPRESAS_X_TIPO T
+     WHERE A.CUIL = I_CUIL
+       AND SYSDATE BETWEEN A.FEC_DESDE AND NVL(A.FEC_HASTA, SYSDATE)
+       AND A.ID_TIPO_SOLICITANTE = S.ID_TIPO_SOLICITANTE
+       AND S.ID_PROGRAMA = I_ID_PROGRAMA
+       AND T.ID_EMPRESA = A.ID_EMPRESA;
+  
+  
+    SELECT NVL(SUM(DECODE(T.ID_TIPO_EMPRESA, 1, 0, 1)), 0) -- INTERURBANO/DIFERENCIAL MENOS DE 100 KM        
+      INTO V_AUT_INTERURBANAS_MENOS100
+      FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES    A,
+           MAASP_TUNI_TPTE.T_TIPOS_SOLICITANTE S,
+           TRANSPORTE.T_EMPRESAS_X_TIPO        T,
+           MAASP_TUNI_TPTE.T_PRECIOS_TRAMO     PT
+     WHERE A.CUIL = I_CUIL
+       AND T.ID_EMPRESA = PT.ID_EMPRESA
+       AND T.ID_TIPO_EMPRESA = PT.ID_TIPO_EMPRESA
+       AND SYSDATE BETWEEN A.FEC_DESDE AND NVL(A.FEC_HASTA, SYSDATE)
+       AND A.ID_TIPO_SOLICITANTE = S.ID_TIPO_SOLICITANTE
+       AND S.ID_PROGRAMA = I_ID_PROGRAMA
+       AND T.ID_EMPRESA = A.ID_EMPRESA
+       AND SYSDATE BETWEEN PT.FEC_DESDE AND NVL(PT.FEC_HASTA, SYSDATE)
+       AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+       AND PT.ID_DESTINO(+) = A.ID_DESTINO
+       AND PT.DISTANCIA < 100;
+  
+    SELECT NVL(SUM(DECODE(T.ID_TIPO_EMPRESA, 1, 0, 1)), 0) -- INTERURBANO/DIFERENCIAL MAS DE 100 KM        
+      INTO V_AUT_INTERURBANAS_MAS100
+      FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES    A,
+           MAASP_TUNI_TPTE.T_TIPOS_SOLICITANTE S,
+           TRANSPORTE.T_EMPRESAS_X_TIPO        T,
+           MAASP_TUNI_TPTE.T_PRECIOS_TRAMO     PT
+     WHERE A.CUIL = I_CUIL
+       AND T.ID_EMPRESA = PT.ID_EMPRESA
+       AND T.ID_TIPO_EMPRESA = PT.ID_TIPO_EMPRESA
+       AND SYSDATE BETWEEN A.FEC_DESDE AND NVL(A.FEC_HASTA, SYSDATE)
+       AND A.ID_TIPO_SOLICITANTE = S.ID_TIPO_SOLICITANTE
+       AND S.ID_PROGRAMA = I_ID_PROGRAMA
+       AND T.ID_EMPRESA = A.ID_EMPRESA
+       AND SYSDATE BETWEEN PT.FEC_DESDE AND NVL(PT.FEC_HASTA, SYSDATE)
+       AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+       AND PT.ID_DESTINO(+) = A.ID_DESTINO
+       AND PT.DISTANCIA > 100;
+  
+    IF I_SERVICIO = 'U' THEN
+      RETURN V_AUT_URBANAS;
+    ELSIF I_SERVICIO = 'IMAS100' THEN
+      RETURN V_AUT_INTERURBANAS_MAS100;
+    ELSIF I_SERVICIO = 'IMENOS100' THEN
+      RETURN V_AUT_INTERURBANAS_MENOS100;  
+    ELSE
+      RETURN NULL;
+    END IF;
+  
+  END FU_GET_CANT_AUTORIZACIONES_BEG;
+
+  -- busca la cantidad maxima de beneficios urbanos para beg
+  -- apto us sql
+  FUNCTION FU_GET_MAX_BOLETOS_URBANOS_BEG
+    RETURN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE IS
+  
+    V_MAX_BOLETOS_URBANOS_BEG T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+  
+  BEGIN
+  
+    SELECT B.VALOR_MINIMO
+      INTO V_MAX_BOLETOS_URBANOS_BEG
+      FROM T_PARAMETROS_BENEFICIO B
+     WHERE B.COD_PARAMETRO = 'BEG-BOLETOS-URBANOS-MAX'
+       AND SYSDATE BETWEEN B.FEC_DESDE AND NVL(B.FEC_HASTA, SYSDATE);
+  
+    RETURN V_MAX_BOLETOS_URBANOS_BEG;
+  
+  END FU_GET_MAX_BOLETOS_URBANOS_BEG;
+
+  -- busca la cantidad maxima de beneficios interurbanos para bos
+  -- apto us sql
+  FUNCTION FU_GET_MAX_BOL_INT_BEG_MEN100
+    RETURN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE IS
+  
+    V_MAX_BOLETOS_INTER_BEG T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+  
+  BEGIN
+  
+    SELECT B.VALOR_MINIMO
+      INTO V_MAX_BOLETOS_INTER_BEG
+      FROM T_PARAMETROS_BENEFICIO B
+     WHERE B.COD_PARAMETRO = 'BEG-BOLETOS-INTERUR-100-MAX'
+       AND SYSDATE BETWEEN B.FEC_DESDE AND NVL(B.FEC_HASTA, SYSDATE);
+  
+    RETURN V_MAX_BOLETOS_INTER_BEG;
+  
+  END FU_GET_MAX_BOL_INT_BEG_MEN100;
+
+  FUNCTION FU_GET_MAX_BOL_INT_BEG_MAS100
+    RETURN T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE IS
+  
+    V_MAX_BOLETOS_INTER_BEG T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+  
+  BEGIN
+  
+    SELECT B.VALOR_MINIMO
+      INTO V_MAX_BOLETOS_INTER_BEG
+      FROM T_PARAMETROS_BENEFICIO B
+     WHERE B.COD_PARAMETRO = 'BEG-BOLETOS-INTERUR+100-MAX'
+       AND SYSDATE BETWEEN B.FEC_DESDE AND NVL(B.FEC_HASTA, SYSDATE);
+  
+    RETURN V_MAX_BOLETOS_INTER_BEG;
+  
+  END FU_GET_MAX_BOL_INT_BEG_MAS100;
+
+  PROCEDURE SP_VALIDAR_BEG(I_CUIL      IN T_EMPADRONADOS.CUIL%TYPE,
+                           O_RESULTADO OUT VARCHAR2,
+                           O_MENSAJE   OUT VARCHAR2) IS
+  
+    V_EMPADRONADO                  T_EMPADRONADOS.ID_EMPADRONADO%TYPE;
+    V_AUT_URBANAS                  NUMBER;
+    V_AUT_INTER_MENOS100           NUMBER;
+    V_AUT_INTER_MAS100             NUMBER;
+    V_MAX_BOLETOS_URBANOS_BEG      T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+    V_MAX_BOLETOS_INTER_BEG_MEN100 T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+    V_MAX_BOLETOS_INTER_BEG_MAS100 T_PARAMETROS_BENEFICIO.VALOR_MINIMO%TYPE;
+    V_AUT_URBANAS_DISPONIBLES      NUMBER;
+    V_AUT_INTER_DISPONIBLES_MEN100 NUMBER;
+    V_AUT_INTER_DISPONIBLES_MAS100 NUMBER;
+  
+  BEGIN
+  
+    BEGIN
+    
+      SELECT E.ID_EMPADRONADO
+        INTO V_EMPADRONADO
+        FROM T_EMPADRONADOS E
+       WHERE E.CUIL = I_CUIL;
+    
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        O_RESULTADO := 'N';
+        O_MENSAJE   := 'No existe el cuil informado en el padrón.';
+        RETURN;
+    END;
+  
+    -- validar cuantas autorizaciones vigentes BOS tiene
+  
+    V_AUT_URBANAS        := FU_GET_CANT_AUTORIZACIONES_BEG(I_CUIL        => I_CUIL,
+                                                       I_ID_PROGRAMA => 1,
+                                                       I_SERVICIO    => 'U');
+    V_AUT_INTER_MENOS100 := FU_GET_CANT_AUTORIZACIONES_BEG(I_CUIL        => I_CUIL,
+                                                       I_ID_PROGRAMA => 1,
+                                                       I_SERVICIO    => 'IMENOS100');
+    V_AUT_INTER_MAS100   := FU_GET_CANT_AUTORIZACIONES_BEG(I_CUIL        => I_CUIL,
+                                                       I_ID_PROGRAMA => 1,
+                                                       I_SERVICIO    => 'IMAS100');
+  
+    V_MAX_BOLETOS_URBANOS_BEG := FU_GET_MAX_BOLETOS_URBANOS_BEG;
+  
+    V_MAX_BOLETOS_INTER_BEG_MEN100 := FU_GET_MAX_BOL_INT_BEG_MEN100;
+  
+    V_MAX_BOLETOS_INTER_BEG_MAS100 := FU_GET_MAX_BOL_INT_BEG_MAS100;
+  
+    V_AUT_URBANAS_DISPONIBLES      := V_MAX_BOLETOS_URBANOS_BEG -
+                                      V_AUT_URBANAS;
+    V_AUT_INTER_DISPONIBLES_MEN100 := V_MAX_BOLETOS_INTER_BEG_MEN100 -
+                                      V_AUT_INTER_MENOS100;
+  
+    V_AUT_INTER_DISPONIBLES_MAS100 := V_MAX_BOLETOS_INTER_BEG_MAS100 -
+                                      V_AUT_INTER_MAS100;
+  
+    IF V_AUT_URBANAS_DISPONIBLES <= 0 AND
+       V_AUT_INTER_DISPONIBLES_MEN100 <= 0 AND
+       V_AUT_INTER_DISPONIBLES_MAS100 <= 0 THEN
+      O_RESULTADO := 'N';
+      O_MENSAJE   := 'No dispone de autorizaciones disponibles, maximo ' ||
+                     V_MAX_BOLETOS_URBANOS_BEG || ' urbanas, ' ||
+                     V_MAX_BOLETOS_INTER_BEG_MEN100 ||
+                     ' interurbanas menores a 100km. y ' ||
+                     V_MAX_BOLETOS_INTER_BEG_MAS100 ||
+                     ' interurbanas mayores a 100km.';
+      RETURN;
+    END IF;
+  
+    -- aplica y tiene autorizaciones disponibles
+    O_RESULTADO := 'S';
+    O_MENSAJE   := O_MENSAJE || 'Dispone de ' ||
+                   GREATEST(V_AUT_URBANAS_DISPONIBLES, 0) ||
+                   ' autorizaciones urbanas, de ' ||
+                   GREATEST(V_AUT_INTER_DISPONIBLES_MEN100, 0) ||
+                   ' autorizaciones interurbanas menores a 100 km. y de ' ||
+                   GREATEST(V_AUT_INTER_DISPONIBLES_MAS100, 0) ||
+                   ' autorizaciones interurbanas mayores a 100 km.';
+  
+  END SP_VALIDAR_BEG;
+
+  PROCEDURE SP_VALIDAR_FECHAS_BEG(I_INSTITUCION  IN T_PARAMETROS_BENEFICIO.COD_PARAMETRO%TYPE,
+                                  O_FECHA_INICIO OUT DATE) IS
+  
+  BEGIN
+    SELECT B.VALOR_MINIMO
+      INTO O_FECHA_INICIO
+      FROM T_PARAMETROS_BENEFICIO B
+     WHERE B.COD_PARAMETRO = I_INSTITUCION
+       AND SYSDATE BETWEEN B.FEC_DESDE AND NVL(B.FEC_HASTA, SYSDATE);
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar fecha de inicio de actividades ' ||
+                              SQLERRM);
+    
+  END SP_VALIDAR_FECHAS_BEG;
+
+
+END PKG_BENEFICIOS;
+/
