@@ -1,0 +1,28 @@
+    
+                 
+                 
+               (SELECT X.ID_TRAMO,
+                       SUM((''' || V_VALOR_TBK || ''' * DISTANCIA * COEFICIENTE) *  (NVL(VALOR_PORCENTUAL, 0))) TARIFA_PORCENTUAL_SUBTRAMO,
+                       SUM(NVL(VALOR_FIJO, 0)) TARIFA_FIJA_SUBTRAMO
+                  FROM T_SUBTRAMOS              S,
+                       T_SUBTRAMOS_TRAMO        ST,
+                       T_TIPOS_CAMINO           TP,
+                       T_TIPOS_SERVICIO         TS,
+                       T_TRAMOS                 X,
+                       T_COEFICIENTES_SUBTRAMO  A,
+                       T_COEFICIENTES           C
+                 WHERE S.ID_SUBTRAMO = ST.ID_SUBTRAMO
+                   AND TP.ID_TIPO_CAMINO = S.ID_TIPO_CAMINO
+                   AND ST.ID_TRAMO = X.ID_TRAMO
+                   AND X.ID_TIPO_SERVICIO = TS.ID_TIPO_SERVICIO
+                   AND A.ID_COEFICIENTE = C.ID_COEFICIENTE(+)
+                   AND A.ID_SUBTRAMO(+) = S.ID_SUBTRAMO
+                   AND (VALOR_PORCENTUAL IS NOT NULL OR
+                       VALOR_FIJO IS NOT NULL)
+                   AND TRUNC(TO_DATE('''||I_FECHA||''',''DD/MM/RRRR'')) BETWEEN TRUNC(S.FEC_DESDE) AND
+                       TRUNC(NVL(S.FEC_HASTA, SYSDATE))
+                   AND TRUNC(TO_DATE('''||I_FECHA||''',''DD/MM/RRRR'')) BETWEEN TRUNC(ST.FEC_DESDE) AND
+                       TRUNC(NVL(ST.FEC_HASTA, SYSDATE))
+                   AND TRUNC(TO_DATE('''||I_FECHA||''',''DD/MM/RRRR'')) BETWEEN TRUNC(X.FEC_DESDE) AND
+                       TRUNC(NVL(X.FEC_HASTA, SYSDATE))    
+                 GROUP BY X.ID_TRAMO) L
