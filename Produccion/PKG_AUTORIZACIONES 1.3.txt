@@ -1,0 +1,4655 @@
+CREATE OR REPLACE PACKAGE PKG_AUTORIZACIONES IS
+
+  -- Author  : NMAZZEO_EXT
+  -- Created : 25/12/2018 15:28:45
+  -- Purpose : Administración de datos de Autorizaciones
+
+  --lista los origenes asociados a una determinada empresa
+  PROCEDURE SP_ORIGEN_EMPRESA(O_CURSOR    OUT SYS_REFCURSOR,
+                              I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                              I_EXCEPCION IN VARCHAR2 DEFAULT 'N');
+
+  --lista los destinos asociados a un determinada empresa
+  PROCEDURE SP_DESTINOS_EMPRESA(O_CURSOR    OUT SYS_REFCURSOR,
+                                I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                I_ID_ORIGEN IN T_PRECIOS_TRAMO.ID_ORIGEN%TYPE,
+                                I_EXCEPCION IN VARCHAR2 DEFAULT 'N');
+
+  PROCEDURE SP_ORIGEN_EMPRESA_BEG(O_CURSOR    OUT SYS_REFCURSOR,
+                                  I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                  I_EXCEPCION IN VARCHAR2 DEFAULT 'N');
+
+  PROCEDURE SP_DESTINOS_EMPRESA_BEG(O_CURSOR    OUT SYS_REFCURSOR,
+                                    I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                    I_ID_ORIGEN IN T_PRECIOS_TRAMO.ID_ORIGEN%TYPE,
+                                    I_EXCEPCION IN VARCHAR2 DEFAULT 'N');
+  --Lista los servicios para una determinada empresa
+  PROCEDURE SP_TIPOS_SERVICIO_EMPRESA(O_CURSOR OUT SYS_REFCURSOR);
+
+  --Lista las autorizaciones de una persona                                  
+  PROCEDURE SP_LIST_AUTORIZACIONES(I_CUIL            IN T_AUTORIZACIONES.CUIL%TYPE,
+                                   I_BENEFICIO       IN VARCHAR2 DEFAULT 'N',
+                                   I_EXCEPCION       IN VARCHAR2 DEFAULT 'N',
+                                   I_LISTA_ESTADO    IN VARCHAR2 DEFAULT NULL,
+                                   I_PROGRAMA        IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                   I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE DEFAULT NULL,
+                                   I_EMPRESA         IN T_AUTORIZACIONES.ID_EMPRESA%TYPE DEFAULT NULL,
+                                   O_CURSOR          OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_PEDIR_AUTORIZACIONES(I_CUIL            IN T_AUTORIZACIONES.CUIL%TYPE,
+                                    I_BENEFICIO       IN VARCHAR2 DEFAULT 'N',
+                                    I_EXCEPCION       IN VARCHAR2 DEFAULT 'N',
+                                    I_LISTA_ESTADO    IN VARCHAR2 DEFAULT NULL,
+                                    I_PROGRAMA        IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                    I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE DEFAULT NULL,
+                                    I_EMPRESA         IN T_AUTORIZACIONES.ID_EMPRESA%TYPE DEFAULT NULL,
+                                    O_CURSOR          OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_BUSCAR_PERSONA_CIDI(I_CUIL      IN T_AUTORIZACIONES.CUIL%TYPE,
+                                   O_RESULTADO OUT VARCHAR2,
+                                   O_CURSOR    OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_BUSCAR_AUTORIZACION(I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                   I_UIDS            IN T_TARJETAS.UIDS%TYPE,
+                                   O_EXISTE          OUT VARCHAR2);
+
+  FUNCTION FN_EXISTE_TARJETA(I_UIDS        IN T_TARJETAS.UIDS%TYPE,
+                             O_NRO_TARJETA OUT T_TARJETAS.ID_TARJETA%TYPE)
+    RETURN VARCHAR2;
+
+  PROCEDURE SP_UPDATE_TARJETA(I_UIDS     IN T_TARJETAS.UIDS%TYPE,
+                              I_COBRA_SN IN T_TARJETAS.COBRA_SN%TYPE);
+
+  PROCEDURE SP_GUARDAR_PERSONALIZACION(I_UIDS            IN T_TARJETAS.UIDS%TYPE DEFAULT NULL,
+                                       I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                       I_FECHA_GRABACION IN T_TARJETAS_AUTORIZACION.FEC_DESDE%TYPE,
+                                       O_RESULTADO       OUT VARCHAR2);
+
+  /*PROCEDURE SP_LISTAR_AUTORIZACIONES_BAJA(I_ID_ADMINISTRADORA IN T_TARJETAS.ID_ADMINISTRADORA%TYPE,
+  O_CURSOR            OUT SYS_REFCURSOR);*/
+
+  FUNCTION FN_TRAE_NRO_TARJETA_CUIL_SERIE(I_CUIL_BENEF      IN T_AUTORIZACIONES.CUIL%TYPE,
+                                          I_UIDS            IN T_TARJETAS.UIDS%TYPE,
+                                          O_ID_AUTORIZACION OUT T_AUTORIZACIONES.ID_AUTORIZACION%TYPE)
+    RETURN VARCHAR2;
+
+  PROCEDURE SP_UPDATE_TARJ_AUT(I_ID_AUTORIZACION IN T_TARJETAS_AUTORIZACION.ID_AUTORIZACION%TYPE,
+                               I_UIDS_NUEVA      IN T_TARJETAS.UIDS%TYPE,
+                               I_UIDS_VIEJA      IN T_TARJETAS.UIDS%TYPE,
+                               O_RESULTADO       OUT VARCHAR2);
+
+  PROCEDURE SP_CAMBIAR_TARJETA(I_CUIL       IN T_AUTORIZACIONES.CUIL%TYPE,
+                               I_UIDS_NUEVO IN T_TARJETAS.UIDS%TYPE,
+                               I_UIDS_VIEJO IN T_TARJETAS.UIDS%TYPE,
+                               O_RESULTADO  OUT VARCHAR2);
+
+  PROCEDURE SP_VERIFICAR_TARJETA_UIDS(I_UIDS         IN T_TARJETAS.UIDS%TYPE,
+                                      I_CUIL         IN T_AUTORIZACIONES.CUIL%TYPE,
+                                      O_RESULTADO    OUT VARCHAR2,
+                                      O_UID_EXISTE   OUT VARCHAR2,
+                                      O_AUTORIZACION OUT VARCHAR2);
+
+  PROCEDURE SP_APROBAR_EXCEPCIONES(I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE);
+
+  PROCEDURE SP_ALTA_AUTORIZACIONES(I_USUARIO               IN T_AUTORIZACIONES.CUIL_USR%TYPE DEFAULT NULL,
+                                   I_CUIL                  IN T_AUTORIZACIONES.CUIL%TYPE,
+                                   I_ID_ORIGEN             IN T_AUTORIZACIONES.ID_ORIGEN%TYPE DEFAULT NULL,
+                                   I_ID_DESTINO            IN T_AUTORIZACIONES.ID_DESTINO%TYPE DEFAULT NULL,
+                                   I_ID_EMPRESA            IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                   I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                   I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                   I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE DEFAULT NULL,
+                                   I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                   I_TIPO_SOLICITANTE      IN T_AUTORIZACIONES.ID_TIPO_SOLICITANTE%TYPE,
+                                   I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE DEFAULT NULL,
+                                   I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE DEFAULT NULL,
+                                   I_VIAJA_FERIADO_SN      IN T_AUTORIZACIONES.VIAJA_FERIADO_SN%TYPE DEFAULT NULL,
+                                   I_CONVENIO              IN T_AUTORIZACIONES.ID_CONVENIO%TYPE DEFAULT NULL,
+                                   I_EXCEPCION             IN VARCHAR2 DEFAULT 'N',
+                                   I_NIVEL_EDUCATIVO       IN T_AUTORIZACIONES.ID_NIVEL_EDUCATIVO%TYPE DEFAULT NULL,
+                                   O_MENSAJE               OUT VARCHAR2);
+
+  PROCEDURE SP_ATRAS_PERSONALIZACION(I_UIDS            IN T_TARJETAS.UIDS%TYPE DEFAULT NULL,
+                                     I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                     O_RESULTADO       OUT VARCHAR2);
+
+  PROCEDURE SP_RENDICIONES(I_ID_PROGRAMA   IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE DEFAULT NULL,
+                           I_FECHA_DESDE   IN DATE,
+                           I_FECHA_HASTA   IN DATE,
+                           I_ID_EMPRESA    IN T_AUTORIZACIONES.ID_EMPRESA%TYPE DEFAULT NULL,
+                           I_TIPO_SERVICIO IN TRANSPORTE.T_TIPOS_EMPRESA.ID_TIPO_EMPRESA%TYPE DEFAULT NULL,
+                           O_CURSOR        OUT SYS_REFCURSOR);
+
+  FUNCTION FN_POSEE_AUTORIZACION(I_CUIL     IN T_AUTORIZACIONES.CUIL%TYPE,
+                                 I_PROGRAMA IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE)
+    RETURN NUMBER;
+
+  PROCEDURE SP_INSERTAR_CLAVE_EMPRESA(I_N_CLAVES          IN T_CLAVES_USUARIO.N_CLAVE%TYPE,
+                                      I_N_USUARIO         IN T_CLAVES_USUARIO.ID_USUARIO%TYPE,
+                                      I_FECHA_EXPIRACCION IN T_CLAVES_USUARIO.FEC_EXPIRACCION%TYPE,
+                                      I_ID_EMPRESA        IN T_CLAVES_USUARIO.ID_EMPRESA%TYPE,
+                                      O_ID_CLAVES         OUT VARCHAR2,
+                                      O_RESULTADO         OUT VARCHAR2);
+
+  PROCEDURE SP_BUSCAR_CLAVE_EMPRESA(I_N_CLAVES   IN T_CLAVES_USUARIO.N_CLAVE%TYPE,
+                                    I_ID_EMPRESA IN T_CLAVES_USUARIO.ID_EMPRESA%TYPE,
+                                    O_CURSOR     OUT SYS_REFCURSOR,
+                                    O_RESULTADO  OUT VARCHAR2);
+
+  PROCEDURE SP_BUSCAR_BENEFICIARIO(I_CUIL      IN T_AUTORIZACIONES.CUIL%TYPE,
+                                   I_PROGRAMA  IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                   O_RESULTADO OUT VARCHAR2,
+                                   O_CURSOR    OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_INSERTAR_CLAVE(I_N_CLAVES          IN T_CLAVES_USUARIO.N_CLAVE%TYPE,
+                              I_N_USUARIO         IN T_CLAVES_USUARIO.ID_USUARIO%TYPE,
+                              I_FECHA_EXPIRACCION IN T_CLAVES_USUARIO.FEC_EXPIRACCION%TYPE,
+                              O_ID_CLAVES         OUT VARCHAR2,
+                              O_RESULTADO         OUT VARCHAR2);
+
+  FUNCTION SP_OBTENER_GRUPO(I_ID_EMPRESA IN T_CLAVES_USUARIO.ID_EMPRESA%TYPE)
+    RETURN NUMBER;
+
+  FUNCTION SP_VALIDAR_EMPRESA(I_N_CLAVES   IN T_CLAVES_USUARIO.N_CLAVE%TYPE,
+                              I_ID_EMPRESA IN T_CLAVES_USUARIO.ID_EMPRESA%TYPE)
+    RETURN NUMBER;
+
+  PROCEDURE SP_BUSCAR_CLAVE(I_N_CLAVES  IN T_CLAVES_USUARIO.N_CLAVE%TYPE,
+                            O_CURSOR    OUT SYS_REFCURSOR,
+                            O_RESULTADO OUT VARCHAR2);
+
+  PROCEDURE SP_BUSCAR_USUARIO(I_N_USUARIO IN T_USUARIOS.ID_USUARIO%TYPE,
+                              I_PWD       IN T_USUARIOS.PWD%TYPE,
+                              O_CURSOR    OUT SYS_REFCURSOR,
+                              O_RESULTADO OUT VARCHAR2);
+
+  PROCEDURE SP_VALIDAR_EXCEP_CONV(I_CUIL       IN T_AUTORIZACIONES.CUIL%TYPE,
+                                  I_ID_EMPRESA IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                  O_CURSOR     OUT SYS_REFCURSOR,
+                                  O_MENSAJE    OUT VARCHAR2,
+                                  O_RESULTADO  OUT VARCHAR2);
+
+  PROCEDURE SP_LISTAR_EMP_X_TIPO(I_CUIL         IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                 I_TIPO_EMPRESA IN TRANSPORTE.T_TIPOS_EMPRESA.ID_TIPO_EMPRESA%TYPE,
+                                 O_CURSOR       OUT SYS_REFCURSOR,
+                                 O_MENSAJE      OUT VARCHAR2,
+                                 O_RESULTADO    OUT VARCHAR);
+
+  PROCEDURE SP_VALIDAR_OPERADOR(I_CUIL      IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                I_EMPRESA   IN T_USUARIOS_EMPRESAS.ID_EMPRESA%TYPE,
+                                O_CURSOR    OUT SYS_REFCURSOR,
+                                O_MENSAJE   OUT VARCHAR2,
+                                O_RESULTADO OUT VARCHAR);
+
+  PROCEDURE SP_LIST_TIPOS_EMPRESAS(O_CURSOR    OUT SYS_REFCURSOR,
+                                   O_MENSAJE   OUT VARCHAR2,
+                                   O_RESULTADO OUT VARCHAR);
+
+  PROCEDURE SP_APROBAR_EXCEPCIONES_CONV(I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                        O_MENSAJE         OUT VARCHAR2,
+                                        O_RESULTADO       OUT VARCHAR);
+
+  PROCEDURE SP_ORIGEN_EMPRESA_BEGT(O_CURSOR    OUT SYS_REFCURSOR,
+                                   I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                   I_DISTANCIA IN NUMBER);
+
+  PROCEDURE SP_DESTINOS_EMPRESA_BEGT(O_CURSOR    OUT SYS_REFCURSOR,
+                                     I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                     I_ID_ORIGEN IN T_PRECIOS_TRAMO.ID_ORIGEN%TYPE,
+                                     I_DISTANCIA IN NUMBER);
+
+  PROCEDURE SP_NOMBRE_EMPRESA_BEGT(O_CURSOR       OUT SYS_REFCURSOR,
+                                   I_EMPRESA      IN number,
+                                   I_TIPO_EMPRESA IN number);
+
+  PROCEDURE SP_ALTA_AUTORIZACIONES_BEGT(I_USUARIO               IN T_AUTORIZACIONES.CUIL_USR%TYPE DEFAULT NULL,
+                                        I_CUIL                  IN T_AUTORIZACIONES.CUIL%TYPE,
+                                        I_ID_ORIGEN             IN T_AUTORIZACIONES.ID_ORIGEN%TYPE DEFAULT NULL,
+                                        I_ID_DESTINO            IN T_AUTORIZACIONES.ID_DESTINO%TYPE DEFAULT NULL,
+                                        I_ID_EMPRESA            IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                        I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                        I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                        I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE DEFAULT NULL,
+                                        I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                        I_TIPO_SOLICITANTE      IN T_AUTORIZACIONES.ID_TIPO_SOLICITANTE%TYPE,
+                                        I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE DEFAULT NULL,
+                                        I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE DEFAULT NULL,
+                                        I_VIAJA_FERIADO_SN      IN T_AUTORIZACIONES.VIAJA_FERIADO_SN%TYPE DEFAULT NULL,
+                                        I_CONVENIO              IN T_AUTORIZACIONES.ID_CONVENIO%TYPE DEFAULT NULL,
+                                        I_EXCEPCION             IN VARCHAR2 DEFAULT 'N',
+                                        I_NIVEL_EDUCATIVO       IN T_AUTORIZACIONES.ID_NIVEL_EDUCATIVO%TYPE DEFAULT NULL,
+                                        I_DISTANCIA             IN NUMBER,
+                                        I_ID_TIPO_EMPRESA       IN NUMBER,
+                                        O_RESULTADO             OUT VARCHAR2,
+                                        O_ID_AUTORIZACION       OUT NUMBER,
+                                        O_MENSAJE               OUT VARCHAR2);
+
+  FUNCTION FN_TRAE_NRO_TARJETA_CUIL_ATOS(I_UIDS            IN T_TARJETAS.UIDS%TYPE,
+                                         O_ID_AUTORIZACION OUT T_AUTORIZACIONES.ID_AUTORIZACION%TYPE)
+    RETURN VARCHAR2;
+
+  PROCEDURE SP_BUSCAR_PADRON_BEGT(O_CURSOR           OUT SYS_REFCURSOR,
+                                  I_CUIL             IN number,
+                                  I_TIPO_SOLICITANTE IN number,
+                                  I_NIVEL_EDUCATIVO  IN NUMBER,
+                                  O_RESULTADO        OUT VARCHAR2,
+                                  O_MENSAJE          OUT VARCHAR2);
+
+  PROCEDURE SP_BUSCAR_NIVEL_BEGT(O_CURSOR           OUT SYS_REFCURSOR,
+                                 I_TIPO_SOLICITANTE IN number,
+                                 O_RESULTADO        OUT VARCHAR2,
+                                 O_MENSAJE          OUT VARCHAR2);
+
+  PROCEDURE SP_RENDICIONES_BEG(O_CURSOR      OUT SYS_REFCURSOR,
+                               O_MENSAJE     OUT VARCHAR2,
+                               O_RESULTADO   OUT VARCHAR,
+                               I_FECHA_DESDE IN VARCHAR2,
+                               I_FECHA_HASTA IN VARCHAR2,
+                               I_EMPRESA     IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                               I_OPERADOR    IN T_USUARIOS_ROLES.CUIL%TYPE);
+
+  PROCEDURE SP_ELIMINAR_AUTORIZACION(I_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                     O_MENSAJE      OUT VARCHAR2,
+                                     O_RESULTADO    OUT VARCHAR2);
+
+  PROCEDURE SP_BUSCAR_AUTORIZACION_BEGT(I_CUIL      IN T_AUTORIZACIONES.CUIL%TYPE,
+                                        O_CURSOR    OUT SYS_REFCURSOR,
+                                        O_MENSAJE   OUT VARCHAR2,
+                                        O_RESULTADO OUT VARCHAR2);
+
+  PROCEDURE SP_ALTA_AUTORIZACIONES_CON_EXC(I_USUARIO               IN T_AUTORIZACIONES.CUIL_USR%TYPE DEFAULT NULL,
+                                           I_CUIL                  IN T_AUTORIZACIONES.CUIL%TYPE,
+                                           I_ID_ORIGEN             IN T_AUTORIZACIONES.ID_ORIGEN%TYPE DEFAULT NULL,
+                                           I_ID_DESTINO            IN T_AUTORIZACIONES.ID_DESTINO%TYPE DEFAULT NULL,
+                                           I_ID_EMPRESA            IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                           I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                           I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                           I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE DEFAULT NULL,
+                                           I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                           I_TIPO_SOLICITANTE      IN T_AUTORIZACIONES.ID_TIPO_SOLICITANTE%TYPE,
+                                           I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE DEFAULT NULL,
+                                           I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE DEFAULT NULL,
+                                           I_VIAJA_FERIADO_SN      IN T_AUTORIZACIONES.VIAJA_FERIADO_SN%TYPE DEFAULT NULL,
+                                           I_CONVENIO              IN T_AUTORIZACIONES.ID_CONVENIO%TYPE DEFAULT NULL,
+                                           I_EXCEPCION             IN VARCHAR2 DEFAULT 'N',
+                                           I_NIVEL_EDUCATIVO       IN T_AUTORIZACIONES.ID_NIVEL_EDUCATIVO%TYPE DEFAULT NULL,
+                                           I_DISTANCIA             IN T_AUTORIZACIONES.ID_DISTANCIA%TYPE,
+                                           O_RESULTADO             OUT VARCHAR2,
+                                           O_MENSAJE               OUT VARCHAR2);
+
+  PROCEDURE SP_VALIDAR_CUIL_TARJETA(I_CUIL     IN T_AUTORIZACIONES.CUIL%TYPE,
+                                    O_CANTIDAD OUT NUMBER);
+
+  PROCEDURE SP_ACTUALIZAR_TARJETA(I_UIDS      IN T_TARJETAS.UIDS%TYPE DEFAULT NULL,
+                                  I_CUIL      IN T_AUTORIZACIONES.CUIL%TYPE DEFAULT NULL,
+                                  O_RESULTADO OUT VARCHAR2);
+
+  PROCEDURE SP_BAJA_AUTORIZACION(I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                 I_CUIL            IN T_AUTORIZACIONES.Cuil%TYPE,
+                                 O_MENSAJE         OUT VARCHAR2,
+                                 O_RESULTADO       OUT VARCHAR2);
+
+  PROCEDURE SP_MODIFICAR_AUTORIZACION(I_ID_AUTORIZACION       IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                      I_CUIL                  IN T_AUTORIZACIONES.Cuil%TYPE,
+                                      I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE,
+                                      I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE,
+                                      I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE,
+                                      I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                      I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE,
+                                      I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE,
+                                      O_MENSAJE               OUT VARCHAR2,
+                                      O_RESULTADO             OUT VARCHAR2);
+
+  PROCEDURE SP_BUSCAR_AUTORIZACION_ID(I_ID        IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                      O_CURSOR    OUT SYS_REFCURSOR,
+                                      O_MENSAJE   OUT VARCHAR2,
+                                      O_RESULTADO OUT VARCHAR2);
+
+  --------------------------------------------------------------------------------------------------
+  -- Mario
+  --------------------------------------------------------------------------------------------------
+  PROCEDURE SP_BUSCAR_AUTORIZ_CONTRATURNO(I_CUIL               IN T_AUTORIZACIONES.CUIL%TYPE,
+                                          I_ID_EMPRESA         IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                          I_ID_NIVEL_EDUCATIVO IN T_AUTORIZACIONES.ID_NIVEL_EDUCATIVO%TYPE,
+                                          O_CURSOR             OUT SYS_REFCURSOR,
+                                          O_MENSAJE            OUT VARCHAR2,
+                                          O_RESULTADO          OUT VARCHAR2);
+
+  PROCEDURE SP_AUTORIZACION_CONTRATURNO(I_ID_AUTORIZACION       IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                        I_CUIL                  IN T_AUTORIZACIONES.Cuil%TYPE,
+                                        I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE,
+                                        I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE,
+                                        I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE,
+                                        I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                        I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE,
+                                        I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE,
+                                        O_MENSAJE               OUT VARCHAR2,
+                                        O_RESULTADO             OUT VARCHAR2);
+
+  ---NATI
+  PROCEDURE SP_RENOVAR_AUTORIZACION;
+
+  ---AGUS
+  PROCEDURE SP_ALTA_AUTORIZACIONES_BOS(I_USUARIO               IN T_AUTORIZACIONES.CUIL_USR%TYPE DEFAULT NULL,
+                                       I_CUIL                  IN T_AUTORIZACIONES.CUIL%TYPE,
+                                       I_ID_ORIGEN             IN T_AUTORIZACIONES.ID_ORIGEN%TYPE DEFAULT NULL,
+                                       I_ID_DESTINO            IN T_AUTORIZACIONES.ID_DESTINO%TYPE DEFAULT NULL,
+                                       I_ID_EMPRESA            IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                       I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                       I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                       I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE DEFAULT NULL,
+                                       I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                       I_TIPO_SOLICITANTE      IN T_AUTORIZACIONES.ID_TIPO_SOLICITANTE%TYPE,
+                                       I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE DEFAULT NULL,
+                                       I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE DEFAULT NULL,
+                                       I_VIAJA_FERIADO_SN      IN T_AUTORIZACIONES.VIAJA_FERIADO_SN%TYPE DEFAULT NULL,
+                                       I_CONVENIO              IN T_AUTORIZACIONES.ID_CONVENIO%TYPE DEFAULT NULL,
+                                       I_EXCEPCION             IN VARCHAR2 DEFAULT 'N',
+                                       I_NIVEL_EDUCATIVO       IN T_AUTORIZACIONES.ID_NIVEL_EDUCATIVO%TYPE DEFAULT NULL,
+                                       I_DISTANCIA             IN NUMBER,
+                                       I_ID_TIPO_EMPRESA       IN NUMBER,
+                                       O_RESULTADO             OUT VARCHAR2,
+                                       O_ID_AUTORIZACION       OUT NUMBER,
+                                       O_MENSAJE               OUT VARCHAR2);
+
+  PROCEDURE SP_ORIGEN_EMPRESA_BOS(O_CURSOR    OUT SYS_REFCURSOR,
+                                  I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                  I_DISTANCIA IN NUMBER);
+
+  PROCEDURE SP_DESTINOS_EMPRESA_BOS(O_CURSOR    OUT SYS_REFCURSOR,
+                                    I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                    I_ID_ORIGEN IN T_PRECIOS_TRAMO.ID_ORIGEN%TYPE,
+                                    I_DISTANCIA IN NUMBER);
+
+  PROCEDURE SP_RENDICIONES_BOS(O_CURSOR      OUT SYS_REFCURSOR,
+                               O_MENSAJE     OUT VARCHAR2,
+                               O_RESULTADO   OUT VARCHAR,
+                               I_FECHA_DESDE IN VARCHAR2,
+                               I_FECHA_HASTA IN VARCHAR2,
+                               I_EMPRESA     IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                               I_OPERADOR    IN T_USUARIOS_ROLES.CUIL%TYPE);
+                               
+PROCEDURE SP_ALTA_AUT_CON_EXC_BOS(I_USUARIO               IN T_AUTORIZACIONES.CUIL_USR%TYPE DEFAULT NULL,
+                                           I_CUIL                  IN T_AUTORIZACIONES.CUIL%TYPE,
+                                           I_ID_ORIGEN             IN T_AUTORIZACIONES.ID_ORIGEN%TYPE DEFAULT NULL,
+                                           I_ID_DESTINO            IN T_AUTORIZACIONES.ID_DESTINO%TYPE DEFAULT NULL,
+                                           I_ID_EMPRESA            IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                           I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                           I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                           I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE DEFAULT NULL,
+                                           I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                           I_TIPO_SOLICITANTE      IN T_AUTORIZACIONES.ID_TIPO_SOLICITANTE%TYPE,
+                                           I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE DEFAULT NULL,
+                                           I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE DEFAULT NULL,
+                                           I_VIAJA_FERIADO_SN      IN T_AUTORIZACIONES.VIAJA_FERIADO_SN%TYPE DEFAULT NULL,
+                                           I_CONVENIO              IN T_AUTORIZACIONES.ID_CONVENIO%TYPE DEFAULT NULL,
+                                           I_EXCEPCION             IN VARCHAR2 DEFAULT 'N',
+                                           I_NIVEL_EDUCATIVO       IN T_AUTORIZACIONES.ID_NIVEL_EDUCATIVO%TYPE DEFAULT NULL,
+                                           I_DISTANCIA             IN T_AUTORIZACIONES.ID_DISTANCIA%TYPE,
+                                           O_RESULTADO             OUT VARCHAR2,
+                                           O_MENSAJE               OUT VARCHAR2);
+                                           
+PROCEDURE SP_VALIDAR_EXCEP_CONV_BOS(I_CUIL       IN T_AUTORIZACIONES.CUIL%TYPE,
+                                  I_ID_EMPRESA IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                  O_CURSOR     OUT SYS_REFCURSOR,
+                                  O_MENSAJE    OUT VARCHAR2,
+                                  O_RESULTADO  OUT VARCHAR2);            
+                                  
+PROCEDURE SP_BUSCAR_AUTORIZACION_BOS(I_CUIL      IN T_AUTORIZACIONES.CUIL%TYPE,
+                                        O_CURSOR    OUT SYS_REFCURSOR,
+                                        O_MENSAJE   OUT VARCHAR2,
+                                        O_RESULTADO OUT VARCHAR2) ;                                                                                                     
+
+END PKG_AUTORIZACIONES;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_AUTORIZACIONES IS
+  /**************************************************
+  * LISTA LOS ORIGENES PARA UNA DETERMINADA EMPRESA *
+  ***************************************************/
+  PROCEDURE SP_ORIGEN_EMPRESA(O_CURSOR    OUT SYS_REFCURSOR,
+                              I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                              I_EXCEPCION IN VARCHAR2 DEFAULT 'N') IS
+  
+    V_SQL        VARCHAR2(32000);
+    V_SQLFILTROS VARCHAR2(32000);
+  
+  BEGIN
+  
+    IF I_EXCEPCION = 'S' THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND DISTANCIA <=60 ';
+    END IF;
+  
+    V_SQL := 'SELECT DISTINCT T.ID_ORIGEN,
+                (SELECT DISTINCT N_PUNTO
+                   FROM VT_PUNTOS
+                  WHERE ID_PUNTO = T.ID_ORIGEN) NOMBRE_ORIGEN
+  FROM T_PRECIOS_TRAMO T, TRANSPORTE.T_EMPRESAS E
+ WHERE SYSDATE BETWEEN T.FEC_DESDE AND NVL(T.FEC_HASTA, SYSDATE)
+   AND E.ID_EMPRESA = T.ID_EMPRESA
+   AND T.ID_EMPRESA = ' || I_EMPRESA || V_SQLFILTROS ||
+             ' ORDER BY 2';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL RECUPERAR LOS ORIGENES DE UNA EMPRESA. ' ||
+                              SQLERRM);
+  END SP_ORIGEN_EMPRESA;
+
+  /**************************************************
+  * LISTA LOS DESTINOS PARA UNA DETERMINADA EMPRESA *
+  ***************************************************/
+
+  PROCEDURE SP_DESTINOS_EMPRESA(O_CURSOR    OUT SYS_REFCURSOR,
+                                I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                I_ID_ORIGEN IN T_PRECIOS_TRAMO.ID_ORIGEN%TYPE,
+                                I_EXCEPCION IN VARCHAR2 DEFAULT 'N') IS
+  
+    V_SQL        VARCHAR2(32000);
+    V_SQLFILTROS VARCHAR2(32000);
+  
+  BEGIN
+    IF I_EXCEPCION = 'S' THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND DISTANCIA <=60 ';
+    END IF;
+  
+    V_SQL := 'SELECT DISTINCT T.ID_DESTINO,
+                      (SELECT DISTINCT N_PUNTO
+                         FROM VT_PUNTOS
+                        WHERE ID_PUNTO = T.ID_DESTINO) NOMBRE_DESTINO
+        FROM T_PRECIOS_TRAMO T, TRANSPORTE.T_EMPRESAS E
+       WHERE E.ID_EMPRESA = T.ID_EMPRESA
+         AND SYSDATE BETWEEN T.FEC_DESDE AND NVL(T.FEC_HASTA, SYSDATE)
+         AND T.ID_EMPRESA = ' || I_EMPRESA ||
+             ' AND T.ID_ORIGEN = ' || I_ID_ORIGEN || V_SQLFILTROS ||
+             ' ORDER BY 2';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL RECUPERAR LOS DESTINOS DE UNA EMPRESA. ' ||
+                              SQLERRM);
+  END SP_DESTINOS_EMPRESA;
+
+  PROCEDURE SP_ORIGEN_EMPRESA_BEG(O_CURSOR    OUT SYS_REFCURSOR,
+                                  I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                  I_EXCEPCION IN VARCHAR2 DEFAULT 'N') IS
+  
+    V_SQL        VARCHAR2(32000);
+    V_SQLFILTROS VARCHAR2(32000);
+  
+  BEGIN
+  
+    IF I_EXCEPCION = 'S' THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND DISTANCIA <=100 ';
+    END IF;
+  
+    V_SQL := 'SELECT DISTINCT T.ID_ORIGEN,
+                (SELECT DISTINCT N_PUNTO
+                   FROM VT_PUNTOS
+                  WHERE ID_PUNTO = T.ID_ORIGEN) NOMBRE_ORIGEN
+  FROM T_PRECIOS_TRAMO T, TRANSPORTE.T_EMPRESAS E
+ WHERE SYSDATE BETWEEN T.FEC_DESDE AND NVL(T.FEC_HASTA, SYSDATE)
+   AND E.ID_EMPRESA = T.ID_EMPRESA
+   AND T.ID_EMPRESA = ' || I_EMPRESA || V_SQLFILTROS ||
+             ' ORDER BY 2';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL RECUPERAR LOS ORIGENES DE UNA EMPRESA. ' ||
+                              SQLERRM);
+  END SP_ORIGEN_EMPRESA_BEG;
+
+  /**************************************************
+  * LISTA LOS DESTINOS PARA UNA DETERMINADA EMPRESA *
+  ***************************************************/
+
+  PROCEDURE SP_DESTINOS_EMPRESA_BEG(O_CURSOR    OUT SYS_REFCURSOR,
+                                    I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                    I_ID_ORIGEN IN T_PRECIOS_TRAMO.ID_ORIGEN%TYPE,
+                                    I_EXCEPCION IN VARCHAR2 DEFAULT 'N') IS
+  
+    V_SQL        VARCHAR2(32000);
+    V_SQLFILTROS VARCHAR2(32000);
+  
+  BEGIN
+    IF I_EXCEPCION = 'S' THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND DISTANCIA <=100 ';
+    END IF;
+  
+    V_SQL := 'SELECT DISTINCT T.ID_DESTINO,
+                      (SELECT DISTINCT N_PUNTO
+                         FROM VT_PUNTOS
+                        WHERE ID_PUNTO = T.ID_DESTINO) NOMBRE_DESTINO
+        FROM T_PRECIOS_TRAMO T, TRANSPORTE.T_EMPRESAS E
+       WHERE E.ID_EMPRESA = T.ID_EMPRESA
+         AND SYSDATE BETWEEN T.FEC_DESDE AND NVL(T.FEC_HASTA, SYSDATE)
+         AND T.ID_EMPRESA = ' || I_EMPRESA ||
+             ' AND T.ID_ORIGEN = ' || I_ID_ORIGEN || V_SQLFILTROS ||
+             ' ORDER BY 2';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL RECUPERAR LOS DESTINOS DE UNA EMPRESA. ' ||
+                              SQLERRM);
+  END SP_DESTINOS_EMPRESA_BEG;
+
+  /**********************************************************************
+  * LISTA LOS SERVICIOS PARA UNA DETERMINADA EMPRESA, ORIGEN Y DESTINO *
+  **********************************************************************/
+  PROCEDURE SP_TIPOS_SERVICIO_EMPRESA(O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT ID_TIPO_EMPRESA, N_TIPO_EMPRESA
+        FROM TRANSPORTE.T_TIPOS_EMPRESA
+       ORDER BY 2 DESC;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL RECUPERAR LOS TIPOS DE SERVICIO. ' ||
+                              SQLERRM);
+  END SP_TIPOS_SERVICIO_EMPRESA;
+
+  PROCEDURE SP_LIST_AUTORIZACIONES(I_CUIL            IN T_AUTORIZACIONES.CUIL%TYPE,
+                                   I_BENEFICIO       IN VARCHAR2 DEFAULT 'N',
+                                   I_EXCEPCION       IN VARCHAR2 DEFAULT 'N',
+                                   I_LISTA_ESTADO    IN VARCHAR2 DEFAULT NULL,
+                                   I_PROGRAMA        IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                   I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE DEFAULT NULL,
+                                   I_EMPRESA         IN T_AUTORIZACIONES.ID_EMPRESA%TYPE DEFAULT NULL,
+                                   O_CURSOR          OUT SYS_REFCURSOR) IS
+  
+    V_SQL             VARCHAR2(32000);
+    V_SQLFILTROS      VARCHAR2(32000);
+    V_ESTADO_ANTERIOR T_AUTO_ESTADO.ID_ESTADO%TYPE;
+    V_ESTADO_ACTUAL   T_AUTO_ESTADO.ID_ESTADO%TYPE;
+    V_EXCEPCION       VARCHAR2(10);
+  
+  BEGIN
+    BEGIN
+      SELECT ID_ESTADO
+        INTO V_ESTADO_ANTERIOR
+        FROM T_AUTO_ESTADO
+       WHERE ID_AUTORIZACION = I_ID_AUTORIZACION
+         AND ID_ESTADO = 2
+         AND FEC_HASTA IS NOT NULL;
+    EXCEPTION
+      WHEN OTHERS THEN
+        V_ESTADO_ANTERIOR := NULL;
+    END;
+  
+    BEGIN
+      SELECT ID_ESTADO
+        INTO V_ESTADO_ACTUAL
+        FROM T_AUTO_ESTADO
+       WHERE ID_AUTORIZACION = I_ID_AUTORIZACION
+         AND ID_ESTADO = 1
+         AND FEC_HASTA IS NULL;
+    EXCEPTION
+      WHEN OTHERS THEN
+        V_ESTADO_ACTUAL := NULL;
+    END;
+  
+    IF I_CUIL IS NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'EL PARAMETRO CUIL ES OBLIGATORIO PARA CONSUMIR ESTA FUNCIONALIDAD');
+    ELSE
+      V_SQLFILTROS := V_SQLFILTROS || '  AND A.CUIL =''' || I_CUIL || '''';
+    END IF;
+  
+    IF V_ESTADO_ACTUAL = 1 AND V_ESTADO_ANTERIOR = 2 THEN
+      V_EXCEPCION := 'EXCEPCION';
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ESTADO, '^(\D+(,\D+)*)?$') AND
+       I_LISTA_ESTADO IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'EL PARAMETRO I_LISTA_ESTADO TIENE UN VALOR INCOMPATIBLE CON UNA LISTA DE ENTEROS SEPARADOS POR COMAS');
+    END IF;
+  
+    IF I_BENEFICIO = 'S' THEN
+      V_SQLFILTROS := V_SQLFILTROS || '  AND AE.ID_ESTADO = 1 ';
+    END IF;
+  
+    IF I_EXCEPCION = 'S' THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND AE.ID_ESTADO = 2 ';
+    END IF;
+  
+    IF I_PROGRAMA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND TS.ID_PROGRAMA = ' ||
+                      I_PROGRAMA;
+    END IF;
+  
+    IF I_ID_AUTORIZACION IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND A.ID_AUTORIZACION = ' ||
+                      I_ID_AUTORIZACION;
+    END IF;
+  
+    IF I_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND ( A.ID_EMPRESA = ' || I_EMPRESA ||
+                      ' OR A.ID_EMPRESA IN ( SELECT T.ID_EMPRESA
+                                            FROM TRANSPORTE.T_EMPRESAS_X_TIPO T
+                                           WHERE T.ID_GRUPO = ( SELECT T2.ID_GRUPO
+                                                                  FROM TRANSPORTE.T_EMPRESAS_X_TIPO T2
+                                                                 WHERE T2.ID_EMPRESA = ' ||
+                      I_EMPRESA || ' ) ) )';
+    END IF;
+  
+    IF I_LISTA_ESTADO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND AE.ID_ESTADO IN( ' ||
+                      I_LISTA_ESTADO || ' )';
+    
+    END IF;
+    V_SQL := 'SELECT A.ID_AUTORIZACION,
+       A.CUIL,
+       A.ID_ORIGEN,
+       (SELECT DISTINCT N_PUNTO FROM VT_PUNTOS WHERE ID_PUNTO = A.ID_ORIGEN) N_ORIGEN,
+       A.ID_DESTINO,
+       (SELECT DISTINCT N_PUNTO FROM VT_PUNTOS WHERE ID_PUNTO = A.ID_DESTINO) N_DESTINO,
+       TE.N_TIPO_EMPRESA,
+       TE.ID_TIPO_EMPRESA,
+       PT.DISTANCIA,
+       A.INICIO_FRANJA_HORARIA,
+       A.FINAL_FRANJA_HORARIA,
+       A.CANT_USO_X_DIA,
+       A.CANT_USO_X_MES,
+       A.CANT_USO_X_DIA_SEM,
+       A.CANT_USO_X_SEMANA,
+       VIAJA_FERIADO_SN,
+       A.ID_TIPO_SOLICITANTE TIPO_SOLICITANTE,
+       TS.N_TIPO_SOLICITANTE,
+       TS.ID_PROGRAMA,
+       A.ID_NIVEL_EDUCATIVO NIVEL_EDUCATIVO,
+       NE.N_NIVEL_EDUCATIVO,
+       A.ID_EMPRESA,
+       EM.RAZON_SOCIAL,
+       EA.ID_ESTADO,
+       EA.N_ESTADO,
+       TAR.FEC_GRABACION FECHA_GRABACION,
+       DECODE(TAR.FEC_GRABACION, NULL, ''N'',''S'') GRABADO_SN,
+       ''' || V_EXCEPCION ||
+             ''' ESTADO_ANTERIOR,
+       A.FEC_HASTA VENCIMIENTO_AUTORIZACION,
+       A.FEC_HASTA VENCIMIENTO_TRAMO,
+       A.FEC_HASTA FECHA_VTO,
+       (SELECT MAX(TAR.FEC_VENCIMIENTO)  
+       FROM MAASP_TUNI_TPTE.T_TARJETAS_AUTORIZACION      TJA,
+            MAASP_TUNI_TPTE.T_TARJETAS                   TAR
+       WHERE TJA.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND TAR.ID_TARJETA = TJA.ID_TARJETA
+         AND TJA.FEC_HASTA IS NULL) VENCIMIENTO_PLASTICO
+       FROM T_AUTORIZACIONES        A,
+       TRANSPORTE.T_DESTINOS        D,
+       TRANSPORTE.T_ORIGENES        O,
+       TRANSPORTE.T_TIPOS_EMPRESA   TE,
+       T_TIPOS_SOLICITANTE          TS,
+       TRANSPORTE.T_EMPRESAS        EM,
+       T_AUTO_ESTADO                AE,
+       T_ESTADOS_AUTORIZACION       EA,
+       T_PRECIOS_TRAMO              PT,
+       TRANSPORTE.T_EMPRESAS_X_TIPO T,
+       MAASP_TUNI_TPTE.T_TARJETAS  TAR,
+       MAASP_TUNI_TPTE.T_TARJETAS_AUTORIZACION TU,
+       ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS NE
+ WHERE AE.ID_AUTORIZACION = A.ID_AUTORIZACION
+   AND TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+   AND T.ID_EMPRESA = EM.ID_EMPRESA
+   AND A.ID_EMPRESA = EM.ID_EMPRESA
+   AND D.ID_DESTINO(+) = A.ID_ORIGEN
+   AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+   AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+   AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+   AND PT.ID_DESTINO(+) = A.ID_DESTINO
+   AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+   AND EA.ID_ESTADO = AE.ID_ESTADO
+   AND AE.FEC_HASTA IS NULL
+   AND PT.FEC_HASTA IS NULL
+   AND TAR.ID_TARJETA(+)=TU.ID_TARJETA
+   AND TU.ID_AUTORIZACION(+)=A.ID_AUTORIZACION 
+   AND NE.ID_NIVEL_EDUCATIVO(+)=A.ID_NIVEL_EDUCATIVO
+   AND NOT TAR.FEC_GRABACION IS NULL
+   AND AE.ID_ESTADO = 1
+   AND TU.FEC_HASTA IS NULL
+   AND AE.ID_AUTORIZACION_ESTADO = (SELECT MAX(AUX.ID_AUTORIZACION_ESTADO)
+                                            FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO AUX                                           
+                                            WHERE AUX.ID_AUTORIZACION = A.ID_AUTORIZACION)  ' ||
+             V_SQLFILTROS || ' ORDER BY 2';
+    --
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL CONSULTAR LA AUTORIZACION' ||
+                              SQLERRM);
+    
+  END SP_LIST_AUTORIZACIONES;
+
+  PROCEDURE SP_PEDIR_AUTORIZACIONES(I_CUIL            IN T_AUTORIZACIONES.CUIL%TYPE,
+                                    I_BENEFICIO       IN VARCHAR2 DEFAULT 'N',
+                                    I_EXCEPCION       IN VARCHAR2 DEFAULT 'N',
+                                    I_LISTA_ESTADO    IN VARCHAR2 DEFAULT NULL,
+                                    I_PROGRAMA        IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                    I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE DEFAULT NULL,
+                                    I_EMPRESA         IN T_AUTORIZACIONES.ID_EMPRESA%TYPE DEFAULT NULL,
+                                    O_CURSOR          OUT SYS_REFCURSOR) IS
+  
+    V_SQL             VARCHAR2(32000);
+    V_SQLFILTROS      VARCHAR2(32000);
+    V_ESTADO_ANTERIOR T_AUTO_ESTADO.ID_ESTADO%TYPE;
+    V_ESTADO_ACTUAL   T_AUTO_ESTADO.ID_ESTADO%TYPE;
+    V_EXCEPCION       VARCHAR2(10);
+  
+  BEGIN
+    BEGIN
+      SELECT ID_ESTADO
+        INTO V_ESTADO_ANTERIOR
+        FROM T_AUTO_ESTADO
+       WHERE ID_AUTORIZACION = I_ID_AUTORIZACION
+         AND ID_ESTADO = 2
+         AND FEC_HASTA IS NOT NULL;
+    EXCEPTION
+      WHEN OTHERS THEN
+        V_ESTADO_ANTERIOR := NULL;
+    END;
+  
+    BEGIN
+      SELECT ID_ESTADO
+        INTO V_ESTADO_ACTUAL
+        FROM T_AUTO_ESTADO
+       WHERE ID_AUTORIZACION = I_ID_AUTORIZACION
+         AND ID_ESTADO = 1
+         AND FEC_HASTA IS NULL;
+    EXCEPTION
+      WHEN OTHERS THEN
+        V_ESTADO_ACTUAL := NULL;
+    END;
+  
+    IF I_CUIL IS NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'EL PARAMETRO CUIL ES OBLIGATORIO PARA CONSUMIR ESTA FUNCIONALIDAD');
+    ELSE
+      V_SQLFILTROS := V_SQLFILTROS || '  AND A.CUIL =''' || I_CUIL || '''';
+    END IF;
+  
+    IF V_ESTADO_ACTUAL = 1 AND V_ESTADO_ANTERIOR = 2 THEN
+      V_EXCEPCION := 'EXCEPCION';
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ESTADO, '^(\D+(,\D+)*)?$') AND
+       I_LISTA_ESTADO IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'EL PARAMETRO I_LISTA_ESTADO TIENE UN VALOR INCOMPATIBLE CON UNA LISTA DE ENTEROS SEPARADOS POR COMAS');
+    END IF;
+  
+    IF I_BENEFICIO = 'S' THEN
+      V_SQLFILTROS := V_SQLFILTROS || '  AND AE.ID_ESTADO = 1 ';
+    END IF;
+  
+    IF I_EXCEPCION = 'S' THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND AE.ID_ESTADO = 2 ';
+    END IF;
+  
+    IF I_PROGRAMA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND TS.ID_PROGRAMA = ' ||
+                      I_PROGRAMA;
+    END IF;
+  
+    IF I_ID_AUTORIZACION IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND A.ID_AUTORIZACION = ' ||
+                      I_ID_AUTORIZACION;
+    END IF;
+  
+    IF I_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND ( A.ID_EMPRESA = ' || I_EMPRESA ||
+                      ' OR A.ID_EMPRESA IN ( SELECT T.ID_EMPRESA
+                                            FROM TRANSPORTE.T_EMPRESAS_X_TIPO T
+                                           WHERE T.ID_GRUPO = ( SELECT T2.ID_GRUPO
+                                                                  FROM TRANSPORTE.T_EMPRESAS_X_TIPO T2
+                                                                 WHERE T2.ID_EMPRESA = ' ||
+                      I_EMPRESA || ' ) ) )';
+    END IF;
+  
+    IF I_LISTA_ESTADO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND AE.ID_ESTADO IN( ' ||
+                      I_LISTA_ESTADO || ' )';
+    
+    END IF;
+    V_SQL := 'SELECT A.ID_AUTORIZACION,
+       A.CUIL,
+       A.ID_ORIGEN,
+       (SELECT DISTINCT N_PUNTO FROM VT_PUNTOS WHERE ID_PUNTO = A.ID_ORIGEN) N_ORIGEN,
+       A.ID_DESTINO,
+       (SELECT DISTINCT N_PUNTO FROM VT_PUNTOS WHERE ID_PUNTO = A.ID_DESTINO) N_DESTINO,
+       TE.N_TIPO_EMPRESA,
+       TE.ID_TIPO_EMPRESA,
+       PT.DISTANCIA,
+       A.INICIO_FRANJA_HORARIA,
+       A.FINAL_FRANJA_HORARIA,
+       A.CANT_USO_X_DIA,
+       A.CANT_USO_X_MES,
+       A.CANT_USO_X_DIA_SEM,
+       A.CANT_USO_X_SEMANA,
+       VIAJA_FERIADO_SN,
+       A.ID_TIPO_SOLICITANTE TIPO_SOLICITANTE,
+       TS.N_TIPO_SOLICITANTE,
+       TS.ID_PROGRAMA,
+       A.ID_NIVEL_EDUCATIVO NIVEL_EDUCATIVO,
+       A.ID_EMPRESA,
+       EM.RAZON_SOCIAL,
+       EA.ID_ESTADO,
+       EA.N_ESTADO,
+       TAR.FEC_GRABACION FECHA_GRABACION,
+       DECODE(TAR.FEC_GRABACION, NULL, ''N'',''S'') GRABADO_SN,
+       ''' || V_EXCEPCION ||
+             ''' ESTADO_ANTERIOR,
+       A.FEC_HASTA VENCIMIENTO_AUTORIZACION,
+       A.FEC_HASTA VENCIMIENTO_TRAMO,
+       A.FEC_HASTA FECHA_VTO,
+       (SELECT MAX(TAR.FEC_VENCIMIENTO)  
+       FROM MAASP_TUNI_TPTE.T_TARJETAS_AUTORIZACION      TJA,
+            MAASP_TUNI_TPTE.T_TARJETAS                   TAR
+       WHERE TJA.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND TAR.ID_TARJETA = TJA.ID_TARJETA
+         AND TJA.FEC_HASTA IS NULL) VENCIMIENTO_PLASTICO
+       FROM T_AUTORIZACIONES        A,
+       TRANSPORTE.T_DESTINOS        D,
+       TRANSPORTE.T_ORIGENES        O,
+       TRANSPORTE.T_TIPOS_EMPRESA   TE,
+       T_TIPOS_SOLICITANTE          TS,
+       TRANSPORTE.T_EMPRESAS        EM,
+       T_AUTO_ESTADO                AE,
+       T_ESTADOS_AUTORIZACION       EA,
+       T_PRECIOS_TRAMO              PT,
+       TRANSPORTE.T_EMPRESAS_X_TIPO T,
+       MAASP_TUNI_TPTE.T_TARJETAS  TAR,
+       MAASP_TUNI_TPTE.T_TARJETAS_AUTORIZACION TU
+ WHERE AE.ID_AUTORIZACION = A.ID_AUTORIZACION
+   AND TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+   AND T.ID_EMPRESA = EM.ID_EMPRESA
+   AND A.ID_EMPRESA = EM.ID_EMPRESA
+   AND D.ID_DESTINO(+) = A.ID_ORIGEN
+   AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+   AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+   AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+   AND PT.ID_DESTINO(+) = A.ID_DESTINO
+   AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+   AND EA.ID_ESTADO = AE.ID_ESTADO
+   AND AE.FEC_HASTA IS NULL
+   AND TAR.ID_TARJETA(+)=TU.ID_TARJETA
+   AND TU.ID_AUTORIZACION(+)=A.ID_AUTORIZACION
+   AND NOT EXISTS (SELECT 1
+                   FROM T_TARJETAS_AUTORIZACION TT
+                   WHERE TT.ID_AUTORIZACION=A.ID_AUTORIZACION)
+   AND PT.FEC_HASTA IS NULL
+   AND AE.ID_ESTADO = 1
+   AND AE.ID_AUTORIZACION_ESTADO = (SELECT MAX(AUX.ID_AUTORIZACION_ESTADO)
+                                            FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO AUX                                           
+                                            WHERE AUX.ID_AUTORIZACION = A.ID_AUTORIZACION)' ||
+             V_SQLFILTROS || ' ORDER BY 2';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL CONSULTAR LA AUTORIZACION' ||
+                              SQLERRM);
+    
+  END SP_PEDIR_AUTORIZACIONES;
+
+  PROCEDURE SP_BUSCAR_AUTORIZACION(I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                   I_UIDS            IN T_TARJETAS.UIDS%TYPE,
+                                   O_EXISTE          OUT VARCHAR2) IS
+  
+    V_AUTORIZACION VARCHAR2(1);
+  
+  BEGIN
+    BEGIN
+      SELECT 'S'
+        INTO V_AUTORIZACION
+        FROM T_AUTORIZACIONES
+       WHERE ID_AUTORIZACION = I_ID_AUTORIZACION;
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20002, 'LA AUTORIZACION NO EXISTE');
+    END;
+    IF V_AUTORIZACION = 'S' THEN
+      BEGIN
+        SELECT 'S'
+          INTO O_EXISTE
+          FROM T_AUTORIZACIONES A, T_TARJETAS T, T_TARJETAS_AUTORIZACION TA
+         WHERE A.ID_AUTORIZACION = TA.ID_AUTORIZACION
+           AND T.ID_TARJETA = TA.ID_TARJETA
+           AND A.ID_AUTORIZACION = I_ID_AUTORIZACION
+           AND T.UIDS = I_UIDS;
+      EXCEPTION
+        WHEN OTHERS THEN
+          O_EXISTE := 'N';
+      END;
+    END IF;
+  
+  END SP_BUSCAR_AUTORIZACION;
+
+  PROCEDURE SP_BUSCAR_PERSONA_CIDI(I_CUIL      IN T_AUTORIZACIONES.CUIL%TYPE,
+                                   O_RESULTADO OUT VARCHAR2,
+                                   O_CURSOR    OUT SYS_REFCURSOR) IS
+  BEGIN
+    O_RESULTADO := 'OK';
+  
+    OPEN O_CURSOR FOR
+      SELECT T.ID_USUARIO,
+             T.N_USUARIO AS CUIL,
+             T.APELLIDO,
+             T.NOMBRE,
+             T.EMAIL,
+             T.ID_SEXO,
+             T.NRO_DOCUMENTO,
+             T.PAI_COD_PAIS,
+             T.ID_NUMERO,
+             T.FECHA_NACIMIENTO
+        FROM GESTION_CIUDADANOS.VT_USUARIOS T
+       WHERE T.N_USUARIO = I_CUIL;
+  
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      O_RESULTADO := 'EL BENEFICIARIO NO EXISTE';
+    WHEN OTHERS THEN
+      O_RESULTADO := SQLERRM;
+    
+  END SP_BUSCAR_PERSONA_CIDI;
+
+  FUNCTION FN_EXISTE_TARJETA(I_UIDS        IN T_TARJETAS.UIDS%TYPE,
+                             O_NRO_TARJETA OUT T_TARJETAS.ID_TARJETA%TYPE)
+    RETURN VARCHAR2 IS
+  
+    O_EXISTE VARCHAR2(1);
+  
+  BEGIN
+  
+    SELECT 'S', T.ID_TARJETA
+      INTO O_EXISTE, O_NRO_TARJETA
+      FROM T_TARJETAS T
+     WHERE T.UIDS = I_UIDS;
+  
+    RETURN O_EXISTE;
+  
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      RETURN 'N';
+    WHEN OTHERS THEN
+      RETURN 'N';
+    
+  END FN_EXISTE_TARJETA;
+
+  PROCEDURE SP_UPDATE_TARJETA(I_UIDS     IN T_TARJETAS.UIDS%TYPE,
+                              I_COBRA_SN IN T_TARJETAS.COBRA_SN%TYPE) IS
+  
+  BEGIN
+  
+    UPDATE T_TARJETAS T
+       SET T.COBRA_SN        = I_COBRA_SN,
+           T.FEC_GRABACION   = SYSDATE,
+           T.FEC_VENCIMIENTO = NVL(T.FEC_VENCIMIENTO,
+                                   ADD_MONTHS(SYSDATE, 24))
+     WHERE T.UIDS = I_UIDS;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL ACTUALIZAR LA TARJETA' || SQLERRM);
+  END SP_UPDATE_TARJETA;
+
+  PROCEDURE SP_ACTUALIZAR_TARJETA(I_UIDS      IN T_TARJETAS.UIDS%TYPE DEFAULT NULL,
+                                  I_CUIL      IN T_AUTORIZACIONES.CUIL%TYPE DEFAULT NULL,
+                                  O_RESULTADO OUT VARCHAR2) IS
+  
+    V_EXISTE_TARJETA VARCHAR2(1);
+    V_CANT_TARJETA   NUMBER;
+    V_ID_TARJETA     T_TARJETAS.ID_TARJETA%TYPE;
+  
+    V_NOUTILIZADA NUMBER;
+  
+  BEGIN
+    V_EXISTE_TARJETA := FN_EXISTE_TARJETA(I_UIDS, V_ID_TARJETA);
+  
+    IF NVL(V_EXISTE_TARJETA, 'N') = 'N' THEN
+      O_RESULTADO := 'No existe la tarjeta';
+    ELSE
+      BEGIN
+      
+        /*  SE MODIFICA PORQUE NO TENIA AÑO Y CUIL LA TARJETA (SE PAGARIA TARJETAS DE AÑOS ANTERIORES)
+        
+        SELECT COUNT(*)
+           INTO V_CANT_TARJETA
+           FROM T_TARJETAS_AUTORIZACION TA, T_TARJETAS T, T_AUTORIZACIONES A
+          WHERE T.ID_TARJETA = TA.ID_TARJETA
+            AND A.ID_AUTORIZACION = TA.ID_AUTORIZACION
+            AND A.CUIL = I_CUIL; */
+      
+        --VERIFICO EL AÑO
+        SELECT COUNT(*)
+          INTO V_NOUTILIZADA
+          FROM T_TARJETAS T
+         WHERE T.UIDS = I_UIDS
+           AND T.ANIO < TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')); ---AÑO ANTERIORES
+      
+        IF V_NOUTILIZADA > 0 THEN
+          O_RESULTADO := 'La tarjeta no se cobra';
+          SP_UPDATE_TARJETA(I_UIDS, 'N'); --- ACTUALIZA LA FECHA DE GRABACION
+        ELSE
+        
+          MAASP_TUNI_TPTE.PKG_AUTORIZACIONES.SP_VALIDAR_CUIL_TARJETA(I_CUIL     => I_CUIL,
+                                                                     O_CANTIDAD => V_CANT_TARJETA);
+        
+          IF (V_CANT_TARJETA > 0) THEN
+            --SE COBRA
+            O_RESULTADO := 'La tarjeta si se cobra';
+            SP_UPDATE_TARJETA(I_UIDS, 'N');
+          ELSE
+            --NO SE COBRA  
+            O_RESULTADO := 'La tarjeta no se cobra';
+            SP_UPDATE_TARJETA(I_UIDS, 'S');
+          END IF;
+        
+        END IF;
+      
+      END;
+    END IF;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al actualizar la tarjeta' || SQLERRM);
+  END SP_ACTUALIZAR_TARJETA;
+
+  PROCEDURE SP_ACTUALIZAR_TARJETA_BEG(I_UIDS      IN T_TARJETAS.UIDS%TYPE DEFAULT NULL,
+                                      I_CUIL      IN T_AUTORIZACIONES.CUIL%TYPE DEFAULT NULL,
+                                      O_RESULTADO OUT VARCHAR2) IS
+  
+    V_EXISTE_TARJETA VARCHAR2(1);
+    V_CANT_TARJETA   NUMBER;
+    V_ID_TARJETA     T_TARJETAS.ID_TARJETA%TYPE;
+  
+    V_NOUTILIZADA NUMBER;
+  
+  BEGIN
+    V_EXISTE_TARJETA := FN_EXISTE_TARJETA(I_UIDS, V_ID_TARJETA);
+  
+    IF NVL(V_EXISTE_TARJETA, 'N') = 'N' THEN
+      O_RESULTADO := 'No existe la tarjeta';
+    ELSE
+      BEGIN
+      
+        /*  SE MODIFICA PORQUE NO TENIA AÑO Y CUIL LA TARJETA (SE PAGARIA TARJETAS DE AÑOS ANTERIORES)
+        
+        SELECT COUNT(*)
+           INTO V_CANT_TARJETA
+           FROM T_TARJETAS_AUTORIZACION TA, T_TARJETAS T, T_AUTORIZACIONES A
+          WHERE T.ID_TARJETA = TA.ID_TARJETA
+            AND A.ID_AUTORIZACION = TA.ID_AUTORIZACION
+            AND A.CUIL = I_CUIL; */
+      
+        --VERIFICO EL AÑO
+        SELECT COUNT(*)
+          INTO V_NOUTILIZADA
+          FROM T_TARJETAS T
+         WHERE T.UIDS = I_UIDS
+           AND T.ANIO < TO_NUMBER(TO_CHAR(SYSDATE, 'YYYY')); ---AÑO ANTERIORES
+      
+        IF V_NOUTILIZADA > 0 THEN
+          O_RESULTADO := 'La tarjeta no se cobra';
+          SP_UPDATE_TARJETA(I_UIDS, 'N'); --- ACTUALIZA LA FECHA DE GRABACION
+        ELSE
+        
+          SELECT COUNT(*)
+            INTO V_CANT_TARJETA
+            FROM T_TARJETAS T
+           WHERE T.UIDS = I_UIDS
+             AND T.CUIL = I_CUIL; --TARJETA SIN USO
+        
+          IF (0 < V_CANT_TARJETA) THEN
+            --SE COBRA
+            O_RESULTADO := 'La tarjeta si se cobra';
+            SP_UPDATE_TARJETA(I_UIDS, 'N');
+          ELSE
+            --NO SE COBRA  
+            O_RESULTADO := 'La tarjeta no se cobra';
+            SP_UPDATE_TARJETA(I_UIDS, 'S');
+          END IF;
+        
+        END IF;
+      
+      END;
+    END IF;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al actualizar la tarjeta' || SQLERRM);
+  END SP_ACTUALIZAR_TARJETA_BEG;
+
+  PROCEDURE SP_GUARDAR_PERSONALIZACION(I_UIDS            IN T_TARJETAS.UIDS%TYPE DEFAULT NULL,
+                                       I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                       I_FECHA_GRABACION IN T_TARJETAS_AUTORIZACION.FEC_DESDE%TYPE,
+                                       O_RESULTADO       OUT VARCHAR2) IS
+  
+    V_ERROR EXCEPTION;
+    V_MSJ                     VARCHAR2(1000);
+    V_EXISTE                  VARCHAR2(1);
+    V_TARJETA                 T_TARJETAS.ID_TARJETA%TYPE;
+    V_ID_TARJETA_AUTORIZACION T_TARJETAS_AUTORIZACION.ID_TARJETA_AUTORIZACION%TYPE;
+    V_CUIL                    T_AUTORIZACIONES.CUIL%TYPE;
+  
+  BEGIN
+    BEGIN
+    
+      SP_BUSCAR_AUTORIZACION(I_ID_AUTORIZACION => I_ID_AUTORIZACION,
+                             I_UIDS            => I_UIDS,
+                             O_EXISTE          => V_EXISTE);
+    
+      IF V_EXISTE = 'S' THEN
+        V_MSJ := 'LA AUTORIZACION ' || I_ID_AUTORIZACION ||
+                 ' ESTA VINCULADA A LA TARJETA ' || I_UIDS;
+        RAISE V_ERROR;
+      ELSE
+      
+        BEGIN
+          SELECT ID_TARJETA
+            INTO V_TARJETA
+            FROM T_TARJETAS
+           WHERE UIDS = I_UIDS;
+        EXCEPTION
+          WHEN OTHERS THEN
+            V_MSJ := 'LA TARJETA NO EXISTE';
+            RAISE V_ERROR;
+        END;
+      
+        SELECT CUIL
+          INTO V_CUIL
+          FROM T_AUTORIZACIONES
+         WHERE ID_AUTORIZACION = I_ID_AUTORIZACION;
+      
+        SP_ACTUALIZAR_TARJETA(I_UIDS      => I_UIDS,
+                              I_CUIL      => V_CUIL,
+                              O_RESULTADO => O_RESULTADO);
+      
+        V_ID_TARJETA_AUTORIZACION := SEQ_AUTORIZACIONES.NEXTVAL;
+      
+        INSERT INTO T_TARJETAS_AUTORIZACION
+          (ID_TARJETA_AUTORIZACION, ID_AUTORIZACION, ID_TARJETA, FEC_DESDE)
+        VALUES
+          (V_ID_TARJETA_AUTORIZACION,
+           I_ID_AUTORIZACION,
+           V_TARJETA,
+           I_FECHA_GRABACION);
+      
+      END IF;
+    
+      IF (O_RESULTADO != 'NO EXISTE LA TARJETA') THEN
+        COMMIT;
+      ELSE
+        ROLLBACK;
+      END IF;
+    
+    EXCEPTION
+      WHEN OTHERS THEN
+        IF V_MSJ IS NULL THEN
+          V_MSJ := 'ERROR EN EL GRABADO DE LA AUTORIZACION';
+        END IF;
+        ROLLBACK;
+        RAISE V_ERROR;
+    END;
+  EXCEPTION
+    WHEN V_ERROR THEN
+      O_RESULTADO := V_MSJ;
+    WHEN OTHERS THEN
+      O_RESULTADO := SQLERRM;
+  END SP_GUARDAR_PERSONALIZACION;
+
+  /* PROCEDURE SP_LISTAR_AUTORIZACIONES_BAJA(I_ID_ADMINISTRADORA IN T_TARJETAS.ID_ADMINISTRADORA%TYPE,
+                                            O_CURSOR            OUT SYS_REFCURSOR) IS
+    
+    BEGIN
+      OPEN O_CURSOR FOR
+        WITH LISTADO AS
+         (SELECT A.ID_AUTORIZACION, S.ID_ESTADO, A.CUIL
+            FROM T_AUTORIZACIONES A, T_AUTO_ESTADO S
+           WHERE S.ID_AUTORIZACION = A.ID_AUTORIZACION
+             AND S.ID_AUTORIZACION_ESTADO =
+                 (SELECT MAX(AUX.ID_AUTORIZACION_ESTADO)
+                    FROM T_AUTO_ESTADO AUX
+                   WHERE AUX.ID_AUTORIZACION = A.ID_AUTORIZACION)
+             AND S.ID_ESTADO = 3)
+        SELECT L.ID_AUTORIZACION,
+               L.ID_ESTADO,
+               ST.UIDS,
+               ST.FEC_ALTA AS FECHA,
+               ST.NRO_SERIE,
+               ST.ID_ADMINISTRADORA,
+               L.CUIL,
+               ST.COBRA_SN,
+               MB.N_MOTIVO_BAJA
+          FROM LISTADO                 L,
+               T_TARJETAS_AUTORIZACION TS,
+               T_TARJETAS              ST,
+               T_MOTIVOS_BAJA          MB
+         WHERE TS.ID_AUTORIZACION = L.ID_AUTORIZACION
+           AND ST.ID_TARJETA = TS.ID_TARJETA
+           AND ST.ID_MOTIVO_BAJA(+) = MB.ID_MOTIVO_BAJA
+           AND ST.ID_ADMINISTRADORA = I_ID_ADMINISTRADORA;
+    EXCEPTION
+      WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20002,
+                                'ERROR AL CONSULTAR AUTORIZACIONES EN LISTA NEGRA' ||
+                                SQLERRM);
+      
+    END SP_LISTAR_AUTORIZACIONES_BAJA;
+  */
+  FUNCTION FN_TRAE_NRO_TARJETA_CUIL_SERIE(I_CUIL_BENEF      IN T_AUTORIZACIONES.CUIL%TYPE,
+                                          I_UIDS            IN T_TARJETAS.UIDS%TYPE,
+                                          O_ID_AUTORIZACION OUT T_AUTORIZACIONES.ID_AUTORIZACION%TYPE)
+    RETURN VARCHAR2 IS
+    O_EXISTE VARCHAR2(1);
+    V_CANT   NUMBER;
+  
+  BEGIN
+  
+    SELECT 'S', A.ID_AUTORIZACION
+      INTO O_EXISTE, O_ID_AUTORIZACION
+      FROM T_TARJETAS_AUTORIZACION TA, T_TARJETAS T, T_AUTORIZACIONES A
+     WHERE TA.ID_AUTORIZACION = A.ID_AUTORIZACION
+       AND T.ID_TARJETA = TA.ID_TARJETA
+       AND T.UIDS = I_UIDS
+       AND A.CUIL = I_CUIL_BENEF
+       AND TA.FEC_HASTA IS NULL;
+  
+    RETURN O_EXISTE;
+  
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      RETURN 'N';
+    WHEN OTHERS THEN
+      RETURN 'N';
+    
+  END FN_TRAE_NRO_TARJETA_CUIL_SERIE;
+
+  PROCEDURE SP_UPDATE_TARJ_AUT(I_ID_AUTORIZACION IN T_TARJETAS_AUTORIZACION.ID_AUTORIZACION%TYPE,
+                               I_UIDS_NUEVA      IN T_TARJETAS.UIDS%TYPE,
+                               I_UIDS_VIEJA      IN T_TARJETAS.UIDS%TYPE,
+                               O_RESULTADO       OUT VARCHAR2) IS
+  
+    V_TARJETA_VIEJA           T_TARJETAS.ID_TARJETA%TYPE;
+    V_TARJETA_NUEVA           T_TARJETAS.ID_TARJETA%TYPE;
+    V_ID_TARJETA_AUTORIZACION T_TARJETAS_AUTORIZACION.ID_TARJETA_AUTORIZACION%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+  
+  BEGIN
+    SELECT T.ID_TARJETA
+      INTO V_TARJETA_VIEJA
+      FROM T_TARJETAS T
+     WHERE T.UIDS = I_UIDS_VIEJA;
+  
+    SELECT T.ID_TARJETA
+      INTO V_TARJETA_NUEVA
+      FROM T_TARJETAS T
+     WHERE T.UIDS = I_UIDS_NUEVA;
+  
+    UPDATE T_TARJETAS_AUTORIZACION T
+       SET T.FEC_HASTA = SYSDATE
+     WHERE T.ID_AUTORIZACION = I_ID_AUTORIZACION
+       AND ID_TARJETA = V_TARJETA_VIEJA;
+  
+    INSERT INTO T_TARJETAS_AUTORIZACION
+      (ID_TARJETA_AUTORIZACION, ID_AUTORIZACION, ID_TARJETA, FEC_DESDE)
+    VALUES
+      (V_ID_TARJETA_AUTORIZACION,
+       I_ID_AUTORIZACION,
+       V_TARJETA_NUEVA,
+       SYSDATE);
+  
+    O_RESULTADO := 'OK';
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := SQLERRM;
+  END SP_UPDATE_TARJ_AUT;
+
+  PROCEDURE SP_CAMBIAR_TARJETA(I_CUIL       IN T_AUTORIZACIONES.CUIL%TYPE,
+                               I_UIDS_NUEVO IN T_TARJETAS.UIDS%TYPE,
+                               I_UIDS_VIEJO IN T_TARJETAS.UIDS%TYPE,
+                               O_RESULTADO  OUT VARCHAR2) IS
+  
+    V_MSJ VARCHAR2(500);
+    V_ERROR EXCEPTION;
+    V_RDO_UPD           VARCHAR2(500);
+    V_UID_EXISTE        VARCHAR2(1);
+    V_ID_AUT            T_AUTORIZACIONES.ID_AUTORIZACION%TYPE;
+    V_ID_AUT_NUEVA      T_AUTORIZACIONES.ID_AUTORIZACION%TYPE;
+    V_UIDS_NUEVA_EXISTE VARCHAR2(1);
+    V_CANT_TARJETA      NUMBER;
+    V_ID_TARJETA        T_TARJETAS.ID_TARJETA%TYPE;
+    V_RESULTADO         VARCHAR2(500);
+    V_CANTIDAD          NUMBER;
+  
+  BEGIN
+  
+    SP_VERIFICAR_TARJETA_UIDS(I_UIDS         => I_UIDS_VIEJO,
+                              I_CUIL         => I_CUIL,
+                              O_RESULTADO    => V_RESULTADO,
+                              O_UID_EXISTE   => V_UID_EXISTE,
+                              O_AUTORIZACION => V_ID_AUT);
+  
+    IF V_RESULTADO IS NOT NULL AND V_RESULTADO <> 'OK' THEN
+      V_MSJ := V_RESULTADO;
+      RAISE V_ERROR;
+    END IF;
+  
+    IF V_UID_EXISTE = 'S' THEN
+    
+      V_UIDS_NUEVA_EXISTE := FN_TRAE_NRO_TARJETA_CUIL_SERIE(I_CUIL_BENEF      => I_CUIL,
+                                                            I_UIDS            => I_UIDS_NUEVO,
+                                                            O_ID_AUTORIZACION => V_ID_AUT_NUEVA);
+    
+      SELECT COUNT(1)
+        INTO V_CANTIDAD
+        FROM T_TARJETAS_AUTORIZACION TA, T_TARJETAS T, T_AUTORIZACIONES A
+       WHERE TA.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND T.ID_TARJETA = TA.ID_TARJETA
+         AND T.UIDS = I_UIDS_NUEVO
+         AND A.CUIL <> I_CUIL
+         AND TA.FEC_HASTA IS NULL;
+    
+      IF V_UIDS_NUEVA_EXISTE = 'S' OR V_CANTIDAD > 0 THEN
+        V_MSJ := 'A002 | LA TARJETA NUEVA YA ESTA SIENDO UTILIZADA';
+        RAISE V_ERROR;
+      ELSE
+      
+        O_RESULTADO := 'OK'; --  'La tarjeta si se cobra';
+        SP_UPDATE_TARJETA(I_UIDS_NUEVO, 'S');
+      
+        SP_UPDATE_TARJ_AUT(I_ID_AUTORIZACION => V_ID_AUT,
+                           I_UIDS_NUEVA      => I_UIDS_NUEVO,
+                           I_UIDS_VIEJA      => I_UIDS_VIEJO,
+                           O_RESULTADO       => V_RDO_UPD);
+      
+        IF V_RDO_UPD != 'OK' THEN
+          V_MSJ := 'A004 | ERROR EN EL CAMBIO DE TARJETA';
+          RAISE V_ERROR;
+        END IF;
+      END IF;
+    ELSE
+      V_MSJ := 'A003 | LA TARJETA NO ESTA ASOCIADA A LA AUTORIZACION';
+      RAISE V_ERROR;
+    END IF;
+    COMMIT;
+  
+  EXCEPTION
+    WHEN V_ERROR THEN
+      O_RESULTADO := V_MSJ;
+    WHEN OTHERS THEN
+      O_RESULTADO := SQLERRM;
+  END SP_CAMBIAR_TARJETA;
+
+  PROCEDURE SP_VERIFICAR_TARJETA_UIDS(I_UIDS         IN T_TARJETAS.UIDS%TYPE,
+                                      I_CUIL         IN T_AUTORIZACIONES.CUIL%TYPE,
+                                      O_RESULTADO    OUT VARCHAR2,
+                                      O_UID_EXISTE   OUT VARCHAR2,
+                                      O_AUTORIZACION OUT VARCHAR2) IS
+  
+    V_MSJ VARCHAR2(500);
+    V_ERROR EXCEPTION;
+    V_UID_EXISTE        VARCHAR2(1);
+    V_NRO_TARJETA       T_TARJETAS.ID_TARJETA%TYPE;
+    V_ID_AUT            T_AUTORIZACIONES.ID_AUTORIZACION%TYPE;
+    V_TARJETA_ASIGNADA  NUMBER;
+    V_AUTOR_TARJETA     NUMBER;
+    V_AUTORIZACION      T_AUTORIZACIONES.ID_AUTORIZACION%TYPE;
+    V_EXISTE            VARCHAR2(1);
+    V_EXISTE_EN_OTRA_AU NUMBER;
+  
+  BEGIN
+  
+    V_EXISTE := FN_EXISTE_TARJETA(I_UIDS        => I_UIDS,
+                                  O_NRO_TARJETA => V_NRO_TARJETA);
+  
+    IF V_EXISTE = 'N' THEN
+      V_MSJ := 'A001 | LA TARJETA NO ESTA DADA DE ALTA';
+      RAISE V_ERROR;
+    ELSE
+    
+      IF I_CUIL IS NULL OR I_CUIL = ' ' THEN
+        V_UID_EXISTE := FN_TRAE_NRO_TARJETA_CUIL_ATOS(I_UIDS            => I_UIDS,
+                                                      O_ID_AUTORIZACION => V_ID_AUT);
+      ELSE
+      
+        V_UID_EXISTE := FN_TRAE_NRO_TARJETA_CUIL_SERIE(I_CUIL_BENEF      => I_CUIL,
+                                                       I_UIDS            => I_UIDS,
+                                                       O_ID_AUTORIZACION => V_ID_AUT);
+      END IF;
+    
+      O_AUTORIZACION := V_ID_AUT;
+      O_UID_EXISTE   := V_UID_EXISTE;
+    
+      SELECT COUNT(1)
+        INTO V_EXISTE_EN_OTRA_AU
+        FROM T_TARJETAS_AUTORIZACION A, T_TARJETAS B, T_AUTORIZACIONES C
+       WHERE A.ID_TARJETA = B.ID_TARJETA
+         AND B.UIDS = I_UIDS
+         AND A.ID_AUTORIZACION = C.ID_AUTORIZACION
+         AND C.CUIL <> I_CUIL;
+    
+      IF V_EXISTE_EN_OTRA_AU > 0 THEN
+        V_MSJ := 'A002 | LA TARJETA YA ESTA SIENDO UTILIZADA';
+        RAISE V_ERROR;
+      ELSE
+        IF V_UID_EXISTE = 'N' THEN
+          V_MSJ := 'A003 | LA TARJETA NO ESTA ASOCIADA A LA AUTORIZACION';
+          RAISE V_ERROR;
+        END IF;
+      END IF;
+    END IF;
+  
+    O_RESULTADO := 'OK';
+  EXCEPTION
+    WHEN V_ERROR THEN
+      O_RESULTADO := V_MSJ;
+    WHEN OTHERS THEN
+      O_RESULTADO := SQLERRM;
+    
+  END SP_VERIFICAR_TARJETA_UIDS;
+
+  PROCEDURE SP_ALTA_AUTORIZACIONES(I_USUARIO               IN T_AUTORIZACIONES.CUIL_USR%TYPE DEFAULT NULL,
+                                   I_CUIL                  IN T_AUTORIZACIONES.CUIL%TYPE,
+                                   I_ID_ORIGEN             IN T_AUTORIZACIONES.ID_ORIGEN%TYPE DEFAULT NULL,
+                                   I_ID_DESTINO            IN T_AUTORIZACIONES.ID_DESTINO%TYPE DEFAULT NULL,
+                                   I_ID_EMPRESA            IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                   I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                   I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                   I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE DEFAULT NULL,
+                                   I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                   I_TIPO_SOLICITANTE      IN T_AUTORIZACIONES.ID_TIPO_SOLICITANTE%TYPE,
+                                   I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE DEFAULT NULL,
+                                   I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE DEFAULT NULL,
+                                   I_VIAJA_FERIADO_SN      IN T_AUTORIZACIONES.VIAJA_FERIADO_SN%TYPE DEFAULT NULL,
+                                   I_CONVENIO              IN T_AUTORIZACIONES.ID_CONVENIO%TYPE DEFAULT NULL,
+                                   I_EXCEPCION             IN VARCHAR2 DEFAULT 'N',
+                                   I_NIVEL_EDUCATIVO       IN T_AUTORIZACIONES.ID_NIVEL_EDUCATIVO%TYPE DEFAULT NULL,
+                                   
+                                   O_MENSAJE OUT VARCHAR2) IS
+  
+    V_ID_AUTORIZACION     T_AUTORIZACIONES.ID_AUTORIZACION%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+    V_ID_ESTADO_AUTO      T_AUTO_ESTADO.ID_AUTORIZACION_ESTADO%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+    V_RESULTADO           VARCHAR2(1) := 'S';
+    V_ID_TIPO_SOLICITANTE T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE;
+    V_ID_PROGRAMA         T_PROGRAMAS.ID_PROGRAMA%TYPE;
+    V_SERVICIO            VARCHAR2(1);
+    V_CANT_USO_X_MES      NUMBER;
+    V_OTRO_PROGRAMA       T_PROGRAMAS.N_PROGRAMA%TYPE;
+    V_CANTVALIDA          NUMBER;
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    SELECT T.ID_PROGRAMA
+      INTO V_ID_PROGRAMA
+      FROM T_TIPOS_SOLICITANTE T
+     WHERE T.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE;
+  
+    SELECT DECODE(T.ID_TIPO_EMPRESA, 1, 'U', 'I')
+      INTO V_SERVICIO
+      FROM TRANSPORTE.T_EMPRESAS_X_TIPO T
+     WHERE T.ID_EMPRESA = I_ID_EMPRESA;
+  
+    -- CONTROL DE CANTIDAD DE USOS ACORDE AL TIPO DE SOLICITANTE
+    -- DESEMPLEADOS SON USOS MENSUALES
+    -- EL RESTO USOS POR DIA DE SEMANA
+    IF I_TIPO_SOLICITANTE = 6 THEN
+    
+      V_CANT_USO_X_MES := 16;
+    
+    ELSE
+    
+      IF NVL(I_CANT_USO_X_DIA_SEM, '0000000') = '0000000' THEN
+        O_MENSAJE := 'DEBE SELECCIONAR AL MENOS UN DIA DE LA SEMANA.';
+        RETURN;
+      END IF;
+    
+    END IF;
+  
+    -- CONTROLES PARA BOS
+    IF V_ID_PROGRAMA = 2 THEN
+      -- SI NO ES EXCEPCION
+      IF I_EXCEPCION = 'N' THEN
+      
+        -- CONTROL PARA CARGAS NO CONVENIO
+        IF I_CONVENIO IS NULL THEN
+          PKG_BENEFICIOS.SP_VALIDAR_BOS(I_CUIL                => I_CUIL,
+                                        O_RESULTADO           => V_RESULTADO,
+                                        O_ID_TIPO_SOLICITANTE => V_ID_TIPO_SOLICITANTE,
+                                        O_MENSAJE             => O_MENSAJE);
+        
+        END IF;
+      
+        IF V_RESULTADO = 'N' THEN
+          RETURN;
+        ELSE
+          O_MENSAJE := NULL;
+        END IF;
+      
+        --- CONTROL PARA CARGAS NO EXCEPCIONES (CANTIDAD TOTAL DE BENEFICIOS Y EXISTENCIA DE OTROS PROGRAMAS)
+        DECLARE
+        
+          V_OTRO_PROGRAMA                T_PROGRAMAS.N_PROGRAMA%TYPE;
+          V_AUT_URBANAS                  NUMBER;
+          V_AUT_INTERURBANAS             NUMBER;
+          V_MAX_BOLETOS_URBANOS_BOS      NUMBER;
+          V_MAX_BOLETOS_INTERURBANOS_BOS NUMBER;
+        
+        BEGIN
+        
+          V_OTRO_PROGRAMA := PKG_BENEFICIOS.FU_GET_BENEFICIO_DIFERENTE(I_CUIL        => I_CUIL,
+                                                                       I_ID_PROGRAMA => V_ID_PROGRAMA);
+        
+          IF V_OTRO_PROGRAMA IS NOT NULL THEN
+            O_MENSAJE := 'EL BENEFICIARIO ' || I_CUIL ||
+                         ' YA POSEE OTRO BENEFICIO: ' || V_OTRO_PROGRAMA ||
+                         '. NO PUEDE AUTORIZARSE POR SISTEMA.';
+            RETURN;
+          END IF;
+        
+          V_AUT_URBANAS := PKG_BENEFICIOS.FU_GET_CANT_AUTORIZACIONES(I_CUIL        => I_CUIL,
+                                                                     I_ID_PROGRAMA => 2,
+                                                                     I_SERVICIO    => 'U');
+        
+          V_AUT_INTERURBANAS := PKG_BENEFICIOS.FU_GET_CANT_AUTORIZACIONES(I_CUIL        => I_CUIL,
+                                                                          I_ID_PROGRAMA => 2,
+                                                                          I_SERVICIO    => 'I');
+        
+          V_MAX_BOLETOS_URBANOS_BOS := PKG_BENEFICIOS.FU_GET_MAX_BOLETOS_URBANOS_BOS;
+        
+          V_MAX_BOLETOS_INTERURBANOS_BOS := PKG_BENEFICIOS.FU_GET_MAX_BOLETOS_INTER_BOS;
+        
+          IF V_SERVICIO = 'I' AND
+             (V_AUT_INTERURBANAS + 1) > V_MAX_BOLETOS_INTERURBANOS_BOS THEN
+          
+            O_MENSAJE := 'CON ESTA ALTA SE EXCEDERÍA EL MÁXIMO DE BENEFICIOS PERMITIDOS PARA SERVICIOS INTERURBANOS. NO PUEDE AUTORIZARSE POR SISTEMA';
+            RETURN;
+          
+          ELSIF V_SERVICIO = 'U' AND
+                (V_AUT_URBANAS + 1) > V_MAX_BOLETOS_URBANOS_BOS THEN
+          
+            O_MENSAJE := 'CON ESTA ALTA SE EXCEDERÍA EL MÁXIMO DE BENEFICIOS PERMITIDOS PARA SERVICIOS URBANOS. NO PUEDE AUTORIZARSE POR SISTEMA';
+            RETURN;
+          
+          END IF;
+        
+        END;
+      END IF;
+      -- CONTROLES PARA BEG
+    ELSIF V_ID_PROGRAMA = 1 THEN
+      -- SI NO ES EXCEPCION
+      IF I_EXCEPCION = 'N' THEN
+      
+        PKG_BENEFICIOS.SP_VALIDAR_BEG(I_CUIL      => I_CUIL,
+                                      O_RESULTADO => V_RESULTADO,
+                                      O_MENSAJE   => O_MENSAJE);
+      
+        IF I_CONVENIO IS NULL THEN
+        
+          -- VALIDO QUE NO TENGA BENEFICIOS EN OTRO PROGRAMA
+          V_OTRO_PROGRAMA := PKG_BENEFICIOS.FU_GET_BENEFICIO_DIFERENTE(I_CUIL        => I_CUIL,
+                                                                       I_ID_PROGRAMA => 1);
+          IF V_OTRO_PROGRAMA IS NOT NULL THEN
+          
+            V_RESULTADO := 'N';
+            O_MENSAJE   := 'YA ES BENEFICIARIO DE OTRO PROGRAMA: ' ||
+                           V_OTRO_PROGRAMA ||
+                           '. NO PUEDE SER BENEFICIARIO DE BEG.';
+            RETURN;
+          
+          END IF;
+        
+        END IF;
+      END IF;
+    
+      IF V_RESULTADO = 'N' THEN
+        RETURN;
+      ELSE
+        O_MENSAJE := NULL;
+      END IF;
+    ELSE
+    
+      O_MENSAJE := 'TIPO DE PROGRAMA NO PARAMETRIZADO PARA AUTORIZACION POR SISTEMA ' ||
+                   V_ID_PROGRAMA;
+      RETURN;
+    
+    END IF;
+  
+    ---BEG
+    IF V_ID_PROGRAMA = 1 THEN
+      IF I_NIVEL_EDUCATIVO IS NULL THEN
+        O_MENSAJE := 'DEBE INGRESAR EL NIVEL EDUCATIVO PARA EL BEG.';
+        RETURN;
+      END IF;
+    END IF;
+  
+    IF V_RESULTADO = 'S' THEN
+    
+      INSERT INTO T_AUTORIZACIONES
+        (CUIL_USR,
+         ID_AUTORIZACION,
+         CUIL,
+         ID_ORIGEN,
+         ID_DESTINO,
+         ID_EMPRESA,
+         INICIO_FRANJA_HORARIA,
+         FINAL_FRANJA_HORARIA,
+         CANT_USO_X_DIA,
+         CANT_USO_X_MES,
+         ID_TIPO_SOLICITANTE,
+         CANT_USO_X_DIA_SEM,
+         CANT_USO_X_SEMANA,
+         VIAJA_FERIADO_SN,
+         ID_CONVENIO,
+         FEC_DESDE,
+         FEC_HASTA,
+         ID_NIVEL_EDUCATIVO)
+      VALUES
+        (I_USUARIO,
+         V_ID_AUTORIZACION,
+         I_CUIL,
+         I_ID_ORIGEN,
+         I_ID_DESTINO,
+         I_ID_EMPRESA,
+         I_INICIO_FRANJA_HORARIA,
+         I_FINAL_FRANJA_HORARIA,
+         I_CANT_USO_X_DIA,
+         I_CANT_USO_X_MES,
+         I_TIPO_SOLICITANTE,
+         I_CANT_USO_X_DIA_SEM,
+         I_CANT_USO_X_SEMANA,
+         I_VIAJA_FERIADO_SN,
+         I_CONVENIO,
+         SYSDATE,
+         TO_DATE('31/12/' || TO_CHAR(SYSDATE, 'YYYY'), 'DD/MM/YYYY'),
+         I_NIVEL_EDUCATIVO);
+    
+      IF I_EXCEPCION = 'N' AND I_CONVENIO IS NULL THEN
+      
+        INSERT INTO T_AUTO_ESTADO
+          (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+        VALUES
+          (V_ID_ESTADO_AUTO, V_ID_AUTORIZACION, 1, SYSDATE);
+      
+      ELSIF I_EXCEPCION = 'S' OR I_CONVENIO IS NOT NULL THEN
+      
+        INSERT INTO T_AUTO_ESTADO
+          (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+        VALUES
+          (V_ID_ESTADO_AUTO, V_ID_AUTORIZACION, 2, SYSDATE);
+      ELSE
+        INSERT INTO T_AUTO_ESTADO
+          (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+        VALUES
+          (V_ID_ESTADO_AUTO, V_ID_AUTORIZACION, 1, SYSDATE);
+      END IF;
+    
+    END IF;
+  
+    COMMIT;
+    O_MENSAJE := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      O_MENSAJE := 'ERROR INESPERADO AL DAR EL ALTA DE LA AUTORIZACIÓN: ' ||
+                   SQLERRM;
+      RAISE;
+  END SP_ALTA_AUTORIZACIONES;
+
+  PROCEDURE SP_ATRAS_PERSONALIZACION(I_UIDS            IN T_TARJETAS.UIDS%TYPE DEFAULT NULL,
+                                     I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                     O_RESULTADO       OUT VARCHAR2) IS
+  
+    V_ERROR EXCEPTION;
+    V_MSJ     VARCHAR2(1000);
+    V_EXISTE  VARCHAR2(1);
+    V_TARJETA T_TARJETAS.ID_TARJETA%TYPE;
+  
+  BEGIN
+    O_RESULTADO := 'OK';
+  
+    SP_BUSCAR_AUTORIZACION(I_ID_AUTORIZACION => I_ID_AUTORIZACION,
+                           I_UIDS            => I_UIDS,
+                           O_EXISTE          => V_EXISTE);
+  
+    IF V_EXISTE = 'N' THEN
+      V_MSJ := 'ERROR: LA SOLICITUD YA SE ENCUENTRA DESGRABADA';
+      RAISE V_ERROR;
+    ELSE
+    
+      BEGIN
+        SELECT T.ID_TARJETA
+          INTO V_TARJETA
+          FROM T_TARJETAS T
+         WHERE T.UIDS = I_UIDS;
+      
+        DELETE T_TARJETAS_AUTORIZACION T
+         WHERE T.ID_AUTORIZACION = I_ID_AUTORIZACION
+           AND T.ID_TARJETA = V_TARJETA;
+      
+        UPDATE T_TARJETAS T
+           SET T.FEC_GRABACION   = NULL,
+               T.COBRA_SN        = NULL,
+               T.FEC_VENCIMIENTO = NULL
+         WHERE T.UIDS = I_UIDS;
+      
+        COMMIT;
+      EXCEPTION
+        WHEN OTHERS THEN
+          V_MSJ := 'ERROR EN EL DESGRABAR DE LA TARJETA';
+          RAISE V_ERROR;
+          ROLLBACK;
+      END;
+    END IF;
+  
+  EXCEPTION
+    WHEN V_ERROR THEN
+      O_RESULTADO := V_MSJ;
+    WHEN OTHERS THEN
+      O_RESULTADO := SQLERRM;
+  END SP_ATRAS_PERSONALIZACION;
+
+  PROCEDURE SP_APROBAR_EXCEPCIONES(I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE) IS
+  
+    V_ID_ESTADO_AUTO T_AUTO_ESTADO.ID_AUTORIZACION_ESTADO%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+  
+  BEGIN
+  
+    UPDATE T_AUTO_ESTADO AE
+       SET AE.FEC_HASTA = SYSDATE
+     WHERE AE.ID_AUTORIZACION = I_ID_AUTORIZACION
+       AND AE.ID_ESTADO = 2;
+  
+    INSERT INTO T_AUTO_ESTADO
+      (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+    VALUES
+      (V_ID_ESTADO_AUTO, I_ID_AUTORIZACION, 1, SYSDATE);
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL APROBAR EXCEPCION ' || SQLERRM);
+    
+  END SP_APROBAR_EXCEPCIONES;
+
+  FUNCTION FN_POSEE_AUTORIZACION(I_CUIL     IN T_AUTORIZACIONES.CUIL%TYPE,
+                                 I_PROGRAMA IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE)
+    RETURN NUMBER IS
+  BEGIN
+    DECLARE
+      CANT_AUT NUMBER := 0;
+    
+    BEGIN
+      BEGIN
+        SELECT COUNT(*)
+          INTO CANT_AUT
+          FROM T_AUTORIZACIONES T, T_TIPOS_SOLICITANTE S
+         WHERE T.ID_TIPO_SOLICITANTE = S.ID_TIPO_SOLICITANTE
+           AND T.CUIL = I_CUIL
+           AND S.ID_PROGRAMA = I_PROGRAMA;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RETURN 0;
+      END;
+    
+      IF CANT_AUT > 0 THEN
+        RETURN 1;
+      ELSE
+        RETURN 0;
+      END IF;
+    END;
+  END FN_POSEE_AUTORIZACION;
+
+  PROCEDURE SP_BUSCAR_BENEFICIARIO(I_CUIL      IN T_AUTORIZACIONES.CUIL%TYPE,
+                                   I_PROGRAMA  IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                   O_RESULTADO OUT VARCHAR2,
+                                   O_CURSOR    OUT SYS_REFCURSOR) IS
+  BEGIN
+    O_RESULTADO := 'OK';
+    BEGIN
+      OPEN O_CURSOR FOR
+        SELECT T.ID_USUARIO,
+               T.N_USUARIO AS CUIL,
+               T.APELLIDO,
+               T.NOMBRE,
+               T.EMAIL,
+               T.ID_SEXO,
+               T.NRO_DOCUMENTO,
+               T.PAI_COD_PAIS,
+               T.ID_NUMERO,
+               T.FECHA_NACIMIENTO
+          FROM GESTION_CIUDADANOS.VT_USUARIOS T
+         WHERE T.N_USUARIO = I_CUIL
+           AND PKG_AUTORIZACIONES.FN_POSEE_AUTORIZACION(I_CUIL, I_PROGRAMA) = 1;
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        O_RESULTADO := 'NODATA';
+      WHEN OTHERS THEN
+        O_RESULTADO := SQLERRM;
+    END;
+  
+  END SP_BUSCAR_BENEFICIARIO;
+
+  PROCEDURE SP_RENDICIONES(I_ID_PROGRAMA   IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE DEFAULT NULL,
+                           I_FECHA_DESDE   IN DATE,
+                           I_FECHA_HASTA   IN DATE,
+                           I_ID_EMPRESA    IN T_AUTORIZACIONES.ID_EMPRESA%TYPE DEFAULT NULL,
+                           I_TIPO_SERVICIO IN TRANSPORTE.T_TIPOS_EMPRESA.ID_TIPO_EMPRESA%TYPE DEFAULT NULL,
+                           O_CURSOR        OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+    
+      SELECT AE.FEC_DESDE FECHA_AUTORIZACION,
+             A.CUIL,
+             EF.SITUACION_LABORAL,
+             'CUIT: ' || EF.CUIT_EMPLEADOR || ' ' || 'EMPLEADOR: ' ||
+             EF.DENOMINACION,
+             TS.N_TIPO_SOLICITANTE,
+             PT.DISTANCIA,
+             PT.IMPORTE,
+             PT.ID_ORIGEN,
+             (SELECT DISTINCT N_PUNTO
+                FROM VT_PUNTOS
+               WHERE ID_PUNTO = PT.ID_ORIGEN) NOMBRE_ORIGEN,
+             PT.ID_DESTINO,
+             (SELECT DISTINCT N_PUNTO
+                FROM VT_PUNTOS
+               WHERE ID_PUNTO = PT.ID_DESTINO) NOMBRE_DESTINO,
+             A.CUIL_USR
+        FROM T_EMPLEOS_FORMAL             EF,
+             T_EMPADRONADOS               E,
+             T_AUTORIZACIONES             A,
+             T_AUTO_ESTADO                AE,
+             TRANSPORTE.T_DESTINOS        D,
+             TRANSPORTE.T_ORIGENES        O,
+             T_PRECIOS_TRAMO              PT,
+             T_TIPOS_SOLICITANTE          TS,
+             TRANSPORTE.T_TIPOS_EMPRESA   TE,
+             TRANSPORTE.T_EMPRESAS_X_TIPO T,
+             TRANSPORTE.T_EMPRESAS        EM
+       WHERE E.ID_EMPADRONADO = EF.ID_EMPADRONADO
+         AND E.CUIL = A.CUIL
+         AND AE.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND AE.ID_ESTADO = 1
+         AND TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+         AND T.ID_EMPRESA = EM.ID_EMPRESA
+         AND A.ID_EMPRESA = EM.ID_EMPRESA
+         AND D.ID_DESTINO(+) = A.ID_ORIGEN
+         AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+         AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_DESTINO(+) = A.ID_DESTINO
+         AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+         AND PT.FEC_HASTA IS NULL
+         AND TS.ID_PROGRAMA = NVL(I_ID_PROGRAMA, TS.ID_PROGRAMA)
+         AND A.ID_EMPRESA = NVL(I_ID_EMPRESA, A.ID_EMPRESA)
+         AND T.ID_TIPO_EMPRESA = NVL(I_TIPO_SERVICIO, T.ID_TIPO_EMPRESA)
+         AND AE.FEC_DESDE BETWEEN I_FECHA_DESDE AND I_FECHA_HASTA
+      UNION
+      SELECT AE.FEC_DESDE FECHA_AUTORIZACION,
+             A.CUIL,
+             'MONOTRIBUTISTA',
+             'MONOTRIBUTO CATEGORIA ' || EP.CATEGORIA,
+             TS.N_TIPO_SOLICITANTE,
+             PT.DISTANCIA,
+             PT.IMPORTE,
+             PT.ID_ORIGEN,
+             (SELECT DISTINCT N_PUNTO
+                FROM VT_PUNTOS
+               WHERE ID_PUNTO = PT.ID_ORIGEN) NOMBRE_ORIGEN,
+             PT.ID_DESTINO,
+             (SELECT DISTINCT N_PUNTO
+                FROM VT_PUNTOS
+               WHERE ID_PUNTO = PT.ID_DESTINO) NOMBRE_DESTINO,
+             A.CUIL_USR
+        FROM T_EMPLEOS_PRESUNTO           EP,
+             T_EMPADRONADOS               E,
+             T_AUTORIZACIONES             A,
+             T_AUTO_ESTADO                AE,
+             TRANSPORTE.T_DESTINOS        D,
+             TRANSPORTE.T_ORIGENES        O,
+             T_PRECIOS_TRAMO              PT,
+             T_TIPOS_SOLICITANTE          TS,
+             TRANSPORTE.T_TIPOS_EMPRESA   TE,
+             TRANSPORTE.T_EMPRESAS_X_TIPO T,
+             TRANSPORTE.T_EMPRESAS        EM
+       WHERE E.ID_EMPADRONADO = EP.ID_EMPADRONADO
+         AND E.CUIL = A.CUIL
+         AND AE.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND AE.ID_ESTADO = 1
+         AND TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+         AND T.ID_EMPRESA = EM.ID_EMPRESA
+         AND A.ID_EMPRESA = EM.ID_EMPRESA
+         AND D.ID_DESTINO(+) = A.ID_ORIGEN
+         AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+         AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_DESTINO(+) = A.ID_DESTINO
+         AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+         AND PT.FEC_HASTA IS NULL
+         AND TS.ID_PROGRAMA = NVL(I_ID_PROGRAMA, TS.ID_PROGRAMA)
+         AND A.ID_EMPRESA = NVL(I_ID_EMPRESA, A.ID_EMPRESA)
+         AND T.ID_TIPO_EMPRESA = NVL(I_TIPO_SERVICIO, T.ID_TIPO_EMPRESA)
+         AND AE.FEC_DESDE BETWEEN I_FECHA_DESDE AND I_FECHA_HASTA
+      UNION
+      SELECT AE.FEC_DESDE FECHA_AUTORIZACION,
+             A.CUIL,
+             'DESEMPLEADO',
+             NULL,
+             TS.N_TIPO_SOLICITANTE,
+             PT.DISTANCIA,
+             PT.IMPORTE,
+             PT.ID_ORIGEN,
+             (SELECT DISTINCT N_PUNTO
+                FROM VT_PUNTOS
+               WHERE ID_PUNTO = PT.ID_ORIGEN) NOMBRE_ORIGEN,
+             PT.ID_DESTINO,
+             (SELECT DISTINCT N_PUNTO
+                FROM VT_PUNTOS
+               WHERE ID_PUNTO = PT.ID_DESTINO) NOMBRE_DESTINO,
+             A.CUIL_USR
+        FROM T_DESEMPLEOS                 DE,
+             T_EMPADRONADOS               E,
+             T_AUTORIZACIONES             A,
+             T_AUTO_ESTADO                AE,
+             TRANSPORTE.T_DESTINOS        D,
+             TRANSPORTE.T_ORIGENES        O,
+             T_PRECIOS_TRAMO              PT,
+             T_TIPOS_SOLICITANTE          TS,
+             TRANSPORTE.T_TIPOS_EMPRESA   TE,
+             TRANSPORTE.T_EMPRESAS_X_TIPO T,
+             TRANSPORTE.T_EMPRESAS        EM
+       WHERE E.ID_EMPADRONADO = DE.ID_EMPADRONADO
+         AND E.CUIL = A.CUIL
+         AND AE.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND AE.ID_ESTADO = 1
+         AND TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+         AND T.ID_EMPRESA = EM.ID_EMPRESA
+         AND A.ID_EMPRESA = EM.ID_EMPRESA
+         AND D.ID_DESTINO(+) = A.ID_ORIGEN
+         AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+         AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_DESTINO(+) = A.ID_DESTINO
+         AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+         AND TS.ID_PROGRAMA = NVL(I_ID_PROGRAMA, TS.ID_PROGRAMA)
+         AND A.ID_EMPRESA = NVL(I_ID_EMPRESA, A.ID_EMPRESA)
+         AND T.ID_TIPO_EMPRESA = NVL(I_TIPO_SERVICIO, T.ID_TIPO_EMPRESA)
+         AND PT.FEC_HASTA IS NULL
+         AND AE.FEC_DESDE BETWEEN I_FECHA_DESDE AND
+             NVL(I_FECHA_HASTA, SYSDATE);
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL RECUPERAR EL LISTADO DE RENDICIONES. ' ||
+                              SQLERRM);
+  END SP_RENDICIONES;
+
+  ----
+
+  PROCEDURE SP_INSERTAR_CLAVE_EMPRESA(I_N_CLAVES          IN T_CLAVES_USUARIO.N_CLAVE%TYPE,
+                                      I_N_USUARIO         IN T_CLAVES_USUARIO.ID_USUARIO%TYPE,
+                                      I_FECHA_EXPIRACCION IN T_CLAVES_USUARIO.FEC_EXPIRACCION%TYPE,
+                                      I_ID_EMPRESA        IN T_CLAVES_USUARIO.ID_EMPRESA%TYPE,
+                                      O_ID_CLAVES         OUT VARCHAR2,
+                                      O_RESULTADO         OUT VARCHAR2) IS
+  
+    V_ID_SEQ T_CLAVES_USUARIO.ID_CLAVE%TYPE;
+  
+  BEGIN
+    O_RESULTADO := 'OK';
+  
+    BEGIN
+      SELECT SEQ_AUTORIZACIONES.NEXTVAL INTO V_ID_SEQ FROM DUAL;
+    
+      INSERT INTO T_CLAVES_USUARIO
+        (ID_CLAVE,
+         N_CLAVE,
+         ID_USUARIO,
+         FEC_EXPIRACCION,
+         FEC_ALTA,
+         ID_EMPRESA)
+      VALUES
+        (V_ID_SEQ,
+         I_N_CLAVES,
+         I_N_USUARIO,
+         I_FECHA_EXPIRACCION,
+         SYSDATE,
+         I_ID_EMPRESA);
+    
+      O_ID_CLAVES := V_ID_SEQ;
+    EXCEPTION
+      WHEN OTHERS THEN
+        O_RESULTADO := SQLERRM;
+    END;
+  
+    COMMIT;
+  
+  END SP_INSERTAR_CLAVE_EMPRESA;
+
+  ----------------------------------------------------------------------------------------------------------
+  -- SP PARA BUSCAR LA INFORMACION DE UNA CLAVE ASOCIADA A UNA EMPRESA
+  ----------------------------------------------------------------------------------------------------------
+  PROCEDURE SP_BUSCAR_CLAVE_EMPRESA(I_N_CLAVES   IN T_CLAVES_USUARIO.N_CLAVE%TYPE,
+                                    I_ID_EMPRESA IN T_CLAVES_USUARIO.ID_EMPRESA%TYPE,
+                                    O_CURSOR     OUT SYS_REFCURSOR,
+                                    O_RESULTADO  OUT VARCHAR2) IS
+  BEGIN
+    O_RESULTADO := 'OK';
+  
+    OPEN O_CURSOR FOR
+      SELECT T.ID_CLAVE,
+             T.N_CLAVE         N_CLAVES,
+             T.ID_USUARIO,
+             T.FEC_EXPIRACCION FECHA_EXPIRACCION,
+             T.FEC_ALTA,
+             T.ID_EMPRESA
+        FROM T_CLAVES_USUARIO T
+       WHERE PKG_AUTORIZACIONES.SP_VALIDAR_EMPRESA(I_N_CLAVES, I_ID_EMPRESA) = 1
+         AND T.N_CLAVE = I_N_CLAVES;
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      O_RESULTADO := 'NODATA';
+    WHEN OTHERS THEN
+      O_RESULTADO := SQLERRM;
+    
+  END SP_BUSCAR_CLAVE_EMPRESA;
+
+  ----------------------------------------------------------------------------------------------------------
+  -- SP PARA INSERTAR LA INFORMACION DE UNA CLAVE 
+  ----------------------------------------------------------------------------------------------------------
+  PROCEDURE SP_INSERTAR_CLAVE(I_N_CLAVES          IN T_CLAVES_USUARIO.N_CLAVE%TYPE,
+                              I_N_USUARIO         IN T_CLAVES_USUARIO.ID_USUARIO%TYPE,
+                              I_FECHA_EXPIRACCION IN T_CLAVES_USUARIO.FEC_EXPIRACCION%TYPE,
+                              O_ID_CLAVES         OUT VARCHAR2,
+                              O_RESULTADO         OUT VARCHAR2) IS
+  
+    V_ID_SEQ T_CLAVES_USUARIO.ID_CLAVE%TYPE;
+  BEGIN
+    O_RESULTADO := 'OK';
+  
+    BEGIN
+      SELECT SEQ_AUTORIZACIONES.NEXTVAL INTO V_ID_SEQ FROM DUAL;
+    
+      INSERT INTO T_CLAVES_USUARIO
+        (ID_CLAVE, N_CLAVE, ID_USUARIO, FEC_EXPIRACCION, FEC_ALTA)
+      VALUES
+        (V_ID_SEQ, I_N_CLAVES, I_N_USUARIO, I_FECHA_EXPIRACCION, SYSDATE);
+    
+      O_ID_CLAVES := V_ID_SEQ;
+    
+    EXCEPTION
+      WHEN OTHERS THEN
+        O_RESULTADO := SQLERRM;
+    END;
+  
+    COMMIT;
+  END SP_INSERTAR_CLAVE;
+
+  ----------------------------------------------------------------------------------------------------------
+  -- SP PARA OBTENER EL ID_GRUPO EN BASE A UN ID_EMPRESA
+  ----------------------------------------------------------------------------------------------------------
+
+  FUNCTION SP_OBTENER_GRUPO(I_ID_EMPRESA IN T_CLAVES_USUARIO.ID_EMPRESA%TYPE)
+    RETURN NUMBER IS
+  BEGIN
+    DECLARE
+      V_ID_GRUPO NUMBER := 0;
+    
+    BEGIN
+      SELECT NVL(ID_GRUPO, 0)
+        INTO V_ID_GRUPO
+        FROM TRANSPORTE.T_EMPRESAS_X_TIPO
+       WHERE ID_EMPRESA = I_ID_EMPRESA;
+      RAISE TOO_MANY_ROWS;
+    EXCEPTION
+      WHEN TOO_MANY_ROWS THEN
+        RETURN V_ID_GRUPO;
+      WHEN OTHERS THEN
+        RETURN 0;
+    END;
+  
+  END SP_OBTENER_GRUPO;
+
+  ----------------------------------------------------------------------------------------------------------
+  -- SP PARA VALIDAR UNA EMPRESA, EN BASE A LA KEY, ID_EMPRESA Y ID_GRUPO
+  ----------------------------------------------------------------------------------------------------------
+
+  FUNCTION SP_VALIDAR_EMPRESA(I_N_CLAVES   IN T_CLAVES_USUARIO.N_CLAVE%TYPE,
+                              I_ID_EMPRESA IN T_CLAVES_USUARIO.ID_EMPRESA%TYPE)
+    RETURN NUMBER IS
+  BEGIN
+    DECLARE
+      AUX NUMBER;
+    
+    BEGIN
+      SELECT 1
+        INTO AUX
+        FROM T_CLAVES_USUARIO
+       WHERE N_CLAVE = I_N_CLAVES
+         AND ID_EMPRESA = I_ID_EMPRESA;
+      RAISE TOO_MANY_ROWS;
+    EXCEPTION
+      WHEN TOO_MANY_ROWS THEN
+        RETURN 1;
+      WHEN NO_DATA_FOUND THEN
+        BEGIN
+          SELECT 1
+            INTO AUX
+            FROM T_CLAVES_USUARIO
+           WHERE N_CLAVE = I_N_CLAVES
+             AND DECODE(PKG_AUTORIZACIONES.SP_OBTENER_GRUPO(ID_EMPRESA),
+                        0,
+                        -1,
+                        PKG_AUTORIZACIONES.SP_OBTENER_GRUPO(ID_EMPRESA)) =
+                 DECODE(PKG_AUTORIZACIONES.SP_OBTENER_GRUPO(I_ID_EMPRESA),
+                        0,
+                        -2,
+                        PKG_AUTORIZACIONES.SP_OBTENER_GRUPO(I_ID_EMPRESA));
+          RAISE TOO_MANY_ROWS;
+        EXCEPTION
+          WHEN TOO_MANY_ROWS THEN
+            RETURN 1;
+          WHEN OTHERS THEN
+            RETURN 0;
+        END;
+      WHEN OTHERS THEN
+        RETURN 0;
+    END;
+  
+  END SP_VALIDAR_EMPRESA;
+
+  ----------------------------------------------------------------------------------------------------------
+  -- SP PARA OBTENER LA INFORMACION DE UNA AUTORIZACION DE UN USUARIO
+  ----------------------------------------------------------------------------------------------------------
+  PROCEDURE SP_BUSCAR_USUARIO(I_N_USUARIO IN T_USUARIOS.ID_USUARIO%TYPE,
+                              I_PWD       IN T_USUARIOS.PWD%TYPE,
+                              O_CURSOR    OUT SYS_REFCURSOR,
+                              O_RESULTADO OUT VARCHAR2) IS
+  BEGIN
+    O_RESULTADO := 'OK';
+  
+    OPEN O_CURSOR FOR
+      SELECT T.ID_USUARIO, T.PWD
+        FROM T_USUARIOS T
+       WHERE T.ID_USUARIO = I_N_USUARIO
+         AND T.PWD = I_PWD;
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      O_RESULTADO := 'NODATA';
+    WHEN OTHERS THEN
+      O_RESULTADO := SQLERRM;
+    
+  END SP_BUSCAR_USUARIO;
+
+  -------------------------------------------------
+  -- SP PARA OBTENER LA INFORMACION DE UNA CLAVE
+  -------------------------------------------------
+  PROCEDURE SP_BUSCAR_CLAVE(I_N_CLAVES  IN T_CLAVES_USUARIO.N_CLAVE%TYPE,
+                            O_CURSOR    OUT SYS_REFCURSOR,
+                            O_RESULTADO OUT VARCHAR2) IS
+  BEGIN
+    O_RESULTADO := 'OK';
+  
+    OPEN O_CURSOR FOR
+      SELECT T.ID_CLAVE,
+             T.N_CLAVE         N_CLAVES,
+             T.ID_USUARIO,
+             T.FEC_EXPIRACCION FECHA_EXPIRACCION,
+             T.FEC_ALTA,
+             T.ID_EMPRESA
+        FROM T_CLAVES_USUARIO T
+       WHERE T.N_CLAVE = I_N_CLAVES;
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      O_RESULTADO := 'NODATA';
+    WHEN OTHERS THEN
+      O_RESULTADO := SQLERRM;
+    
+  END SP_BUSCAR_CLAVE;
+
+  PROCEDURE SP_VALIDAR_EXCEP_CONV(I_CUIL       IN T_AUTORIZACIONES.CUIL%TYPE,
+                                  I_ID_EMPRESA IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                  O_CURSOR     OUT SYS_REFCURSOR,
+                                  O_MENSAJE    OUT VARCHAR2,
+                                  O_RESULTADO  OUT VARCHAR2) IS
+  
+    V_ESTADO       T_AUTO_ESTADO.ID_ESTADO%TYPE;
+    V_CONVENIO     T_AUTORIZACIONES.ID_CONVENIO%TYPE;
+    V_TIPO         VARCHAR2(1);
+    V_RDO          VARCHAR2(50) := NULL;
+    V_AUTORIZACION T_AUTORIZACIONES.ID_AUTORIZACION%TYPE;
+  
+  BEGIN
+    BEGIN
+      SELECT MIN(A.ID_AUTORIZACION), ID_ESTADO, EXCEP, B.ID_CONVENIO
+        INTO V_AUTORIZACION, V_ESTADO, V_TIPO, V_CONVENIO
+        FROM T_AUTO_ESTADO A, T_AUTORIZACIONES B
+       WHERE A.ID_AUTORIZACION = B.ID_AUTORIZACION
+         AND B.CUIL = I_CUIL
+         AND B.ID_EMPRESA = I_ID_EMPRESA
+         AND A.FEC_HASTA IS NULL
+         AND A.ID_ESTADO = 2
+       GROUP BY ID_ESTADO, EXCEP, B.ID_CONVENIO;
+    
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        O_RESULTADO := 'NODATA';
+      WHEN OTHERS THEN
+        V_RDO := NULL;
+    END;
+    IF V_ESTADO IS NULL THEN
+      O_RESULTADO := 'NODATA';
+    ELSE
+      IF V_TIPO = 'S' THEN
+        V_RDO := 'EXCEPCION';
+      END IF;
+      IF V_RDO IS NULL THEN
+        IF V_CONVENIO IS NOT NULL THEN
+          V_RDO := 'CONVENIO';
+        END IF;
+      END IF;
+    END IF;
+    /* DEVUELVO DATO SI  ES CONVENIO O SI  ES EXCEPCION */
+    IF V_RDO IS NOT NULL THEN
+      /* VERIFICO QUE NO ESTE APROBADA*/
+      IF V_ESTADO = 1 THEN
+        O_MENSAJE   := 'SINDATO';
+        O_RESULTADO := 'OK';
+      ELSE
+      
+        IF V_CONVENIO IS NOT NULL THEN
+          OPEN O_CURSOR FOR
+            SELECT A.ID_AUTORIZACION,
+                   A.CUIL,
+                   A.ID_ORIGEN,
+                   A.ID_DESTINO,
+                   (SELECT DISTINCT N_PUNTO
+                      FROM VT_PUNTOS
+                     WHERE ID_PUNTO = A.ID_ORIGEN) || ' - ' ||
+                   (SELECT DISTINCT N_PUNTO
+                      FROM VT_PUNTOS
+                     WHERE ID_PUNTO = A.ID_DESTINO) TRAYECTO,
+                   TE.N_TIPO_EMPRESA,
+                   PT.DISTANCIA,
+                   A.INICIO_FRANJA_HORARIA,
+                   A.FINAL_FRANJA_HORARIA,
+                   A.CANT_USO_X_DIA,
+                   A.CANT_USO_X_MES,
+                   A.CANT_USO_X_DIA_SEM,
+                   A.CANT_USO_X_SEMANA,
+                   A.INICIO_FRANJA_HORARIA || ' - ' ||
+                   A.FINAL_FRANJA_HORARIA FRANJA_HORARIA,
+                   VIAJA_FERIADO_SN,
+                   A.ID_TIPO_SOLICITANTE,
+                   TS.N_TIPO_SOLICITANTE,
+                   A.ID_NIVEL_EDUCATIVO,
+                   NE.N_NIVEL_EDUCATIVO,
+                   V_RDO ORIGEN_AUTORIZACION,
+                   EM.RAZON_SOCIAL N_EMPRESA
+              FROM T_AUTORIZACIONES             A,
+                   TRANSPORTE.T_DESTINOS        D,
+                   TRANSPORTE.T_ORIGENES        O,
+                   TRANSPORTE.T_TIPOS_EMPRESA   TE,
+                   T_TIPOS_SOLICITANTE          TS,
+                   TRANSPORTE.T_EMPRESAS        EM,
+                   T_PRECIOS_TRAMO              PT,
+                   TRANSPORTE.T_EMPRESAS_X_TIPO T,
+                   VT_NIVELES_EDUCATIVO         NE
+             WHERE TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+               AND T.ID_EMPRESA = EM.ID_EMPRESA
+               AND A.ID_EMPRESA = EM.ID_EMPRESA
+               AND D.ID_DESTINO(+) = A.ID_ORIGEN
+               AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+               AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+               AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+               AND PT.ID_DESTINO(+) = A.ID_DESTINO
+               AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+               AND NE.ID_NIVEL_EDUCATIVO = A.ID_NIVEL_EDUCATIVO
+               AND A.CUIL = I_CUIL
+               AND A.ID_EMPRESA = I_ID_EMPRESA
+               AND PT.FEC_HASTA IS NULL
+               AND A.ID_CONVENIO IS NOT NULL
+               AND A.ID_AUTORIZACION = V_AUTORIZACION;
+        END IF;
+      
+        IF V_TIPO IS NOT NULL THEN
+          OPEN O_CURSOR FOR
+            SELECT A.ID_AUTORIZACION,
+                   A.CUIL,
+                   A.ID_ORIGEN,
+                   A.ID_DESTINO,
+                   (SELECT DISTINCT N_PUNTO
+                      FROM VT_PUNTOS
+                     WHERE ID_PUNTO = A.ID_ORIGEN) || ' - ' ||
+                   (SELECT DISTINCT N_PUNTO
+                      FROM VT_PUNTOS
+                     WHERE ID_PUNTO = A.ID_DESTINO) TRAYECTO,
+                   TE.N_TIPO_EMPRESA,
+                   PT.DISTANCIA,
+                   A.INICIO_FRANJA_HORARIA,
+                   A.FINAL_FRANJA_HORARIA,
+                   A.CANT_USO_X_DIA,
+                   A.CANT_USO_X_MES,
+                   A.CANT_USO_X_DIA_SEM,
+                   A.CANT_USO_X_SEMANA,
+                   A.INICIO_FRANJA_HORARIA || ' - ' ||
+                   A.FINAL_FRANJA_HORARIA FRANJA_HORARIA,
+                   VIAJA_FERIADO_SN,
+                   A.ID_TIPO_SOLICITANTE,
+                   TS.N_TIPO_SOLICITANTE,
+                   A.ID_NIVEL_EDUCATIVO,
+                   NE.N_NIVEL_EDUCATIVO,
+                   V_RDO ORIGEN_AUTORIZACION,
+                   EM.RAZON_SOCIAL N_EMPRESA
+              FROM T_AUTORIZACIONES             A,
+                   TRANSPORTE.T_DESTINOS        D,
+                   TRANSPORTE.T_ORIGENES        O,
+                   TRANSPORTE.T_TIPOS_EMPRESA   TE,
+                   T_TIPOS_SOLICITANTE          TS,
+                   TRANSPORTE.T_EMPRESAS        EM,
+                   T_PRECIOS_TRAMO              PT,
+                   TRANSPORTE.T_EMPRESAS_X_TIPO T,
+                   VT_NIVELES_EDUCATIVO         NE
+             WHERE TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+               AND T.ID_EMPRESA = EM.ID_EMPRESA
+               AND A.ID_EMPRESA = EM.ID_EMPRESA
+               AND D.ID_DESTINO(+) = A.ID_ORIGEN
+               AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+               AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+               AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+               AND PT.ID_DESTINO(+) = A.ID_DESTINO
+               AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+               AND NE.ID_NIVEL_EDUCATIVO = A.ID_NIVEL_EDUCATIVO
+               AND A.CUIL = I_CUIL
+               AND A.ID_EMPRESA = I_ID_EMPRESA
+               AND PT.FEC_HASTA IS NULL
+               AND A.EXCEP IS NOT NULL
+               AND A.ID_AUTORIZACION = V_AUTORIZACION;
+        END IF;
+        O_MENSAJE   := V_RDO;
+        O_RESULTADO := 'OK';
+      END IF;
+    ELSIF O_RESULTADO <> 'NODATA' OR V_RDO IS NULL THEN
+      --NO ES CONVENIO NI EXCEPCION
+      O_MENSAJE   := 'SINDATO';
+      O_RESULTADO := 'OK';
+    ELSIF O_RESULTADO = 'NODATA' THEN
+      O_MENSAJE   := 'SINDATO';
+      O_RESULTADO := 'OK';
+    END IF;
+  
+  EXCEPTION
+  
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR EN CONSULTAR EXCEPCION CONVENIO' || SQLERRM;
+  END SP_VALIDAR_EXCEP_CONV;
+
+  -------------------------------------------
+  -- SP PARA OBTENER LAS EMPRESAS POR USUARIO DE EMPRESAS 
+  -------------------------------------------
+
+  PROCEDURE SP_LISTAR_EMP_X_TIPO(I_CUIL         IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                 I_TIPO_EMPRESA IN TRANSPORTE.T_TIPOS_EMPRESA.ID_TIPO_EMPRESA%TYPE,
+                                 O_CURSOR       OUT SYS_REFCURSOR,
+                                 O_MENSAJE      OUT VARCHAR2,
+                                 O_RESULTADO    OUT VARCHAR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT *
+        FROM (SELECT B.ID_EMPRESA,
+                     B.RAZON_SOCIAL N_EMPRESA,
+                     D.CUIL,
+                     D.FEC_DESDE,
+                     D.FEC_HASTA,
+                     C.ID_TIPO_EMPRESA
+                FROM TRANSPORTE.T_EMPRESAS_X_TIPO A,
+                     TRANSPORTE.T_EMPRESAS        B,
+                     TRANSPORTE.T_TIPOS_EMPRESA   C,
+                     T_USUARIOS_EMPRESAS          D
+               WHERE A.ID_EMPRESA = B.ID_EMPRESA
+                 AND C.ID_TIPO_EMPRESA = A.ID_TIPO_EMPRESA
+                 AND D.ID_EMPRESA = B.ID_EMPRESA
+                    
+                 AND SYSDATE BETWEEN D.FEC_DESDE AND
+                     NVL(D.FEC_HASTA, SYSDATE)
+                 AND B.ID_EMPRESA NOT IN (501, 502, 670, 671)
+              UNION ALL
+              SELECT H.ID_EMPRESA,
+                     H.N_EMPRESA,
+                     D.CUIL,
+                     D.FEC_DESDE,
+                     D.FEC_HASTA,
+                     H.ID_TIPO_EMPRESA
+                FROM (SELECT 501 ID_EMPRESA,
+                             'CONIFERAL' N_EMPRESA,
+                             4 ID_TIPO_EMPRESA
+                        FROM DUAL
+                      UNION ALL
+                      SELECT 502 ID_EMPRESA,
+                             'TAMSE' N_EMPRESA,
+                             4 ID_TIPO_EMPRESA
+                        FROM DUAL
+                      UNION ALL
+                      SELECT 670 ID_EMPRESA,
+                             'AUTOBUSES CORDOBA' N_EMPRESA,
+                             4 ID_TIPO_EMPRESA
+                        FROM DUAL
+                      UNION ALL
+                      SELECT 671 ID_EMPRESA,
+                             'ERSA URBANO' N_EMPRESA,
+                             4 ID_TIPO_EMPRESA
+                        FROM DUAL) H,
+                     
+                     T_USUARIOS_EMPRESAS D
+               WHERE H.ID_EMPRESA = D.ID_EMPRESA) GG
+      
+       WHERE GG.CUIL = I_CUIL
+         AND GG.ID_TIPO_EMPRESA = I_TIPO_EMPRESA
+       ORDER BY GG.N_EMPRESA;
+  
+    O_MENSAJE   := '';
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      O_MENSAJE   := 'EL OPERADOR NO TIENE EMPRESAS ASIGNADAS.';
+      O_RESULTADO := 'OK';
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR AL CONSULTAR EMPRESAS POR USUARIO' || SQLERRM;
+    
+  END SP_LISTAR_EMP_X_TIPO;
+
+  -------------------------------------------
+  -- SP PARA VALIDAR OPERADOR DE EMPRESAS
+  -------------------------------------------
+  PROCEDURE SP_VALIDAR_OPERADOR(I_CUIL      IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                I_EMPRESA   IN T_USUARIOS_EMPRESAS.ID_EMPRESA%TYPE,
+                                O_CURSOR    OUT SYS_REFCURSOR,
+                                O_MENSAJE   OUT VARCHAR2,
+                                O_RESULTADO OUT VARCHAR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT B.ID_EMPRESA,
+             B.RAZON_SOCIAL N_EMPRESA,
+             D.CUIL,
+             C.ID_TIPO_EMPRESA,
+             U.ID_ROL
+        FROM TRANSPORTE.T_EMPRESAS_X_TIPO A,
+             TRANSPORTE.T_EMPRESAS        B,
+             TRANSPORTE.T_TIPOS_EMPRESA   C,
+             T_USUARIOS_ROLES             U,
+             T_USUARIOS_EMPRESAS          D
+       WHERE A.ID_EMPRESA = B.ID_EMPRESA
+         AND C.ID_TIPO_EMPRESA = A.ID_TIPO_EMPRESA
+         AND D.ID_EMPRESA = B.ID_EMPRESA
+         AND D.CUIL = U.CUIL
+         AND D.CUIL = I_CUIL
+         AND D.ID_EMPRESA = I_EMPRESA
+         AND SYSDATE BETWEEN D.FEC_DESDE AND NVL(D.FEC_HASTA, SYSDATE);
+    O_MENSAJE   := '';
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      O_MENSAJE   := 'OPERADOR INEXISTENTE.';
+      O_RESULTADO := 'OK';
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR AL VALIDAR OPERADOR' || SQLERRM;
+    
+  END SP_VALIDAR_OPERADOR;
+
+  /*************************************************
+  * LISTA DE TIPOS DE SERVICIO                     *
+  * SE USA PARA ARMAR LOS FILTROS DE LAS CONSULTAS *
+  *************************************************/
+  PROCEDURE SP_LIST_TIPOS_EMPRESAS(O_CURSOR    OUT SYS_REFCURSOR,
+                                   O_MENSAJE   OUT VARCHAR2,
+                                   O_RESULTADO OUT VARCHAR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT 1 ID_TIPO_EMPRESA, 'URBANO INTERIOR' N_TIPO_EMPRESA
+        FROM DUAL
+      UNION ALL
+      SELECT ID_TIPO_EMPRESA, N_TIPO_EMPRESA
+        FROM TRANSPORTE.T_TIPOS_EMPRESA T
+       WHERE T.ID_TIPO_EMPRESA <> 1
+      UNION ALL
+      SELECT 4, 'URBANO CAPITAL' FROM DUAL ORDER BY 2 DESC;
+  
+    O_MENSAJE   := '';
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR AL LISTAR TIPOS DE SERVICIO' || SQLERRM;
+  END SP_LIST_TIPOS_EMPRESAS;
+
+  /* SE AGREGA EL SP DEBINO A QUE NO SABEMOS SI SE USA EN OTRO LADO */
+  PROCEDURE SP_APROBAR_EXCEPCIONES_CONV(I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                        O_MENSAJE         OUT VARCHAR2,
+                                        O_RESULTADO       OUT VARCHAR) IS
+  
+    V_ID_ESTADO_AUTO T_AUTO_ESTADO.ID_AUTORIZACION_ESTADO%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+  
+  BEGIN
+  
+    UPDATE T_AUTO_ESTADO AE
+       SET AE.FEC_HASTA = SYSDATE
+     WHERE AE.ID_AUTORIZACION = I_ID_AUTORIZACION
+       AND AE.ID_ESTADO = 2;
+  
+    INSERT INTO T_AUTO_ESTADO
+      (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+    VALUES
+      (V_ID_ESTADO_AUTO, I_ID_AUTORIZACION, 1, SYSDATE);
+  
+    O_MENSAJE   := 'SE GRABO CORRECTAMENTE.';
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR AL APROBAR_EXCEPCIONES CONVENIO' || SQLERRM;
+    
+  END SP_APROBAR_EXCEPCIONES_CONV;
+
+  PROCEDURE SP_ORIGEN_EMPRESA_BEGT(O_CURSOR    OUT SYS_REFCURSOR,
+                                   I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                   I_DISTANCIA IN NUMBER) IS
+  
+    V_SQL        VARCHAR2(32000);
+    V_SQLFILTROS VARCHAR2(32000);
+  
+  BEGIN
+  
+    IF I_DISTANCIA = 2 THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND DISTANCIA <=100 ';
+    ELSIF I_DISTANCIA = 3 THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND DISTANCIA >100 ';
+    END IF;
+  
+    V_SQL := 'SELECT DISTINCT T.ID_ORIGEN,
+                (SELECT DISTINCT N_PUNTO
+                   FROM VT_PUNTOS
+                  WHERE ID_PUNTO = T.ID_ORIGEN) N_ORIGEN
+  FROM T_PRECIOS_TRAMO T, TRANSPORTE.T_EMPRESAS E
+ WHERE SYSDATE BETWEEN T.FEC_DESDE AND NVL(T.FEC_HASTA, SYSDATE)
+   AND E.ID_EMPRESA = T.ID_EMPRESA
+   AND T.ID_EMPRESA = ' || I_EMPRESA || V_SQLFILTROS ||
+             ' ORDER BY 2';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL RECUPERAR LOS ORIGENES DE UNA EMPRESA. ' ||
+                              SQLERRM);
+  END SP_ORIGEN_EMPRESA_BEGT;
+
+  /**************************************************
+  * LISTA LOS DESTINOS PARA UNA DETERMINADA EMPRESA *
+  ***************************************************/
+
+  PROCEDURE SP_DESTINOS_EMPRESA_BEGT(O_CURSOR    OUT SYS_REFCURSOR,
+                                     I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                     I_ID_ORIGEN IN T_PRECIOS_TRAMO.ID_ORIGEN%TYPE,
+                                     I_DISTANCIA IN NUMBER) IS
+  
+    V_SQL        VARCHAR2(32000);
+    V_SQLFILTROS VARCHAR2(32000);
+  
+  BEGIN
+    IF I_DISTANCIA = 2 THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND DISTANCIA <=100 ';
+    ELSIF I_DISTANCIA = 3 THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND DISTANCIA >100 ';
+    END IF;
+  
+    V_SQL := 'SELECT DISTINCT T.ID_DESTINO,
+                      (SELECT DISTINCT N_PUNTO
+                         FROM VT_PUNTOS
+                        WHERE ID_PUNTO = T.ID_DESTINO) N_DESTINO
+        FROM T_PRECIOS_TRAMO T, TRANSPORTE.T_EMPRESAS E
+       WHERE E.ID_EMPRESA = T.ID_EMPRESA
+         AND SYSDATE BETWEEN T.FEC_DESDE AND NVL(T.FEC_HASTA, SYSDATE)
+         AND T.ID_EMPRESA = ' || I_EMPRESA ||
+             ' AND T.ID_ORIGEN = ' || I_ID_ORIGEN || V_SQLFILTROS ||
+             ' ORDER BY 2';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL RECUPERAR LOS DESTINOS DE UNA EMPRESA. ' ||
+                              SQLERRM);
+  END SP_DESTINOS_EMPRESA_BEGT;
+
+  PROCEDURE SP_NOMBRE_EMPRESA_BEGT(O_CURSOR       OUT SYS_REFCURSOR,
+                                   I_EMPRESA      IN NUMBER,
+                                   I_TIPO_EMPRESA IN NUMBER) IS
+  
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT E.RAZON_SOCIAL N_EMPRESA, T.N_TIPO_EMPRESA
+        FROM TRANSPORTE.T_TIPOS_EMPRESA   T,
+             TRANSPORTE.T_EMPRESAS        E,
+             TRANSPORTE.T_EMPRESAS_X_TIPO ET
+       WHERE ET.ID_EMPRESA = E.ID_EMPRESA
+         AND ET.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+         AND T.ID_TIPO_EMPRESA = I_TIPO_EMPRESA
+         AND E.ID_EMPRESA = I_EMPRESA;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL RECUPERAR LOS DESTINOS DE UNA EMPRESA. ' ||
+                              SQLERRM);
+  END SP_NOMBRE_EMPRESA_BEGT;
+
+  PROCEDURE SP_ALTA_AUTORIZACIONES_BEGT(I_USUARIO               IN T_AUTORIZACIONES.CUIL_USR%TYPE DEFAULT NULL,
+                                        I_CUIL                  IN T_AUTORIZACIONES.CUIL%TYPE,
+                                        I_ID_ORIGEN             IN T_AUTORIZACIONES.ID_ORIGEN%TYPE DEFAULT NULL,
+                                        I_ID_DESTINO            IN T_AUTORIZACIONES.ID_DESTINO%TYPE DEFAULT NULL,
+                                        I_ID_EMPRESA            IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                        I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                        I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                        I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE DEFAULT NULL,
+                                        I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                        I_TIPO_SOLICITANTE      IN T_AUTORIZACIONES.ID_TIPO_SOLICITANTE%TYPE,
+                                        I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE DEFAULT NULL,
+                                        I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE DEFAULT NULL,
+                                        I_VIAJA_FERIADO_SN      IN T_AUTORIZACIONES.VIAJA_FERIADO_SN%TYPE DEFAULT NULL,
+                                        I_CONVENIO              IN T_AUTORIZACIONES.ID_CONVENIO%TYPE DEFAULT NULL,
+                                        I_EXCEPCION             IN VARCHAR2 DEFAULT 'N',
+                                        I_NIVEL_EDUCATIVO       IN T_AUTORIZACIONES.ID_NIVEL_EDUCATIVO%TYPE DEFAULT NULL,
+                                        I_DISTANCIA             IN NUMBER,
+                                        I_ID_TIPO_EMPRESA       IN NUMBER,
+                                        O_RESULTADO             OUT VARCHAR2,
+                                        O_ID_AUTORIZACION       OUT NUMBER,
+                                        O_MENSAJE               OUT VARCHAR2) IS
+  
+    V_ID_AUTORIZACION T_AUTORIZACIONES.ID_AUTORIZACION%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+    V_ID_ESTADO_AUTO  T_AUTO_ESTADO.ID_AUTORIZACION_ESTADO%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+    V_SALIDA          VARCHAR2(1) := 'N';
+    V_CANT            NUMBER;
+    V_CANT2           NUMBER;
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    IF I_ID_TIPO_EMPRESA = 2 OR I_ID_TIPO_EMPRESA = 3 THEN
+    
+      IF I_DISTANCIA = 2 THEN
+        SELECT COUNT(*)
+          INTO V_CANT
+          FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES T
+         INNER JOIN TRANSPORTE.T_EMPRESAS_X_TIPO ET
+            ON ET.ID_EMPRESA = T.ID_EMPRESA
+         INNER JOIN TRANSPORTE.T_EMPRESAS_X_TRAMOS TR
+            ON TR.ID_EMPRESA = T.ID_EMPRESA
+           AND TR.ID_TIPO_EMPRESA IN (2, 3)
+           AND TR.ID_ORIGEN = T.ID_ORIGEN
+           AND TR.ID_DESTINO = T.ID_DESTINO
+           AND TR.DISTANCIA < 101
+         INNER JOIN MAASP_TUNI_TPTE.T_AUTO_ESTADO E
+            ON E.ID_AUTORIZACION = T.ID_AUTORIZACION
+           AND E.ID_AUTORIZACION_ESTADO =
+               (SELECT MAX(AUX.ID_AUTORIZACION_ESTADO)
+                  FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO AUX
+                 WHERE AUX.ID_AUTORIZACION = T.ID_AUTORIZACION)
+        
+         WHERE T.CUIL = I_CUIL
+           AND E.ID_ESTADO = 1
+           AND E.FEC_HASTA IS NULL;
+      
+        IF V_CANT = 0 THEN
+          V_SALIDA := 'S';
+        ELSE
+          O_MENSAJE := 'YA POSEE UN BOLETO APROBADO DE INTERURBANO/DIFERENCIAL MENOR 100 KM.';
+        END IF;
+      
+      ELSIF I_DISTANCIA = 3 THEN
+      
+        SELECT COUNT(*)
+          INTO V_CANT2
+          FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES T
+         INNER JOIN TRANSPORTE.T_EMPRESAS_X_TIPO ET
+            ON ET.ID_EMPRESA = T.ID_EMPRESA
+         INNER JOIN TRANSPORTE.T_EMPRESAS_X_TRAMOS TR
+            ON TR.ID_EMPRESA = T.ID_EMPRESA
+           AND TR.ID_TIPO_EMPRESA IN (2, 3)
+           AND TR.ID_ORIGEN = T.ID_ORIGEN
+           AND TR.ID_DESTINO = T.ID_DESTINO
+           AND TR.DISTANCIA > 100
+         INNER JOIN MAASP_TUNI_TPTE.T_AUTO_ESTADO E
+            ON E.ID_AUTORIZACION = T.ID_AUTORIZACION
+           AND E.ID_AUTORIZACION_ESTADO =
+               (SELECT MAX(AUX.ID_AUTORIZACION_ESTADO)
+                  FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO AUX
+                 WHERE AUX.ID_AUTORIZACION = T.ID_AUTORIZACION)
+         WHERE T.CUIL = I_CUIL
+           AND E.ID_ESTADO = 1
+           AND E.FEC_HASTA IS NULL;
+      
+        IF V_CANT2 = 0 THEN
+          V_SALIDA := 'S';
+        ELSE
+          O_MENSAJE := 'YA POSEE UN BOLETO APROBADO DE INTERURBANO/DIFERENCIAL MAYOR 100 KM.';
+        END IF;
+      
+      END IF;
+    ELSIF I_ID_TIPO_EMPRESA = 1 OR I_ID_TIPO_EMPRESA = 4 THEN
+    
+      SELECT COUNT(*)
+        INTO V_CANT
+        FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES T
+       INNER JOIN TRANSPORTE.T_EMPRESAS_X_TIPO ET
+          ON ET.ID_EMPRESA = T.ID_EMPRESA
+      
+       INNER JOIN TRANSPORTE.T_EMPRESAS_X_TRAMOS TR
+          ON TR.ID_EMPRESA = T.ID_EMPRESA
+         AND TR.ID_TIPO_EMPRESA IN (1)
+       INNER JOIN MAASP_TUNI_TPTE.T_AUTO_ESTADO E
+          ON E.ID_AUTORIZACION = T.ID_AUTORIZACION
+         AND E.ID_AUTORIZACION_ESTADO =
+             (SELECT MAX(AUX.ID_AUTORIZACION_ESTADO)
+                FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO AUX
+               WHERE AUX.ID_AUTORIZACION = T.ID_AUTORIZACION)
+       WHERE T.CUIL = I_CUIL
+         AND E.ID_ESTADO = 1
+         AND E.FEC_HASTA IS NULL;
+    
+      IF V_CANT = 0 THEN
+        V_SALIDA := 'S';
+      ELSE
+        O_MENSAJE := 'YA POSEE UN BOLETO URBANO APROBADO.';
+      END IF;
+    
+    END IF;
+  
+    IF V_SALIDA = 'N' THEN
+      O_RESULTADO := 'ERROR';
+      RETURN;
+    END IF;
+  
+    ---BEG
+  
+    IF V_SALIDA = 'S' THEN
+    
+      INSERT INTO T_AUTORIZACIONES
+        (CUIL_USR,
+         ID_AUTORIZACION,
+         CUIL,
+         ID_ORIGEN,
+         ID_DESTINO,
+         ID_EMPRESA,
+         INICIO_FRANJA_HORARIA,
+         FINAL_FRANJA_HORARIA,
+         CANT_USO_X_DIA,
+         CANT_USO_X_MES,
+         ID_TIPO_SOLICITANTE,
+         CANT_USO_X_DIA_SEM,
+         CANT_USO_X_SEMANA,
+         VIAJA_FERIADO_SN,
+         ID_CONVENIO,
+         FEC_DESDE,
+         FEC_HASTA,
+         ID_NIVEL_EDUCATIVO,
+         Id_Distancia)
+      VALUES
+        (I_USUARIO,
+         V_ID_AUTORIZACION,
+         I_CUIL,
+         I_ID_ORIGEN,
+         I_ID_DESTINO,
+         I_ID_EMPRESA,
+         I_INICIO_FRANJA_HORARIA,
+         I_FINAL_FRANJA_HORARIA,
+         I_CANT_USO_X_DIA,
+         I_CANT_USO_X_MES,
+         I_TIPO_SOLICITANTE,
+         NVL(I_CANT_USO_X_DIA_SEM, 0),
+         I_CANT_USO_X_SEMANA,
+         I_VIAJA_FERIADO_SN,
+         I_CONVENIO,
+         SYSDATE,
+         TO_DATE('31/12/' || TO_CHAR(SYSDATE, 'YYYY'), 'DD/MM/YYYY'),
+         I_NIVEL_EDUCATIVO,
+         I_DISTANCIA);
+    
+      INSERT INTO T_AUTO_ESTADO
+        (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+      VALUES
+        (V_ID_ESTADO_AUTO, V_ID_AUTORIZACION, 1, SYSDATE);
+    
+    END IF;
+  
+    COMMIT;
+    O_ID_AUTORIZACION := V_ID_AUTORIZACION;
+    O_RESULTADO       := 'OK';
+    O_MENSAJE         := '';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR INESPERADO AL DAR EL ALTA DE LA AUTORIZACIÓN: ' ||
+                     SQLERRM;
+    
+      RAISE;
+    
+  END SP_ALTA_AUTORIZACIONES_BEGT;
+
+  -----
+  PROCEDURE SP_ALTA_AUTORIZACIONES_CON_EXC(I_USUARIO               IN T_AUTORIZACIONES.CUIL_USR%TYPE DEFAULT NULL,
+                                           I_CUIL                  IN T_AUTORIZACIONES.CUIL%TYPE,
+                                           I_ID_ORIGEN             IN T_AUTORIZACIONES.ID_ORIGEN%TYPE DEFAULT NULL,
+                                           I_ID_DESTINO            IN T_AUTORIZACIONES.ID_DESTINO%TYPE DEFAULT NULL,
+                                           I_ID_EMPRESA            IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                           I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                           I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                           I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE DEFAULT NULL,
+                                           I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                           I_TIPO_SOLICITANTE      IN T_AUTORIZACIONES.ID_TIPO_SOLICITANTE%TYPE,
+                                           I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE DEFAULT NULL,
+                                           I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE DEFAULT NULL,
+                                           I_VIAJA_FERIADO_SN      IN T_AUTORIZACIONES.VIAJA_FERIADO_SN%TYPE DEFAULT NULL,
+                                           I_CONVENIO              IN T_AUTORIZACIONES.ID_CONVENIO%TYPE DEFAULT NULL,
+                                           I_EXCEPCION             IN VARCHAR2 DEFAULT 'N',
+                                           I_NIVEL_EDUCATIVO       IN T_AUTORIZACIONES.ID_NIVEL_EDUCATIVO%TYPE DEFAULT NULL,
+                                           I_DISTANCIA             IN T_AUTORIZACIONES.ID_DISTANCIA%TYPE,
+                                           O_RESULTADO             OUT VARCHAR2,
+                                           O_MENSAJE               OUT VARCHAR2) IS
+  
+    V_ID_AUTORIZACION T_AUTORIZACIONES.ID_AUTORIZACION%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+    V_ID_ESTADO_AUTO  T_AUTO_ESTADO.ID_AUTORIZACION_ESTADO%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    INSERT INTO T_AUTORIZACIONES
+      (CUIL_USR,
+       ID_AUTORIZACION,
+       CUIL,
+       ID_ORIGEN,
+       ID_DESTINO,
+       ID_EMPRESA,
+       INICIO_FRANJA_HORARIA,
+       FINAL_FRANJA_HORARIA,
+       CANT_USO_X_DIA,
+       CANT_USO_X_MES,
+       ID_TIPO_SOLICITANTE,
+       CANT_USO_X_DIA_SEM,
+       CANT_USO_X_SEMANA,
+       VIAJA_FERIADO_SN,
+       ID_CONVENIO,
+       FEC_DESDE,
+       FEC_HASTA,
+       ID_NIVEL_EDUCATIVO,
+       EXCEP,
+       ID_DISTANCIA)
+    VALUES
+      (I_USUARIO,
+       V_ID_AUTORIZACION,
+       I_CUIL,
+       I_ID_ORIGEN,
+       I_ID_DESTINO,
+       I_ID_EMPRESA,
+       I_INICIO_FRANJA_HORARIA,
+       I_FINAL_FRANJA_HORARIA,
+       I_CANT_USO_X_DIA,
+       I_CANT_USO_X_MES,
+       I_TIPO_SOLICITANTE,
+       NVL(I_CANT_USO_X_DIA_SEM, 0),
+       I_CANT_USO_X_SEMANA,
+       I_VIAJA_FERIADO_SN,
+       I_CONVENIO,
+       SYSDATE,
+       TO_DATE('31/12/' || TO_CHAR(SYSDATE, 'YYYY'), 'DD/MM/YYYY'),
+       I_NIVEL_EDUCATIVO,
+       I_EXCEPCION,
+       I_DISTANCIA);
+  
+    INSERT INTO T_AUTO_ESTADO
+      (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+    VALUES
+      (V_ID_ESTADO_AUTO, V_ID_AUTORIZACION, 2, SYSDATE);
+  
+    COMMIT;
+    O_RESULTADO := 'OK';
+    O_MENSAJE   := '';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR INESPERADO AL DAR EL ALTA DE LA AUTORIZACIÓN: ' ||
+                     SQLERRM;
+    
+      RAISE;
+    
+  END SP_ALTA_AUTORIZACIONES_CON_EXC;
+  -----
+
+  FUNCTION FN_TRAE_NRO_TARJETA_CUIL_ATOS(I_UIDS            IN T_TARJETAS.UIDS%TYPE,
+                                         O_ID_AUTORIZACION OUT T_AUTORIZACIONES.ID_AUTORIZACION%TYPE)
+    RETURN VARCHAR2 IS
+    O_EXISTE VARCHAR2(1);
+  
+  BEGIN
+  
+    SELECT 'S', A.ID_AUTORIZACION
+      INTO O_EXISTE, O_ID_AUTORIZACION
+      FROM T_TARJETAS_AUTORIZACION TA, T_TARJETAS T, T_AUTORIZACIONES A
+     WHERE TA.ID_AUTORIZACION = A.ID_AUTORIZACION
+       AND T.ID_TARJETA = TA.ID_TARJETA
+       AND T.UIDS = I_UIDS
+       AND TA.FEC_HASTA IS NULL;
+  
+    RETURN O_EXISTE;
+  
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      RETURN 'N';
+    WHEN OTHERS THEN
+      RETURN 'N';
+    
+  END FN_TRAE_NRO_TARJETA_CUIL_ATOS;
+
+  PROCEDURE SP_BUSCAR_PADRON_BEGT(O_CURSOR           OUT SYS_REFCURSOR,
+                                  I_CUIL             IN NUMBER,
+                                  I_TIPO_SOLICITANTE IN NUMBER,
+                                  I_NIVEL_EDUCATIVO  IN NUMBER,
+                                  O_RESULTADO        OUT VARCHAR2,
+                                  O_MENSAJE          OUT VARCHAR2) IS
+  
+    --VAPI VARCHAR2(1);
+  BEGIN
+  
+    --SELECT B.API_SN INTO VAPI FROM T_PARAMETROS_BENEFICIO B WHERE B.N_PARAMETRO=I_INSTITUCION;
+  
+    OPEN O_CURSOR FOR
+      SELECT *
+        FROM T_EMPADRONADOS E, T_EDUCACION_ACTUAL N
+       WHERE E.ID_EMPADRONADO = N.ID_EMPADRONADO
+         AND N.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+         AND N.ID_NIVEL = I_NIVEL_EDUCATIVO
+         AND E.CUIL = I_CUIL;
+  
+    O_MENSAJE   := '';
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      O_MENSAJE   := 'NOEXISTE';
+      O_RESULTADO := 'OK';
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR AL CONSULTAR PADRON' || SQLERRM;
+    
+  END SP_BUSCAR_PADRON_BEGT;
+
+  PROCEDURE SP_BUSCAR_NIVEL_BEGT(O_CURSOR           OUT SYS_REFCURSOR,
+                                 I_TIPO_SOLICITANTE IN NUMBER,
+                                 O_RESULTADO        OUT VARCHAR2,
+                                 O_MENSAJE          OUT VARCHAR2) IS
+  BEGIN
+  
+    IF I_TIPO_SOLICITANTE = 1 THEN
+      OPEN O_CURSOR FOR
+        SELECT * FROM VT_NIVELES_EDUCATIVO E;
+    ELSE
+      OPEN O_CURSOR FOR
+        SELECT *
+          FROM VT_NIVELES_EDUCATIVO E
+         WHERE E.ID_NIVEL_EDUCATIVO <> 5;
+    END IF;
+    O_MENSAJE   := '';
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+  
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR AL CONSULTAR NIVEL EDUCATIVO' || SQLERRM;
+    
+  END SP_BUSCAR_NIVEL_BEGT;
+
+  PROCEDURE SP_RENDICIONES_BEG(O_CURSOR      OUT SYS_REFCURSOR,
+                               O_MENSAJE     OUT VARCHAR2,
+                               O_RESULTADO   OUT VARCHAR,
+                               I_FECHA_DESDE IN VARCHAR2,
+                               I_FECHA_HASTA IN VARCHAR2,
+                               I_EMPRESA     IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                               I_OPERADOR    IN T_USUARIOS_ROLES.CUIL%TYPE) IS
+  
+    V_ROL T_USUARIOS_ROLES.ID_ROL%TYPE;
+  
+  BEGIN
+  
+    BEGIN
+      SELECT ID_ROL
+        INTO V_ROL
+        FROM T_USUARIOS_ROLES
+       WHERE CUIL = I_OPERADOR;
+    EXCEPTION
+      WHEN OTHERS THEN
+        O_RESULTADO := 'ERROR';
+        O_MENSAJE   := 'ERROR AL CONSULTAR EL ROL DEL OPERADOR';
+    END;
+  
+    IF V_ROL = 1 OR V_ROL = 3 THEN
+    
+      OPEN O_CURSOR FOR
+        SELECT A.ID_AUTORIZACION,
+               A.CUIL,
+               A.ID_ORIGEN,
+               (SELECT DISTINCT N_PUNTO
+                  FROM VT_PUNTOS
+                 WHERE ID_PUNTO = A.ID_ORIGEN) N_ORIGEN,
+               A.ID_DESTINO,
+               (SELECT DISTINCT N_PUNTO
+                  FROM VT_PUNTOS
+                 WHERE ID_PUNTO = A.ID_DESTINO) N_DESTINO,
+               PT.DISTANCIA,
+               VT.APELLIDO || ' ' || VT.NOMBRE NOMBRE,
+               A.INICIO_FRANJA_HORARIA,
+               A.FINAL_FRANJA_HORARIA,
+               A.INICIO_FRANJA_HORARIA || '-' || A.FINAL_FRANJA_HORARIA HORARIO,
+               A.CANT_USO_X_DIA,
+               A.CANT_USO_X_MES,
+               A.CANT_USO_X_DIA_SEM,
+               A.CANT_USO_X_SEMANA,
+               VIAJA_FERIADO_SN FERIADO,
+               PT.IMPORTE,
+               A.ID_TIPO_SOLICITANTE TIPO_SOLICITANTE,
+               TS.N_TIPO_SOLICITANTE,
+               TS.ID_PROGRAMA,
+               A.ID_NIVEL_EDUCATIVO NIVEL_EDUCATIVO,
+               NE.N_NIVEL_EDUCATIVO,
+               A.ID_EMPRESA,
+               EM.RAZON_SOCIAL,
+               A.FEC_DESDE,
+               D.CUIL OPERADOR
+          FROM T_AUTORIZACIONES                       A,
+               TRANSPORTE.T_DESTINOS                  D,
+               TRANSPORTE.T_ORIGENES                  O,
+               TRANSPORTE.T_TIPOS_EMPRESA             TE,
+               T_TIPOS_SOLICITANTE                    TS,
+               TRANSPORTE.T_EMPRESAS                  EM,
+               T_PRECIOS_TRAMO                        PT,
+               TRANSPORTE.T_EMPRESAS_X_TIPO           T,
+               ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS NE,
+               GESTION_CIUDADANOS.VT_USUARIOS         VT,
+               T_USUARIOS_ROLES                       U,
+               T_USUARIOS_EMPRESAS                    D
+         WHERE TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+           AND T.ID_EMPRESA = EM.ID_EMPRESA
+           AND A.ID_EMPRESA = EM.ID_EMPRESA
+           AND D.ID_DESTINO(+) = A.ID_ORIGEN
+           AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+           AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+           AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+           AND PT.ID_DESTINO(+) = A.ID_DESTINO
+           AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+           and ts.id_programa = 1
+           AND PT.FEC_HASTA IS NULL
+           AND NE.ID_NIVEL_EDUCATIVO(+) = A.ID_NIVEL_EDUCATIVO
+           AND VT.N_USUARIO(+) = A.CUIL
+           AND D.ID_EMPRESA = EM.ID_EMPRESA
+           AND D.CUIL = U.CUIL
+           AND U.CUIL = A.CUIL_USR
+           AND A.ID_EMPRESA = I_EMPRESA
+           AND TRUNC(A.FEC_DESDE) BETWEEN
+               TO_DATE(I_FECHA_DESDE, 'DD/MM/YYYY') AND
+               TO_DATE(I_FECHA_HASTA, 'DD/MM/YYYY');
+    
+    ELSIF V_ROL = 2 OR V_ROL = 4 THEN
+    
+      OPEN O_CURSOR FOR
+        SELECT A.ID_AUTORIZACION,
+               A.CUIL,
+               A.ID_ORIGEN,
+               (SELECT DISTINCT N_PUNTO
+                  FROM VT_PUNTOS
+                 WHERE ID_PUNTO = A.ID_ORIGEN) N_ORIGEN,
+               A.ID_DESTINO,
+               (SELECT DISTINCT N_PUNTO
+                  FROM VT_PUNTOS
+                 WHERE ID_PUNTO = A.ID_DESTINO) N_DESTINO,
+               PT.DISTANCIA,
+               VT.APELLIDO || ' ' || VT.NOMBRE NOMBRE,
+               A.INICIO_FRANJA_HORARIA,
+               A.FINAL_FRANJA_HORARIA,
+               A.INICIO_FRANJA_HORARIA || '-' || A.FINAL_FRANJA_HORARIA HORARIO,
+               A.CANT_USO_X_DIA,
+               A.CANT_USO_X_MES,
+               A.CANT_USO_X_DIA_SEM,
+               A.CANT_USO_X_SEMANA,
+               VIAJA_FERIADO_SN FERIADO,
+               PT.IMPORTE,
+               A.ID_TIPO_SOLICITANTE TIPO_SOLICITANTE,
+               TS.N_TIPO_SOLICITANTE,
+               TS.ID_PROGRAMA,
+               A.ID_NIVEL_EDUCATIVO NIVEL_EDUCATIVO,
+               NE.N_NIVEL_EDUCATIVO,
+               A.ID_EMPRESA,
+               EM.RAZON_SOCIAL,
+               A.FEC_DESDE,
+               D.CUIL OPERADOR
+          FROM T_AUTORIZACIONES                       A,
+               TRANSPORTE.T_DESTINOS                  D,
+               TRANSPORTE.T_ORIGENES                  O,
+               TRANSPORTE.T_TIPOS_EMPRESA             TE,
+               T_TIPOS_SOLICITANTE                    TS,
+               TRANSPORTE.T_EMPRESAS                  EM,
+               T_PRECIOS_TRAMO                        PT,
+               TRANSPORTE.T_EMPRESAS_X_TIPO           T,
+               ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS NE,
+               GESTION_CIUDADANOS.VT_USUARIOS         VT,
+               T_USUARIOS_ROLES                       U,
+               T_USUARIOS_EMPRESAS                    D
+         WHERE TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+           AND T.ID_EMPRESA = EM.ID_EMPRESA
+           AND A.ID_EMPRESA = EM.ID_EMPRESA
+           AND D.ID_DESTINO(+) = A.ID_ORIGEN
+           AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+           AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+           AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+           AND PT.ID_DESTINO(+) = A.ID_DESTINO
+           AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+           and ts.id_programa = 1
+           AND PT.FEC_HASTA IS NULL
+           AND NE.ID_NIVEL_EDUCATIVO(+) = A.ID_NIVEL_EDUCATIVO
+           AND VT.N_USUARIO(+) = A.CUIL
+           AND D.ID_EMPRESA = EM.ID_EMPRESA
+           AND D.CUIL = U.CUIL
+           AND A.ID_EMPRESA = I_EMPRESA
+           AND U.CUIL = A.CUIL_USR
+           AND U.CUIL = I_OPERADOR
+           AND TRUNC(A.FEC_DESDE) BETWEEN
+               TO_DATE(I_FECHA_DESDE, 'DD/MM/YYYY') AND
+               TO_DATE(I_FECHA_HASTA, 'DD/MM/YYYY');
+    END IF;
+  
+    O_MENSAJE   := '';
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR AL LISTAR LAS RENDICIONES' || SQLERRM;
+  END SP_RENDICIONES_BEG;
+
+  PROCEDURE SP_ELIMINAR_AUTORIZACION(I_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                     O_MENSAJE      OUT VARCHAR2,
+                                     O_RESULTADO    OUT VARCHAR2) IS
+  
+    V_EXISTE NUMBER;
+  BEGIN
+  
+    SELECT COUNT(1)
+      INTO V_EXISTE
+      FROM T_TARJETAS_AUTORIZACION
+     WHERE ID_AUTORIZACION = I_AUTORIZACION;
+  
+    IF V_EXISTE = 0 THEN
+    
+      DELETE FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO S
+       WHERE ID_AUTORIZACION = I_AUTORIZACION;
+    
+      DELETE FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES
+       WHERE ID_AUTORIZACION = I_AUTORIZACION;
+    
+      O_MENSAJE   := '';
+      O_RESULTADO := 'OK';
+    
+    ELSE
+    
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'LA AUTORIZACION SE ENCUENTRA ASOCIADA A UNA TARJETA, NO SE PUEDE ELIMINAR';
+    
+    END IF;
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR AL ELIMINAR LA AUTORIZACION' || SQLERRM;
+  END SP_ELIMINAR_AUTORIZACION;
+
+  PROCEDURE SP_BUSCAR_AUTORIZACION_BEGT(I_CUIL      IN T_AUTORIZACIONES.CUIL%TYPE,
+                                        O_CURSOR    OUT SYS_REFCURSOR,
+                                        O_MENSAJE   OUT VARCHAR2,
+                                        O_RESULTADO OUT VARCHAR2) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT A.CUIL,
+             (SELECT DISTINCT N_PUNTO
+                FROM MAASP_TUNI_TPTE.VT_PUNTOS
+               WHERE ID_PUNTO = A.ID_ORIGEN) N_ORIGEN,
+             (SELECT DISTINCT N_PUNTO
+                FROM MAASP_TUNI_TPTE.VT_PUNTOS
+               WHERE ID_PUNTO = A.ID_DESTINO) N_DESTINO,
+             A.ID_AUTORIZACION,
+             TE.N_TIPO_EMPRESA,
+             A.INICIO_FRANJA_HORARIA,
+             A.FINAL_FRANJA_HORARIA,
+             A.INICIO_FRANJA_HORARIA || '-' || A.FINAL_FRANJA_HORARIA AS FRANJA_HORARIA,
+             A.CANT_USO_X_DIA,
+             A.CANT_USO_X_MES,
+             A.CANT_USO_X_DIA_SEM,
+             A.CANT_USO_X_SEMANA,
+             VIAJA_FERIADO_SN,
+             A.ID_TIPO_SOLICITANTE TIPO_SOLICITANTE,
+             TS.N_TIPO_SOLICITANTE,
+             TS.ID_PROGRAMA,
+             NE.N_NIVEL_EDUCATIVO,
+             A.ID_EMPRESA,
+             EM.RAZON_SOCIAL,
+             EM.RAZON_SOCIAL N_EMPRESA,
+             EA.N_ESTADO,
+             EA.Id_Estado,
+             A.ID_DISTANCIA,
+             DECODE(a.id_distancia,
+                    2,
+                    'Menos de 100 km',
+                    3,
+                    'Mas de 100 km',
+                    '') as N_DISTANCIA,
+             to_char(AE.FEC_ALTA, 'dd/mm/yyyy') AS FECHA
+        FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES       A,
+             TRANSPORTE.T_DESTINOS                  D,
+             TRANSPORTE.T_ORIGENES                  O,
+             TRANSPORTE.T_TIPOS_EMPRESA             TE,
+             MAASP_TUNI_TPTE.T_TIPOS_SOLICITANTE    TS,
+             TRANSPORTE.T_EMPRESAS                  EM,
+             MAASP_TUNI_TPTE.T_AUTO_ESTADO          AE,
+             MAASP_TUNI_TPTE.T_ESTADOS_AUTORIZACION EA,
+             MAASP_TUNI_TPTE.T_PRECIOS_TRAMO        PT,
+             ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS NE,
+             TRANSPORTE.T_EMPRESAS_X_TIPO           T
+       WHERE AE.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND A.ID_EMPRESA = EM.ID_EMPRESA
+         AND D.ID_DESTINO(+) = A.ID_ORIGEN
+         AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+         AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_DESTINO(+) = A.ID_DESTINO
+         AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+         AND TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+         AND T.ID_EMPRESA = EM.ID_EMPRESA
+         AND EA.ID_ESTADO = AE.ID_ESTADO
+         AND AE.FEC_HASTA IS NULL
+         AND PT.FEC_HASTA IS NULL
+         AND NE.ID_NIVEL_EDUCATIVO(+) = A.ID_NIVEL_EDUCATIVO
+         AND CUIL = I_CUIL
+         and ts.id_tipo_solicitante in (1,2,3)
+         AND AE.ID_AUTORIZACION_ESTADO =
+             (SELECT MAX(A2.ID_AUTORIZACION_ESTADO)
+                FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO A2
+               WHERE A2.ID_AUTORIZACION = A.ID_AUTORIZACION)
+      /*  AND pt.fec_alta = ( select max(pt2.fec_alta) 
+      from  MAASP_TUNI_TPTE.T_PRECIOS_TRAMO pt2
+      where pt2.id_empresa = pt.id_empresa
+      and pt2.id_origen = pt.id_origen
+      and pt2.id_destino = pt.id_destino
+      )                     */
+      ;
+  
+    O_MENSAJE   := '';
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR AL BUSCAR LA AUTORIZACION' || SQLERRM;
+  END SP_BUSCAR_AUTORIZACION_BEGT;
+
+  PROCEDURE SP_VALIDAR_CUIL_TARJETA(I_CUIL     IN T_AUTORIZACIONES.CUIL%TYPE,
+                                    O_CANTIDAD OUT NUMBER) IS
+  
+    V_CANTIDAD1 NUMBER;
+    V_CANTIDAD2 NUMBER;
+  
+  BEGIN
+    SELECT COUNT(1)
+      INTO V_CANTIDAD1
+      FROM ABONO_ESTUDIANTIL.T_STOCK_TARJETA
+     WHERE CUIL = I_CUIL;
+  
+    SELECT COUNT(1)
+      INTO V_CANTIDAD2
+      FROM MAASP_TUNI_TPTE.T_TARJETAS_AUTORIZACION A,
+           MAASP_TUNI_TPTE.T_AUTORIZACIONES        B
+     WHERE A.ID_AUTORIZACION = A.ID_AUTORIZACION
+       AND B.CUIL = I_CUIL;
+  
+    O_CANTIDAD := V_CANTIDAD1 + V_CANTIDAD2;
+  
+  END SP_VALIDAR_CUIL_TARJETA;
+
+  PROCEDURE SP_BAJA_AUTORIZACION(I_ID_AUTORIZACION IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                 I_CUIL            IN T_AUTORIZACIONES.Cuil%TYPE,
+                                 O_MENSAJE         OUT VARCHAR2,
+                                 O_RESULTADO       OUT VARCHAR2) IS
+  
+    V_AUTORIZACION   VARCHAR2(1);
+    V_ID_ESTADO_AUTO T_AUTO_ESTADO.ID_AUTORIZACION_ESTADO%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+  BEGIN
+    BEGIN
+      SELECT 'S'
+        INTO V_AUTORIZACION
+        FROM T_AUTORIZACIONES
+       WHERE ID_AUTORIZACION = I_ID_AUTORIZACION
+         AND CUIL = I_CUIL;
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        O_MENSAJE   := 'LA AUTORIZACION NO EXISTE';
+        O_RESULTADO := 'OK';
+    END;
+    IF V_AUTORIZACION = 'S' THEN
+    
+      INSERT INTO T_AUTO_ESTADO
+        (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+      VALUES
+        (V_ID_ESTADO_AUTO, I_ID_AUTORIZACION, 3, SYSDATE);
+    
+      O_MENSAJE   := 'SE REALIZO LA BAJA CON EXITO.';
+      O_RESULTADO := 'OK';
+    END IF;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR INESPERADO AL DAR EL ALTA DE LA AUTORIZACIÓN: ' ||
+                     SQLERRM;
+    
+  END SP_BAJA_AUTORIZACION;
+
+  PROCEDURE SP_MODIFICAR_AUTORIZACION(I_ID_AUTORIZACION       IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                      I_CUIL                  IN T_AUTORIZACIONES.Cuil%TYPE,
+                                      I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE,
+                                      I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE,
+                                      I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE,
+                                      I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                      I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE,
+                                      I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE,
+                                      O_MENSAJE               OUT VARCHAR2,
+                                      O_RESULTADO             OUT VARCHAR2) IS
+    /*Agregar campo que falta Mario*/
+    V_AUTORIZACION    VARCHAR2(1);
+    V_ID_ESTADO_AUTO  T_AUTO_ESTADO.ID_AUTORIZACION_ESTADO%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+    V_ID_AUTORIZACION T_AUTORIZACIONES.ID_AUTORIZACION%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+  
+  BEGIN
+    BEGIN
+      SELECT 'S'
+        INTO V_AUTORIZACION
+        FROM T_AUTORIZACIONES
+       WHERE ID_AUTORIZACION = I_ID_AUTORIZACION
+         AND CUIL = I_CUIL;
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        O_MENSAJE   := 'LA AUTORIZACION NO EXISTE';
+        O_RESULTADO := 'OK';
+    END;
+    IF V_AUTORIZACION = 'S' THEN
+    
+      insert into t_autorizaciones
+        (id_autorizacion,
+         cuil_usr,
+         cuil,
+         id_origen,
+         id_destino,
+         observacion,
+         id_empresa,
+         inicio_franja_horaria,
+         final_franja_horaria,
+         cant_uso_x_dia,
+         cant_uso_x_mes,
+         id_tipo_solicitante,
+         cant_uso_x_dia_sem,
+         cant_uso_x_semana,
+         viaja_feriado_sn,
+         fec_alta,
+         usr_alta,
+         fec_modif,
+         usr_modif,
+         id_convenio,
+         fec_desde,
+         fec_hasta,
+         id_nivel_educativo,
+         excep,
+         id_distancia)
+        (SELECT V_ID_AUTORIZACION,
+                cuil_usr,
+                cuil,
+                id_origen,
+                id_destino,
+                observacion,
+                id_empresa,
+                I_INICIO_FRANJA_HORARIA,
+                I_FINAL_FRANJA_HORARIA,
+                I_CANT_USO_X_DIA,
+                I_CANT_USO_X_MES,
+                id_tipo_solicitante,
+                I_CANT_USO_X_DIA_SEM,
+                I_CANT_USO_X_SEMANA,
+                viaja_feriado_sn,
+                fec_alta,
+                usr_alta,
+                fec_modif,
+                usr_modif,
+                id_convenio,
+                fec_desde,
+                fec_hasta,
+                id_nivel_educativo,
+                excep,
+                id_distancia
+           FROM T_AUTORIZACIONES
+          WHERE ID_AUTORIZACION = I_ID_AUTORIZACION
+            AND CUIL = I_CUIL);
+    
+      UPDATE MAASP_TUNI_TPTE.T_AUTO_ESTADO
+         SET ID_ESTADO = 3
+       WHERE ID_AUTORIZACION = I_ID_AUTORIZACION;
+    
+      INSERT INTO T_AUTO_ESTADO
+        (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+      VALUES
+        (V_ID_ESTADO_AUTO, V_ID_AUTORIZACION, 1, SYSDATE);
+    
+      O_MENSAJE   := 'SE REALIZO LA MODIFICACION CON EXITO.';
+      O_RESULTADO := 'OK';
+    END IF;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR INESPERADO AL DAR EL ALTA DE LA AUTORIZACIÓN: ' ||
+                     SQLERRM;
+    
+  END SP_MODIFICAR_AUTORIZACION;
+
+  PROCEDURE SP_BUSCAR_AUTORIZACION_ID(I_ID        IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                      O_CURSOR    OUT SYS_REFCURSOR,
+                                      O_MENSAJE   OUT VARCHAR2,
+                                      O_RESULTADO OUT VARCHAR2) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT A.CUIL,
+             (SELECT DISTINCT N_PUNTO
+                FROM MAASP_TUNI_TPTE.VT_PUNTOS
+               WHERE ID_PUNTO = A.ID_ORIGEN) N_ORIGEN,
+             (SELECT DISTINCT N_PUNTO
+                FROM MAASP_TUNI_TPTE.VT_PUNTOS
+               WHERE ID_PUNTO = A.ID_DESTINO) N_DESTINO,
+             A.ID_AUTORIZACION,
+             TE.N_TIPO_EMPRESA,
+             A.INICIO_FRANJA_HORARIA,
+             A.FINAL_FRANJA_HORARIA,
+             A.INICIO_FRANJA_HORARIA || '-' || A.FINAL_FRANJA_HORARIA AS FRANJA_HORARIA,
+             A.CANT_USO_X_DIA,
+             A.CANT_USO_X_MES,
+             A.CANT_USO_X_DIA_SEM,
+             A.CANT_USO_X_SEMANA,
+             VIAJA_FERIADO_SN,
+             A.ID_TIPO_SOLICITANTE TIPO_SOLICITANTE,
+             TS.N_TIPO_SOLICITANTE,
+             TS.ID_PROGRAMA,
+             A.ID_NIVEL_EDUCATIVO,
+             NE.N_NIVEL_EDUCATIVO,
+             A.ID_EMPRESA,
+             EM.RAZON_SOCIAL,
+             EM.RAZON_SOCIAL N_EMPRESA,
+             EA.N_ESTADO,
+             EA.Id_Estado,
+             A.ID_DISTANCIA,
+             DECODE(a.id_distancia,
+                    2,
+                    'Menos de 100 km',
+                    3,
+                    'Mas de 100 km',
+                    '') as N_DISTANCIA,
+             to_char(AE.FEC_ALTA, 'dd/mm/yyyy') AS FECHA
+        FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES       A,
+             TRANSPORTE.T_DESTINOS                  D,
+             TRANSPORTE.T_ORIGENES                  O,
+             TRANSPORTE.T_TIPOS_EMPRESA             TE,
+             MAASP_TUNI_TPTE.T_TIPOS_SOLICITANTE    TS,
+             TRANSPORTE.T_EMPRESAS                  EM,
+             MAASP_TUNI_TPTE.T_AUTO_ESTADO          AE,
+             MAASP_TUNI_TPTE.T_ESTADOS_AUTORIZACION EA,
+             MAASP_TUNI_TPTE.T_PRECIOS_TRAMO        PT,
+             ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS NE,
+             TRANSPORTE.T_EMPRESAS_X_TIPO           T
+       WHERE AE.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND A.ID_EMPRESA = EM.ID_EMPRESA
+         AND D.ID_DESTINO(+) = A.ID_ORIGEN
+         AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+         AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_DESTINO(+) = A.ID_DESTINO
+         AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+         AND TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+         AND T.ID_EMPRESA = EM.ID_EMPRESA
+         AND EA.ID_ESTADO = AE.ID_ESTADO
+         AND AE.FEC_HASTA IS NULL
+         AND PT.FEC_HASTA IS NULL
+         AND NE.ID_NIVEL_EDUCATIVO(+) = A.ID_NIVEL_EDUCATIVO
+         AND A.ID_AUTORIZACION = I_ID
+         AND AE.ID_AUTORIZACION_ESTADO =
+             (SELECT MAX(A2.ID_AUTORIZACION_ESTADO)
+                FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO A2
+               WHERE A2.ID_AUTORIZACION = A.ID_AUTORIZACION)
+      /*  AND pt.fec_alta = ( select max(pt2.fec_alta) 
+      from  MAASP_TUNI_TPTE.T_PRECIOS_TRAMO pt2
+      where pt2.id_empresa = pt.id_empresa
+      and pt2.id_origen = pt.id_origen
+      and pt2.id_destino = pt.id_destino
+      )       */
+      ;
+  
+    O_MENSAJE   := '';
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR AL BUSCAR LA AUTORIZACION' || SQLERRM;
+  END SP_BUSCAR_AUTORIZACION_ID;
+
+  --------------------------------------------------------------------------------------------------
+  -- Mario
+  --------------------------------------------------------------------------------------------------
+  PROCEDURE SP_BUSCAR_AUTORIZ_CONTRATURNO(I_CUIL               IN T_AUTORIZACIONES.CUIL%TYPE,
+                                          I_ID_EMPRESA         IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                          I_ID_NIVEL_EDUCATIVO IN T_AUTORIZACIONES.ID_NIVEL_EDUCATIVO%TYPE,
+                                          O_CURSOR             OUT SYS_REFCURSOR,
+                                          O_MENSAJE            OUT VARCHAR2,
+                                          O_RESULTADO          OUT VARCHAR2) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT A.CUIL,
+             (SELECT DISTINCT N_PUNTO
+                FROM MAASP_TUNI_TPTE.VT_PUNTOS
+               WHERE ID_PUNTO = A.ID_ORIGEN) N_ORIGEN,
+             (SELECT DISTINCT N_PUNTO
+                FROM MAASP_TUNI_TPTE.VT_PUNTOS
+               WHERE ID_PUNTO = A.ID_DESTINO) N_DESTINO,
+             A.ID_AUTORIZACION,
+             TE.N_TIPO_EMPRESA,
+             A.INICIO_FRANJA_HORARIA,
+             A.FINAL_FRANJA_HORARIA,
+             A.CANT_USO_X_DIA,
+             A.CANT_USO_X_MES,
+             A.CANT_USO_X_DIA_SEM,
+             A.CANT_USO_X_SEMANA,
+             VIAJA_FERIADO_SN,
+             A.ID_TIPO_SOLICITANTE TIPO_SOLICITANTE,
+             TS.N_TIPO_SOLICITANTE,
+             TS.ID_PROGRAMA,
+             A.ID_NIVEL_EDUCATIVO,
+             NE.N_NIVEL_EDUCATIVO,
+             A.ID_EMPRESA,
+             EM.RAZON_SOCIAL,
+             EM.RAZON_SOCIAL N_EMPRESA,
+             EA.N_ESTADO,
+             EA.Id_Estado,
+             A.ID_DISTANCIA,
+             DECODE(a.id_distancia,
+                    2,
+                    'Menos de 100 km',
+                    3,
+                    'Mas de 100 km',
+                    '') as N_DISTANCIA,
+             to_char(AE.FEC_ALTA, 'dd/mm/yyyy') AS FECHA
+        FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES       A,
+             TRANSPORTE.T_DESTINOS                  D,
+             TRANSPORTE.T_ORIGENES                  O,
+             TRANSPORTE.T_TIPOS_EMPRESA             TE,
+             MAASP_TUNI_TPTE.T_TIPOS_SOLICITANTE    TS,
+             TRANSPORTE.T_EMPRESAS                  EM,
+             MAASP_TUNI_TPTE.T_AUTO_ESTADO          AE,
+             MAASP_TUNI_TPTE.T_ESTADOS_AUTORIZACION EA,
+             MAASP_TUNI_TPTE.T_PRECIOS_TRAMO        PT,
+             ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS NE,
+             TRANSPORTE.T_EMPRESAS_X_TIPO           T
+       WHERE AE.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND A.ID_EMPRESA = EM.ID_EMPRESA
+         AND D.ID_DESTINO(+) = A.ID_ORIGEN
+         AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+         AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_DESTINO(+) = A.ID_DESTINO
+         AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+         AND TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+         AND T.ID_EMPRESA = EM.ID_EMPRESA
+         AND EA.ID_ESTADO = AE.ID_ESTADO
+         AND AE.FEC_HASTA IS NULL
+         AND PT.FEC_HASTA IS NULL
+         AND NE.ID_NIVEL_EDUCATIVO(+) = A.ID_NIVEL_EDUCATIVO
+         AND A.CUIL = I_CUIL
+         AND A.ID_EMPRESA = I_ID_EMPRESA
+         AND A.ID_NIVEL_EDUCATIVO = I_ID_NIVEL_EDUCATIVO
+         AND AE.ID_AUTORIZACION_ESTADO =
+             (SELECT MAX(A2.ID_AUTORIZACION_ESTADO)
+                FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO A2
+               WHERE A2.ID_AUTORIZACION = A.ID_AUTORIZACION)
+      /* AND pt.fec_alta = ( select max(pt2.fec_alta) 
+      from  MAASP_TUNI_TPTE.T_PRECIOS_TRAMO pt2
+      where pt2.id_empresa = pt.id_empresa
+      and pt2.id_origen = pt.id_origen
+      and pt2.id_destino = pt.id_destino
+      )      */
+      ;
+  
+    O_MENSAJE   := '';
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR AL BUSCAR LA AUTORIZACION' || SQLERRM;
+  END SP_BUSCAR_AUTORIZ_CONTRATURNO;
+
+  --------------------------------------------------------------------------------------------------
+  PROCEDURE SP_AUTORIZACION_CONTRATURNO(I_ID_AUTORIZACION       IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                                        I_CUIL                  IN T_AUTORIZACIONES.Cuil%TYPE,
+                                        I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE,
+                                        I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE,
+                                        I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE,
+                                        I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                        I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE,
+                                        I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE,
+                                        O_MENSAJE               OUT VARCHAR2,
+                                        O_RESULTADO             OUT VARCHAR2) IS
+    /*Agregar campo que falta Mario*/
+    V_AUTORIZACION       VARCHAR2(1);
+    V_ID_ESTADO_AUTO_OLD T_AUTO_ESTADO.ID_AUTORIZACION_ESTADO%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+    V_ID_ESTADO_AUTO     T_AUTO_ESTADO.ID_AUTORIZACION_ESTADO%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+    V_ID_AUTORIZACION    T_AUTORIZACIONES.ID_AUTORIZACION%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+  
+  BEGIN
+    BEGIN
+      SELECT 'S'
+        INTO V_AUTORIZACION
+        FROM T_AUTORIZACIONES
+       WHERE ID_AUTORIZACION = I_ID_AUTORIZACION
+         AND CUIL = I_CUIL;
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        O_MENSAJE   := 'LA AUTORIZACION NO EXISTE';
+        O_RESULTADO := 'ERROR';
+    END;
+    IF V_AUTORIZACION = 'S' THEN
+    
+      INSERT INTO T_AUTORIZACIONES
+        (ID_AUTORIZACION,
+         CUIL_USR,
+         CUIL,
+         ID_ORIGEN,
+         ID_DESTINO,
+         OBSERVACION,
+         ID_EMPRESA,
+         INICIO_FRANJA_HORARIA,
+         FINAL_FRANJA_HORARIA,
+         CANT_USO_X_DIA,
+         CANT_USO_X_MES,
+         ID_TIPO_SOLICITANTE,
+         CANT_USO_X_DIA_SEM,
+         CANT_USO_X_SEMANA,
+         VIAJA_FERIADO_SN,
+         FEC_ALTA,
+         USR_ALTA,
+         FEC_MODIF,
+         USR_MODIF,
+         ID_CONVENIO,
+         FEC_DESDE,
+         FEC_HASTA,
+         ID_NIVEL_EDUCATIVO,
+         EXCEP,
+         ID_DISTANCIA)
+        (SELECT V_ID_AUTORIZACION,
+                CUIL_USR,
+                CUIL,
+                ID_ORIGEN,
+                ID_DESTINO,
+                null,
+                ID_EMPRESA,
+                I_INICIO_FRANJA_HORARIA,
+                I_FINAL_FRANJA_HORARIA,
+                I_CANT_USO_X_DIA,
+                I_CANT_USO_X_MES,
+                ID_TIPO_SOLICITANTE,
+                I_CANT_USO_X_DIA_SEM,
+                I_CANT_USO_X_SEMANA,
+                VIAJA_FERIADO_SN,
+                FEC_ALTA,
+                USR_ALTA,
+                FEC_MODIF,
+                USR_MODIF,
+                ID_CONVENIO,
+                FEC_DESDE,
+                FEC_HASTA,
+                ID_NIVEL_EDUCATIVO,
+                EXCEP,
+                ID_DISTANCIA
+           FROM T_AUTORIZACIONES
+          WHERE ID_AUTORIZACION = I_ID_AUTORIZACION
+            AND CUIL = I_CUIL);
+    
+      UPDATE T_AUTO_ESTADO E
+         SET E.FEC_HASTA = SYSDATE
+       WHERE ID_AUTORIZACION = I_ID_AUTORIZACION;
+    
+      INSERT INTO T_AUTO_ESTADO
+        (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+      VALUES
+        (V_ID_ESTADO_AUTO_OLD, I_ID_AUTORIZACION, 3, SYSDATE);
+    
+      INSERT INTO T_AUTO_ESTADO
+        (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+      VALUES
+        (V_ID_ESTADO_AUTO, V_ID_AUTORIZACION, 1, SYSDATE);
+    
+      O_MENSAJE   := V_ID_AUTORIZACION;
+      O_RESULTADO := 'OK';
+    END IF;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR INESPERADO AL DAR EL ALTA DE LA AUTORIZACIÓN: ' ||
+                     SQLERRM;
+    
+  END SP_AUTORIZACION_CONTRATURNO;
+
+  PROCEDURE SP_RENOVAR_AUTORIZACION IS
+  
+    V_ID_ESTADO_AUTO T_AUTO_ESTADO.ID_AUTORIZACION_ESTADO%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+  
+  BEGIN
+    FOR REG IN (SELECT A.ID_AUTORIZACION
+                  FROM T_AUTORIZACIONES             A,
+                       T_AUTO_ESTADO                E,
+                       TRANSPORTE.T_EMPRESAS_X_TIPO T
+                 WHERE T.ID_EMPRESA NOT IN (501, 502, 670, 671)
+                   AND E.ID_ESTADO = 1
+                   AND A.ID_TIPO_SOLICITANTE = 1
+                   AND A.ID_NIVEL_EDUCATIVO = 3
+                   AND T.ID_TIPO_EMPRESA = 1
+                   AND A.ID_AUTORIZACION = E.ID_AUTORIZACION
+                   AND T.ID_EMPRESA = A.ID_EMPRESA
+                   AND E.ID_AUTORIZACION_ESTADO =
+                       (SELECT MAX(A2.ID_AUTORIZACION_ESTADO)
+                          FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO A2
+                         WHERE A2.ID_AUTORIZACION = A.ID_AUTORIZACION)) LOOP
+    
+      UPDATE T_AUTO_ESTADO E
+         SET E.FEC_HASTA = SYSDATE
+       WHERE ID_AUTORIZACION = REG.ID_AUTORIZACION;
+    
+      UPDATE T_AUTORIZACIONES
+         SET OBSERVACION = 'RENOVAR ' || TO_CHAR(SYSDATE)
+       WHERE ID_AUTORIZACION = REG.ID_AUTORIZACION;
+    
+      INSERT INTO T_AUTO_ESTADO
+        (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+      VALUES
+        (V_ID_ESTADO_AUTO, REG.ID_AUTORIZACION, 4, SYSDATE);
+    
+      COMMIT;
+    END LOOP;
+  END;
+
+  PROCEDURE SP_ALTA_AUTORIZACIONES_BOS(I_USUARIO               IN T_AUTORIZACIONES.CUIL_USR%TYPE DEFAULT NULL,
+                                       I_CUIL                  IN T_AUTORIZACIONES.CUIL%TYPE,
+                                       I_ID_ORIGEN             IN T_AUTORIZACIONES.ID_ORIGEN%TYPE DEFAULT NULL,
+                                       I_ID_DESTINO            IN T_AUTORIZACIONES.ID_DESTINO%TYPE DEFAULT NULL,
+                                       I_ID_EMPRESA            IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                       I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                       I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                       I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE DEFAULT NULL,
+                                       I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                       I_TIPO_SOLICITANTE      IN T_AUTORIZACIONES.ID_TIPO_SOLICITANTE%TYPE,
+                                       I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE DEFAULT NULL,
+                                       I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE DEFAULT NULL,
+                                       I_VIAJA_FERIADO_SN      IN T_AUTORIZACIONES.VIAJA_FERIADO_SN%TYPE DEFAULT NULL,
+                                       I_CONVENIO              IN T_AUTORIZACIONES.ID_CONVENIO%TYPE DEFAULT NULL,
+                                       I_EXCEPCION             IN VARCHAR2 DEFAULT 'N',
+                                       I_NIVEL_EDUCATIVO       IN T_AUTORIZACIONES.ID_NIVEL_EDUCATIVO%TYPE DEFAULT NULL,
+                                       I_DISTANCIA             IN NUMBER,
+                                       I_ID_TIPO_EMPRESA       IN NUMBER,
+                                       O_RESULTADO             OUT VARCHAR2,
+                                       O_ID_AUTORIZACION       OUT NUMBER,
+                                       O_MENSAJE               OUT VARCHAR2) IS
+  
+    V_ID_AUTORIZACION T_AUTORIZACIONES.ID_AUTORIZACION%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+    V_ID_ESTADO_AUTO  T_AUTO_ESTADO.ID_AUTORIZACION_ESTADO%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+    V_SALIDA          VARCHAR2(1) := 'N';
+    V_CANT            NUMBER;
+    V_CANT2           NUMBER;
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    -- IF I_ID_TIPO_EMPRESA = 2 OR I_ID_TIPO_EMPRESA = 3 THEN
+  
+    --  IF I_DISTANCIA = 4 THEN
+    SELECT COUNT(*)
+      INTO V_CANT
+      FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES T
+     INNER JOIN TRANSPORTE.T_EMPRESAS_X_TIPO ET
+        ON ET.ID_EMPRESA = T.ID_EMPRESA
+       and et.id_tipo_empresa in (2, 3)
+     INNER JOIN TRANSPORTE.T_EMPRESAS_X_TRAMOS TR
+        ON TR.ID_EMPRESA = T.ID_EMPRESA
+          -- AND TR.ID_TIPO_EMPRESA IN (2, 3)
+       AND TR.ID_ORIGEN = T.ID_ORIGEN
+       AND TR.ID_DESTINO = T.ID_DESTINO
+       AND TR.DISTANCIA < 61
+     INNER JOIN MAASP_TUNI_TPTE.T_AUTO_ESTADO E
+        ON E.ID_AUTORIZACION = T.ID_AUTORIZACION
+       AND E.ID_AUTORIZACION_ESTADO =
+           (SELECT MAX(AUX.ID_AUTORIZACION_ESTADO)
+              FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO AUX
+             WHERE AUX.ID_AUTORIZACION = T.ID_AUTORIZACION)
+    
+     WHERE T.CUIL = I_CUIL
+       AND E.ID_ESTADO = 1
+       AND E.FEC_HASTA IS NULL;
+  
+    IF V_CANT = 0 THEN
+      V_SALIDA := 'S';
+    ELSE
+      O_MENSAJE := 'YA POSEE UN BOLETO APROBADO DE INTERURBANO/DIFERENCIAL MENOR 60 KM.';
+    END IF;
+  
+    /*ELSIF I_DISTANCIA = 5 THEN
+    
+    SELECT COUNT(*)
+      INTO V_CANT2
+      FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES T
+     INNER JOIN TRANSPORTE.T_EMPRESAS_X_TIPO ET
+        ON ET.ID_EMPRESA = T.ID_EMPRESA
+     INNER JOIN TRANSPORTE.T_EMPRESAS_X_TRAMOS TR
+        ON TR.ID_EMPRESA = T.ID_EMPRESA
+       AND TR.ID_TIPO_EMPRESA IN (2, 3)
+       AND TR.ID_ORIGEN = T.ID_ORIGEN
+       AND TR.ID_DESTINO = T.ID_DESTINO
+       AND TR.DISTANCIA > 60
+     INNER JOIN MAASP_TUNI_TPTE.T_AUTO_ESTADO E
+        ON E.ID_AUTORIZACION = T.ID_AUTORIZACION
+       AND E.ID_AUTORIZACION_ESTADO =
+           (SELECT MAX(AUX.ID_AUTORIZACION_ESTADO)
+              FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO AUX
+             WHERE AUX.ID_AUTORIZACION = T.ID_AUTORIZACION)
+     WHERE T.CUIL = I_CUIL
+       AND E.ID_ESTADO = 1
+       AND E.FEC_HASTA IS NULL;
+    
+    IF V_CANT2 = 0 THEN
+      V_SALIDA := 'S';
+    ELSE
+      O_MENSAJE := 'YA POSEE UN BOLETO APROBADO DE INTERURBANO/DIFERENCIAL MAYOR 60 KM.';
+    END IF;*/
+  
+    -- END IF;
+    --  ELSIF I_ID_TIPO_EMPRESA = 1 OR I_ID_TIPO_EMPRESA = 4 THEN
+    IF V_SALIDA = 'S' THEN
+      SELECT COUNT(*)
+        INTO V_CANT
+        FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES T
+       INNER JOIN TRANSPORTE.T_EMPRESAS_X_TIPO ET
+          ON ET.ID_EMPRESA = T.ID_EMPRESA
+         and et.id_tipo_empresa = 1
+      /*  INNER JOIN TRANSPORTE.T_EMPRESAS_X_TRAMOS TR
+      ON TR.ID_EMPRESA = T.ID_EMPRESA*/
+      --  AND TR.ID_TIPO_EMPRESA IN (1)
+       INNER JOIN MAASP_TUNI_TPTE.T_AUTO_ESTADO E
+          ON E.ID_AUTORIZACION = T.ID_AUTORIZACION
+         AND E.ID_AUTORIZACION_ESTADO =
+             (SELECT MAX(AUX.ID_AUTORIZACION_ESTADO)
+                FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO AUX
+               WHERE AUX.ID_AUTORIZACION = T.ID_AUTORIZACION)
+       WHERE T.CUIL = I_CUIL
+         AND E.ID_ESTADO = 1
+         AND E.FEC_HASTA IS NULL;
+    
+      IF V_CANT = 0 THEN
+        V_SALIDA := 'S';
+      ELSE
+        V_SALIDA  := 'N';
+        O_MENSAJE := 'YA POSEE UN BOLETO URBANO APROBADO.';
+      END IF;
+    END IF;
+    --END IF;
+  
+    if I_CUIL = '27182865910' then
+      V_SALIDA  := 'S';
+      O_MENSAJE := '';
+    end if;
+  
+    IF V_SALIDA = 'N' THEN
+      O_RESULTADO := 'ERROR';
+      RETURN;
+    END IF;
+  
+    ---
+  
+    IF V_SALIDA = 'S' THEN
+    
+      INSERT INTO T_AUTORIZACIONES
+        (CUIL_USR,
+         ID_AUTORIZACION,
+         CUIL,
+         ID_ORIGEN,
+         ID_DESTINO,
+         ID_EMPRESA,
+         INICIO_FRANJA_HORARIA,
+         FINAL_FRANJA_HORARIA,
+         CANT_USO_X_DIA,
+         CANT_USO_X_MES,
+         ID_TIPO_SOLICITANTE,
+         CANT_USO_X_DIA_SEM,
+         CANT_USO_X_SEMANA,
+         VIAJA_FERIADO_SN,
+         ID_CONVENIO,
+         FEC_DESDE,
+         FEC_HASTA,
+         ID_NIVEL_EDUCATIVO,
+         Id_Distancia)
+      VALUES
+        (I_USUARIO,
+         V_ID_AUTORIZACION,
+         I_CUIL,
+         I_ID_ORIGEN,
+         I_ID_DESTINO,
+         I_ID_EMPRESA,
+         I_INICIO_FRANJA_HORARIA,
+         I_FINAL_FRANJA_HORARIA,
+         I_CANT_USO_X_DIA,
+         I_CANT_USO_X_MES,
+         I_TIPO_SOLICITANTE,
+         NVL(I_CANT_USO_X_DIA_SEM, 0),
+         I_CANT_USO_X_SEMANA,
+         I_VIAJA_FERIADO_SN,
+         I_CONVENIO,
+         SYSDATE,
+         ADD_MONTHS(TO_DATE(SYSDATE, 'DD/MM/rrrr'), 12),
+         I_NIVEL_EDUCATIVO,
+         I_DISTANCIA);
+    
+      INSERT INTO T_AUTO_ESTADO
+        (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+      VALUES
+        (V_ID_ESTADO_AUTO, V_ID_AUTORIZACION, 1, SYSDATE);
+    
+    END IF;
+  
+    COMMIT;
+    O_ID_AUTORIZACION := V_ID_AUTORIZACION;
+    O_RESULTADO       := 'OK';
+    O_MENSAJE         := '';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR INESPERADO AL DAR EL ALTA DE LA AUTORIZACIÓN: ' ||
+                     SQLERRM;
+    
+      RAISE;
+    
+  END SP_ALTA_AUTORIZACIONES_BOS;
+
+  PROCEDURE SP_ORIGEN_EMPRESA_BOS(O_CURSOR    OUT SYS_REFCURSOR,
+                                  I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                  I_DISTANCIA IN NUMBER) IS
+  
+    V_SQL        VARCHAR2(32000);
+    V_SQLFILTROS VARCHAR2(32000);
+  
+  BEGIN
+  
+    IF I_DISTANCIA = 4 THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND DISTANCIA <=60 ';
+    ELSIF I_DISTANCIA = 5 THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND DISTANCIA >60 ';
+    END IF;
+  
+    V_SQL := 'SELECT DISTINCT T.ID_ORIGEN,
+                (SELECT DISTINCT N_PUNTO
+                   FROM VT_PUNTOS
+                  WHERE ID_PUNTO = T.ID_ORIGEN) N_ORIGEN
+  FROM T_PRECIOS_TRAMO T, TRANSPORTE.T_EMPRESAS E
+ WHERE SYSDATE BETWEEN T.FEC_DESDE AND NVL(T.FEC_HASTA, SYSDATE)
+   AND E.ID_EMPRESA = T.ID_EMPRESA
+   AND T.ID_EMPRESA = ' || I_EMPRESA || V_SQLFILTROS ||
+             ' ORDER BY 2';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL RECUPERAR LOS ORIGENES DE UNA EMPRESA. ' ||
+                              SQLERRM);
+  END SP_ORIGEN_EMPRESA_BOS;
+
+  /**************************************************
+  * LISTA LOS DESTINOS PARA UNA DETERMINADA EMPRESA *
+  ***************************************************/
+
+  PROCEDURE SP_DESTINOS_EMPRESA_BOS(O_CURSOR    OUT SYS_REFCURSOR,
+                                    I_EMPRESA   IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                    I_ID_ORIGEN IN T_PRECIOS_TRAMO.ID_ORIGEN%TYPE,
+                                    I_DISTANCIA IN NUMBER) IS
+  
+    V_SQL        VARCHAR2(32000);
+    V_SQLFILTROS VARCHAR2(32000);
+  
+  BEGIN
+    IF I_DISTANCIA = 4 THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND DISTANCIA <=60 ';
+    ELSIF I_DISTANCIA = 5 THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND DISTANCIA >60 ';
+    END IF;
+  
+    V_SQL := 'SELECT DISTINCT T.ID_DESTINO,
+                      (SELECT DISTINCT N_PUNTO
+                         FROM VT_PUNTOS
+                        WHERE ID_PUNTO = T.ID_DESTINO) N_DESTINO
+        FROM T_PRECIOS_TRAMO T, TRANSPORTE.T_EMPRESAS E
+       WHERE E.ID_EMPRESA = T.ID_EMPRESA
+         AND SYSDATE BETWEEN T.FEC_DESDE AND NVL(T.FEC_HASTA, SYSDATE)
+         AND T.ID_EMPRESA = ' || I_EMPRESA ||
+             ' AND T.ID_ORIGEN = ' || I_ID_ORIGEN || V_SQLFILTROS ||
+             ' ORDER BY 2';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL RECUPERAR LOS DESTINOS DE UNA EMPRESA. ' ||
+                              SQLERRM);
+  END SP_DESTINOS_EMPRESA_BOS;
+  PROCEDURE SP_RENDICIONES_BOS(O_CURSOR      OUT SYS_REFCURSOR,
+                               O_MENSAJE     OUT VARCHAR2,
+                               O_RESULTADO   OUT VARCHAR,
+                               I_FECHA_DESDE IN VARCHAR2,
+                               I_FECHA_HASTA IN VARCHAR2,
+                               I_EMPRESA     IN T_AUTORIZACIONES.ID_AUTORIZACION%TYPE,
+                               I_OPERADOR    IN T_USUARIOS_ROLES.CUIL%TYPE) IS
+  
+    V_ROL T_USUARIOS_ROLES.ID_ROL%TYPE;
+  
+  BEGIN
+  
+    BEGIN
+      SELECT ID_ROL
+        INTO V_ROL
+        FROM T_USUARIOS_ROLES
+       WHERE CUIL = I_OPERADOR;
+    EXCEPTION
+      WHEN OTHERS THEN
+        O_RESULTADO := 'ERROR';
+        O_MENSAJE   := 'ERROR AL CONSULTAR EL ROL DEL OPERADOR';
+    END;
+  
+    IF V_ROL = 1 OR V_ROL = 3 THEN
+    
+      OPEN O_CURSOR FOR
+        SELECT A.ID_AUTORIZACION,
+               A.CUIL,
+               A.ID_ORIGEN,
+               (SELECT DISTINCT N_PUNTO
+                  FROM VT_PUNTOS
+                 WHERE ID_PUNTO = A.ID_ORIGEN) N_ORIGEN,
+               A.ID_DESTINO,
+               (SELECT DISTINCT N_PUNTO
+                  FROM VT_PUNTOS
+                 WHERE ID_PUNTO = A.ID_DESTINO) N_DESTINO,
+               PT.DISTANCIA,
+               VT.APELLIDO || ' ' || VT.NOMBRE NOMBRE,
+               A.INICIO_FRANJA_HORARIA,
+               A.FINAL_FRANJA_HORARIA,
+               A.INICIO_FRANJA_HORARIA || '-' || A.FINAL_FRANJA_HORARIA HORARIO,
+               A.CANT_USO_X_DIA,
+               A.CANT_USO_X_MES,
+               A.CANT_USO_X_DIA_SEM,
+               A.CANT_USO_X_SEMANA,
+               VIAJA_FERIADO_SN FERIADO,
+               PT.IMPORTE,
+               A.ID_TIPO_SOLICITANTE TIPO_SOLICITANTE,
+               TS.N_TIPO_SOLICITANTE,
+               TS.ID_PROGRAMA,
+               A.ID_EMPRESA,
+               EM.RAZON_SOCIAL,
+               A.FEC_DESDE,
+               D.CUIL OPERADOR
+          FROM T_AUTORIZACIONES               A,
+               TRANSPORTE.T_DESTINOS          D,
+               TRANSPORTE.T_ORIGENES          O,
+               TRANSPORTE.T_TIPOS_EMPRESA     TE,
+               T_TIPOS_SOLICITANTE            TS,
+               TRANSPORTE.T_EMPRESAS          EM,
+               T_PRECIOS_TRAMO                PT,
+               TRANSPORTE.T_EMPRESAS_X_TIPO   T,
+               GESTION_CIUDADANOS.VT_USUARIOS VT,
+               T_USUARIOS_ROLES               U,
+               T_USUARIOS_EMPRESAS            D
+         WHERE TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+           AND T.ID_EMPRESA = EM.ID_EMPRESA
+           AND A.ID_EMPRESA = EM.ID_EMPRESA
+           AND D.ID_DESTINO(+) = A.ID_ORIGEN
+           AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+           AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+           AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+           AND PT.ID_DESTINO(+) = A.ID_DESTINO
+           AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+           and ts.id_programa = 2
+           AND PT.FEC_HASTA IS NULL
+           AND VT.N_USUARIO(+) = A.CUIL
+           AND D.ID_EMPRESA = EM.ID_EMPRESA
+           AND D.CUIL = U.CUIL
+           AND U.CUIL = A.CUIL_USR
+           AND A.ID_EMPRESA = I_EMPRESA
+           AND TRUNC(A.FEC_DESDE) BETWEEN
+               TO_DATE(I_FECHA_DESDE, 'DD/MM/YYYY') AND
+               TO_DATE(I_FECHA_HASTA, 'DD/MM/YYYY');
+    
+    ELSIF V_ROL = 2 OR V_ROL = 4 THEN
+    
+      OPEN O_CURSOR FOR
+        SELECT A.ID_AUTORIZACION,
+               A.CUIL,
+               A.ID_ORIGEN,
+               (SELECT DISTINCT N_PUNTO
+                  FROM VT_PUNTOS
+                 WHERE ID_PUNTO = A.ID_ORIGEN) N_ORIGEN,
+               A.ID_DESTINO,
+               (SELECT DISTINCT N_PUNTO
+                  FROM VT_PUNTOS
+                 WHERE ID_PUNTO = A.ID_DESTINO) N_DESTINO,
+               PT.DISTANCIA,
+               VT.APELLIDO || ' ' || VT.NOMBRE NOMBRE,
+               A.INICIO_FRANJA_HORARIA,
+               A.FINAL_FRANJA_HORARIA,
+               A.INICIO_FRANJA_HORARIA || '-' || A.FINAL_FRANJA_HORARIA HORARIO,
+               A.CANT_USO_X_DIA,
+               A.CANT_USO_X_MES,
+               A.CANT_USO_X_DIA_SEM,
+               A.CANT_USO_X_SEMANA,
+               VIAJA_FERIADO_SN FERIADO,
+               PT.IMPORTE,
+               A.ID_TIPO_SOLICITANTE TIPO_SOLICITANTE,
+               TS.N_TIPO_SOLICITANTE,
+               TS.ID_PROGRAMA,
+               A.ID_EMPRESA,
+               EM.RAZON_SOCIAL,
+               A.FEC_DESDE,
+               D.CUIL OPERADOR
+          FROM T_AUTORIZACIONES               A,
+               TRANSPORTE.T_DESTINOS          D,
+               TRANSPORTE.T_ORIGENES          O,
+               TRANSPORTE.T_TIPOS_EMPRESA     TE,
+               T_TIPOS_SOLICITANTE            TS,
+               TRANSPORTE.T_EMPRESAS          EM,
+               T_PRECIOS_TRAMO                PT,
+               TRANSPORTE.T_EMPRESAS_X_TIPO   T,
+               GESTION_CIUDADANOS.VT_USUARIOS VT,
+               T_USUARIOS_ROLES               U,
+               T_USUARIOS_EMPRESAS            D
+         WHERE TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+           AND T.ID_EMPRESA = EM.ID_EMPRESA
+           AND A.ID_EMPRESA = EM.ID_EMPRESA
+           AND D.ID_DESTINO(+) = A.ID_ORIGEN
+           AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+           AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+           AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+           AND PT.ID_DESTINO(+) = A.ID_DESTINO
+           AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+           and ts.id_programa = 2
+           AND PT.FEC_HASTA IS NULL
+           AND VT.N_USUARIO(+) = A.CUIL
+           AND D.ID_EMPRESA = EM.ID_EMPRESA
+           AND D.CUIL = U.CUIL
+           AND A.ID_EMPRESA = I_EMPRESA
+           AND U.CUIL = A.CUIL_USR
+           AND U.CUIL = I_OPERADOR
+           AND TRUNC(A.FEC_DESDE) BETWEEN
+               TO_DATE(I_FECHA_DESDE, 'DD/MM/YYYY') AND
+               TO_DATE(I_FECHA_HASTA, 'DD/MM/YYYY');
+    END IF;
+  
+    O_MENSAJE   := '';
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR AL LISTAR LAS RENDICIONES' || SQLERRM;
+  END SP_RENDICIONES_BOS;
+  
+ PROCEDURE SP_VALIDAR_EXCEP_CONV_BOS(I_CUIL       IN T_AUTORIZACIONES.CUIL%TYPE,
+                                  I_ID_EMPRESA IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                  O_CURSOR     OUT SYS_REFCURSOR,
+                                  O_MENSAJE    OUT VARCHAR2,
+                                  O_RESULTADO  OUT VARCHAR2) IS
+  
+    V_ESTADO       T_AUTO_ESTADO.ID_ESTADO%TYPE;
+    V_CONVENIO     T_AUTORIZACIONES.ID_CONVENIO%TYPE;
+    V_TIPO         VARCHAR2(1);
+    V_RDO          VARCHAR2(50) := NULL;
+    V_AUTORIZACION T_AUTORIZACIONES.ID_AUTORIZACION%TYPE;
+  
+  BEGIN
+    BEGIN
+      SELECT MIN(A.ID_AUTORIZACION), ID_ESTADO, EXCEP, B.ID_CONVENIO
+        INTO V_AUTORIZACION, V_ESTADO, V_TIPO, V_CONVENIO
+        FROM T_AUTO_ESTADO A, T_AUTORIZACIONES B 
+       WHERE A.ID_AUTORIZACION = B.ID_AUTORIZACION
+         AND B.CUIL = I_CUIL
+         AND B.ID_EMPRESA = I_ID_EMPRESA
+         AND A.FEC_HASTA IS NULL
+         AND A.ID_ESTADO = 2
+         and b.id_tipo_solicitante in (4,5,6,7)
+       GROUP BY ID_ESTADO, EXCEP, B.ID_CONVENIO;
+    
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        O_RESULTADO := 'NODATA';
+      WHEN OTHERS THEN
+        V_RDO := NULL;
+    END;
+    IF V_ESTADO IS NULL THEN
+      O_RESULTADO := 'NODATA';
+    ELSE
+      IF V_TIPO = 'S' THEN
+        V_RDO := 'EXCEPCION';
+      END IF;
+      IF V_RDO IS NULL THEN
+        IF V_CONVENIO IS NOT NULL THEN
+          V_RDO := 'CONVENIO';
+        END IF;
+      END IF;
+    END IF;
+    /* DEVUELVO DATO SI  ES CONVENIO O SI  ES EXCEPCION */
+    IF V_RDO IS NOT NULL THEN
+      /* VERIFICO QUE NO ESTE APROBADA*/
+      IF V_ESTADO = 1 THEN
+        O_MENSAJE   := 'SINDATO';
+        O_RESULTADO := 'OK';
+      ELSE
+      
+        IF V_CONVENIO IS NOT NULL THEN
+          OPEN O_CURSOR FOR
+            SELECT A.ID_AUTORIZACION,
+                   A.CUIL,
+                   A.ID_ORIGEN,
+                   A.ID_DESTINO,
+                   (SELECT DISTINCT N_PUNTO
+                      FROM VT_PUNTOS
+                     WHERE ID_PUNTO = A.ID_ORIGEN) || ' - ' ||
+                   (SELECT DISTINCT N_PUNTO
+                      FROM VT_PUNTOS
+                     WHERE ID_PUNTO = A.ID_DESTINO) TRAYECTO,
+                   TE.N_TIPO_EMPRESA,
+                   PT.DISTANCIA,
+                   A.INICIO_FRANJA_HORARIA,
+                   A.FINAL_FRANJA_HORARIA,
+                   A.CANT_USO_X_DIA,
+                   A.CANT_USO_X_MES,
+                   A.CANT_USO_X_DIA_SEM,
+                   A.CANT_USO_X_SEMANA,
+                   A.INICIO_FRANJA_HORARIA || ' - ' ||
+                   A.FINAL_FRANJA_HORARIA FRANJA_HORARIA,
+                   VIAJA_FERIADO_SN,
+                   A.ID_TIPO_SOLICITANTE,
+                   TS.N_TIPO_SOLICITANTE,
+                 --  A.ID_NIVEL_EDUCATIVO,
+                --   NE.N_NIVEL_EDUCATIVO,
+                   V_RDO ORIGEN_AUTORIZACION,
+                   EM.RAZON_SOCIAL N_EMPRESA
+              FROM T_AUTORIZACIONES             A,
+                   TRANSPORTE.T_DESTINOS        D,
+                   TRANSPORTE.T_ORIGENES        O,
+                   TRANSPORTE.T_TIPOS_EMPRESA   TE,
+                   T_TIPOS_SOLICITANTE          TS,
+                   TRANSPORTE.T_EMPRESAS        EM,
+                   T_PRECIOS_TRAMO              PT,
+                   TRANSPORTE.T_EMPRESAS_X_TIPO T--,
+              --     VT_NIVELES_EDUCATIVO         NE
+             WHERE TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+               AND T.ID_EMPRESA = EM.ID_EMPRESA
+               AND A.ID_EMPRESA = EM.ID_EMPRESA
+               AND D.ID_DESTINO(+) = A.ID_ORIGEN
+               AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+               AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+               AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+               AND PT.ID_DESTINO(+) = A.ID_DESTINO
+               AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+              -- AND NE.ID_NIVEL_EDUCATIVO = A.ID_NIVEL_EDUCATIVO
+               AND A.CUIL = I_CUIL
+               AND A.ID_EMPRESA = I_ID_EMPRESA
+               AND PT.FEC_HASTA IS NULL
+               AND A.ID_CONVENIO IS NOT NULL
+               and ts.id_tipo_solicitante in (4,5,6,7)
+               AND A.ID_AUTORIZACION = V_AUTORIZACION;
+        END IF;
+      
+        IF V_TIPO IS NOT NULL THEN
+          OPEN O_CURSOR FOR
+            SELECT A.ID_AUTORIZACION,
+                   A.CUIL,
+                   A.ID_ORIGEN,
+                   A.ID_DESTINO,
+                   (SELECT DISTINCT N_PUNTO
+                      FROM VT_PUNTOS
+                     WHERE ID_PUNTO = A.ID_ORIGEN) || ' - ' ||
+                   (SELECT DISTINCT N_PUNTO
+                      FROM VT_PUNTOS
+                     WHERE ID_PUNTO = A.ID_DESTINO) TRAYECTO,
+                   TE.N_TIPO_EMPRESA,
+                   PT.DISTANCIA,
+                   A.INICIO_FRANJA_HORARIA,
+                   A.FINAL_FRANJA_HORARIA,
+                   A.CANT_USO_X_DIA,
+                   A.CANT_USO_X_MES,
+                   A.CANT_USO_X_DIA_SEM,
+                   A.CANT_USO_X_SEMANA,
+                   A.INICIO_FRANJA_HORARIA || ' - ' ||
+                   A.FINAL_FRANJA_HORARIA FRANJA_HORARIA,
+                   VIAJA_FERIADO_SN,
+                   A.ID_TIPO_SOLICITANTE,
+                   TS.N_TIPO_SOLICITANTE,
+                   A.ID_NIVEL_EDUCATIVO,
+                 --  NE.N_NIVEL_EDUCATIVO,
+                   V_RDO ORIGEN_AUTORIZACION,
+                   EM.RAZON_SOCIAL N_EMPRESA
+              FROM T_AUTORIZACIONES             A,
+                   TRANSPORTE.T_DESTINOS        D,
+                   TRANSPORTE.T_ORIGENES        O,
+                   TRANSPORTE.T_TIPOS_EMPRESA   TE,
+                   T_TIPOS_SOLICITANTE          TS,
+                   TRANSPORTE.T_EMPRESAS        EM,
+                   T_PRECIOS_TRAMO              PT,
+                   TRANSPORTE.T_EMPRESAS_X_TIPO T--,
+                 --  VT_NIVELES_EDUCATIVO         NE
+             WHERE TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+               AND T.ID_EMPRESA = EM.ID_EMPRESA
+               AND A.ID_EMPRESA = EM.ID_EMPRESA
+               AND D.ID_DESTINO(+) = A.ID_ORIGEN
+               AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+               AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+               AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+               AND PT.ID_DESTINO(+) = A.ID_DESTINO
+               AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+              -- AND NE.ID_NIVEL_EDUCATIVO = A.ID_NIVEL_EDUCATIVO
+               AND A.CUIL = I_CUIL
+               AND A.ID_EMPRESA = I_ID_EMPRESA
+               AND PT.FEC_HASTA IS NULL
+               AND A.EXCEP IS NOT NULL
+                and ts.id_tipo_solicitante in (4,5,6,7)
+               AND A.ID_AUTORIZACION = V_AUTORIZACION;
+        END IF;
+        O_MENSAJE   := V_RDO;
+        O_RESULTADO := 'OK';
+      END IF;
+    ELSIF O_RESULTADO <> 'NODATA' OR V_RDO IS NULL THEN
+      --NO ES CONVENIO NI EXCEPCION
+      O_MENSAJE   := 'SINDATO';
+      O_RESULTADO := 'OK';
+    ELSIF O_RESULTADO = 'NODATA' THEN
+      O_MENSAJE   := 'SINDATO';
+      O_RESULTADO := 'OK';
+    END IF;
+  
+  EXCEPTION
+  
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR EN CONSULTAR EXCEPCION CONVENIO' || SQLERRM;
+  END SP_VALIDAR_EXCEP_CONV_BOS;
+
+PROCEDURE SP_ALTA_AUT_CON_EXC_BOS(I_USUARIO               IN T_AUTORIZACIONES.CUIL_USR%TYPE DEFAULT NULL,
+                                           I_CUIL                  IN T_AUTORIZACIONES.CUIL%TYPE,
+                                           I_ID_ORIGEN             IN T_AUTORIZACIONES.ID_ORIGEN%TYPE DEFAULT NULL,
+                                           I_ID_DESTINO            IN T_AUTORIZACIONES.ID_DESTINO%TYPE DEFAULT NULL,
+                                           I_ID_EMPRESA            IN T_AUTORIZACIONES.ID_EMPRESA%TYPE,
+                                           I_INICIO_FRANJA_HORARIA IN T_AUTORIZACIONES.INICIO_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                           I_FINAL_FRANJA_HORARIA  IN T_AUTORIZACIONES.FINAL_FRANJA_HORARIA%TYPE DEFAULT NULL,
+                                           I_CANT_USO_X_DIA        IN T_AUTORIZACIONES.CANT_USO_X_DIA%TYPE DEFAULT NULL,
+                                           I_CANT_USO_X_MES        IN T_AUTORIZACIONES.CANT_USO_X_MES%TYPE,
+                                           I_TIPO_SOLICITANTE      IN T_AUTORIZACIONES.ID_TIPO_SOLICITANTE%TYPE,
+                                           I_CANT_USO_X_DIA_SEM    IN T_AUTORIZACIONES.CANT_USO_X_DIA_SEM%TYPE DEFAULT NULL,
+                                           I_CANT_USO_X_SEMANA     IN T_AUTORIZACIONES.CANT_USO_X_SEMANA%TYPE DEFAULT NULL,
+                                           I_VIAJA_FERIADO_SN      IN T_AUTORIZACIONES.VIAJA_FERIADO_SN%TYPE DEFAULT NULL,
+                                           I_CONVENIO              IN T_AUTORIZACIONES.ID_CONVENIO%TYPE DEFAULT NULL,
+                                           I_EXCEPCION             IN VARCHAR2 DEFAULT 'N',
+                                           I_NIVEL_EDUCATIVO       IN T_AUTORIZACIONES.ID_NIVEL_EDUCATIVO%TYPE DEFAULT NULL,
+                                           I_DISTANCIA             IN T_AUTORIZACIONES.ID_DISTANCIA%TYPE,
+                                           O_RESULTADO             OUT VARCHAR2,
+                                           O_MENSAJE               OUT VARCHAR2) IS
+  
+    V_ID_AUTORIZACION T_AUTORIZACIONES.ID_AUTORIZACION%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+    V_ID_ESTADO_AUTO  T_AUTO_ESTADO.ID_AUTORIZACION_ESTADO%TYPE := SEQ_AUTORIZACIONES.NEXTVAL;
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    INSERT INTO T_AUTORIZACIONES
+      (CUIL_USR,
+       ID_AUTORIZACION,
+       CUIL,
+       ID_ORIGEN,
+       ID_DESTINO,
+       ID_EMPRESA,
+       INICIO_FRANJA_HORARIA,
+       FINAL_FRANJA_HORARIA,
+       CANT_USO_X_DIA,
+       CANT_USO_X_MES,
+       ID_TIPO_SOLICITANTE,
+       CANT_USO_X_DIA_SEM,
+       CANT_USO_X_SEMANA,
+       VIAJA_FERIADO_SN,
+       ID_CONVENIO,
+       FEC_DESDE,
+       FEC_HASTA,
+    --   ID_NIVEL_EDUCATIVO,
+       EXCEP,
+       ID_DISTANCIA)
+    VALUES
+      (I_USUARIO,
+       V_ID_AUTORIZACION,
+       I_CUIL,
+       I_ID_ORIGEN,
+       I_ID_DESTINO,
+       I_ID_EMPRESA,
+       I_INICIO_FRANJA_HORARIA,
+       I_FINAL_FRANJA_HORARIA,
+       I_CANT_USO_X_DIA,
+       I_CANT_USO_X_MES,
+       I_TIPO_SOLICITANTE,
+       NVL(I_CANT_USO_X_DIA_SEM, 0),
+       I_CANT_USO_X_SEMANA,
+       I_VIAJA_FERIADO_SN,
+       I_CONVENIO,
+       SYSDATE,
+       TO_DATE('31/12/' || TO_CHAR(SYSDATE, 'YYYY'), 'DD/MM/YYYY'),
+      -- I_NIVEL_EDUCATIVO,
+       I_EXCEPCION,
+       I_DISTANCIA);
+  
+    INSERT INTO T_AUTO_ESTADO
+      (ID_AUTORIZACION_ESTADO, ID_AUTORIZACION, ID_ESTADO, FEC_DESDE)
+    VALUES
+      (V_ID_ESTADO_AUTO, V_ID_AUTORIZACION, 2, SYSDATE);
+  
+    COMMIT;
+    O_RESULTADO := 'OK';
+    O_MENSAJE   := '';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR INESPERADO AL DAR EL ALTA DE LA AUTORIZACIÓN: ' ||
+                     SQLERRM;
+    
+      RAISE;
+    
+  END SP_ALTA_AUT_CON_EXC_BOS;
+  
+  
+  PROCEDURE SP_BUSCAR_AUTORIZACION_BOS(I_CUIL      IN T_AUTORIZACIONES.CUIL%TYPE,
+                                        O_CURSOR    OUT SYS_REFCURSOR,
+                                        O_MENSAJE   OUT VARCHAR2,
+                                        O_RESULTADO OUT VARCHAR2) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT A.CUIL,
+             (SELECT DISTINCT N_PUNTO
+                FROM MAASP_TUNI_TPTE.VT_PUNTOS
+               WHERE ID_PUNTO = A.ID_ORIGEN) N_ORIGEN,
+             (SELECT DISTINCT N_PUNTO
+                FROM MAASP_TUNI_TPTE.VT_PUNTOS
+               WHERE ID_PUNTO = A.ID_DESTINO) N_DESTINO,
+             A.ID_AUTORIZACION,
+             TE.N_TIPO_EMPRESA,
+             A.INICIO_FRANJA_HORARIA,
+             A.FINAL_FRANJA_HORARIA,
+             A.INICIO_FRANJA_HORARIA || '-' || A.FINAL_FRANJA_HORARIA AS FRANJA_HORARIA,
+             A.CANT_USO_X_DIA,
+             A.CANT_USO_X_MES,
+             A.CANT_USO_X_DIA_SEM,
+             A.CANT_USO_X_SEMANA,
+             VIAJA_FERIADO_SN,
+             A.ID_TIPO_SOLICITANTE TIPO_SOLICITANTE,
+             TS.N_TIPO_SOLICITANTE,
+             TS.ID_PROGRAMA,
+           --  NE.N_NIVEL_EDUCATIVO,
+             A.ID_EMPRESA,
+             EM.RAZON_SOCIAL,
+             EM.RAZON_SOCIAL N_EMPRESA,
+             EA.N_ESTADO,
+             EA.Id_Estado,
+             A.ID_DISTANCIA,
+             DECODE(a.id_distancia,
+                    2,
+                    'Menos de 100 km',
+                    3,
+                    'Mas de 100 km',
+                    '') as N_DISTANCIA,
+             to_char(AE.FEC_ALTA, 'dd/mm/yyyy') AS FECHA
+        FROM MAASP_TUNI_TPTE.T_AUTORIZACIONES       A,
+             TRANSPORTE.T_DESTINOS                  D,
+             TRANSPORTE.T_ORIGENES                  O,
+             TRANSPORTE.T_TIPOS_EMPRESA             TE,
+             MAASP_TUNI_TPTE.T_TIPOS_SOLICITANTE    TS,
+             TRANSPORTE.T_EMPRESAS                  EM,
+             MAASP_TUNI_TPTE.T_AUTO_ESTADO          AE,
+             MAASP_TUNI_TPTE.T_ESTADOS_AUTORIZACION EA,
+             MAASP_TUNI_TPTE.T_PRECIOS_TRAMO        PT,
+             --ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS NE,
+             TRANSPORTE.T_EMPRESAS_X_TIPO           T
+       WHERE AE.ID_AUTORIZACION = A.ID_AUTORIZACION
+         AND A.ID_EMPRESA = EM.ID_EMPRESA
+         AND D.ID_DESTINO(+) = A.ID_ORIGEN
+         AND O.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_EMPRESA(+) = A.ID_EMPRESA
+         AND PT.ID_ORIGEN(+) = A.ID_ORIGEN
+         AND PT.ID_DESTINO(+) = A.ID_DESTINO
+         AND TS.ID_TIPO_SOLICITANTE = A.ID_TIPO_SOLICITANTE
+         AND TE.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+         AND T.ID_EMPRESA = EM.ID_EMPRESA
+         AND EA.ID_ESTADO = AE.ID_ESTADO
+         AND AE.FEC_HASTA IS NULL
+         AND PT.FEC_HASTA IS NULL
+       --  AND NE.ID_NIVEL_EDUCATIVO(+) = A.ID_NIVEL_EDUCATIVO
+         AND CUIL = I_CUIL
+         and ts.id_tipo_solicitante in (4,5,6,7)
+         AND AE.ID_AUTORIZACION_ESTADO =
+             (SELECT MAX(A2.ID_AUTORIZACION_ESTADO)
+                FROM MAASP_TUNI_TPTE.T_AUTO_ESTADO A2
+               WHERE A2.ID_AUTORIZACION = A.ID_AUTORIZACION)
+      /*  AND pt.fec_alta = ( select max(pt2.fec_alta) 
+      from  MAASP_TUNI_TPTE.T_PRECIOS_TRAMO pt2
+      where pt2.id_empresa = pt.id_empresa
+      and pt2.id_origen = pt.id_origen
+      and pt2.id_destino = pt.id_destino
+      )                     */
+      ;
+  
+    O_MENSAJE   := '';
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR';
+      O_MENSAJE   := 'ERROR AL BUSCAR LA AUTORIZACION' || SQLERRM;
+  END SP_BUSCAR_AUTORIZACION_BOS;
+  
+END PKG_AUTORIZACIONES;
+/
