@@ -1,0 +1,2505 @@
+CREATE OR REPLACE PACKAGE PKG_TRAMOS IS
+
+  -- Author  : PPONTE_EXT
+  -- Created : 5/9/2018 11:07:56
+  -- Purpose : Administración de datos de Tramos
+
+  -- lista los tipos de nodos
+  PROCEDURE SP_LIST_TIPOS_NODOS(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- lista las localidades
+  PROCEDURE SP_LIST_LOCALIDADES(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- lista los nodos
+  PROCEDURE SP_LIST_NODOS(O_CURSOR      OUT SYS_REFCURSOR,
+                          I_NOMBRE_NODO IN T_NODOS.N_NODO%TYPE DEFAULT NULL,
+                          I_TIPO_NODO   IN T_NODOS.ID_TIPO_NODO%TYPE DEFAULT NULL,
+                          I_LOCALIDAD   IN T_NODOS.ID_LOCALIDAD%TYPE DEFAULT NULL);
+
+  -- lista los nodos parada
+  PROCEDURE SP_LIST_NODOS_PARADA(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- lista tipos de camino
+  PROCEDURE SP_LIST_TIPOS_CAMINO(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- lista segmentos
+  PROCEDURE SP_LIST_SUBTRAMOS(O_CURSOR       OUT SYS_REFCURSOR,
+                              I_NODO_ORIGEN  IN T_SUBTRAMOS.ID_NODO_ORIGEN%TYPE DEFAULT NULL,
+                              I_NODO_DESTINO IN T_SUBTRAMOS.ID_NODO_DESTINO%TYPE DEFAULT NULL,
+                              I_TIPO_CAMINO  IN T_TIPOS_CAMINO.ID_TIPO_CAMINO%TYPE DEFAULT NULL);
+
+  -- lista nodos de referencia
+  PROCEDURE SP_LIST_NODOS_REFERENCIA(O_CURSOR      OUT SYS_REFCURSOR,
+                                     I_ID_SUBTRAMO IN T_SUBTRAMOS_NODOS_REF.ID_SUBTRAMO%TYPE DEFAULT NULL);
+
+  -- lista subtramos sin tramos
+  PROCEDURE SP_LIST_SUBTRAMOS_SIN_TRAMOS(O_CURSOR   OUT SYS_REFCURSOR,
+                                         I_ID_TRAMO IN T_SUBTRAMOS_TRAMO.ID_TRAMO%TYPE DEFAULT NULL);
+
+  -- lista tipos de servicio
+  PROCEDURE SP_LIST_TIPOS_SERVICIO(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- lista los tramos
+  PROCEDURE SP_LIST_TRAMOS(O_CURSOR           OUT SYS_REFCURSOR,
+                           I_FECHA_DESDE      IN T_TRAMOS.FEC_DESDE%TYPE,
+                           I_FECHA_HASTA      IN T_TRAMOS.FEC_HASTA%TYPE DEFAULT NULL,
+                           I_NOMBRE           IN T_TRAMOS.N_TRAMO%TYPE DEFAULT NULL,
+                           I_ID_TIPO_SERVICIO IN T_TRAMOS.ID_TIPO_SERVICIO%TYPE DEFAULT NULL,
+                           I_ID_EMPRESA       IN T_TRAMOS.ID_EMPRESA%TYPE DEFAULT NULL,
+                           I_NODO_ORIGEN      IN T_NODOS.ID_NODO%TYPE DEFAULT NULL,
+                           I_NODO_DESTINO     IN T_NODOS.ID_NODO%TYPE DEFAULT NULL);
+
+  -- lista subtramos por tramos
+  PROCEDURE SP_LIST_SUBTRAMOS_TRAMOS(O_CURSOR   OUT SYS_REFCURSOR,
+                                     I_ID_TRAMO IN T_SUBTRAMOS_TRAMO.ID_TRAMO%TYPE DEFAULT NULL);
+
+  -- lista subtramos no asociados a ningun tramo
+  PROCEDURE SP_LIST_NODOS_SIN_SUBTRAMOS(O_CURSOR      OUT SYS_REFCURSOR,
+                                        I_ID_SUBTRAMO IN T_SUBTRAMOS_NODOS_REF.ID_SUBTRAMO%TYPE DEFAULT NULL);
+
+  --lista los coeficientes
+  PROCEDURE SP_LIST_COEFICIENTES(O_CURSOR OUT SYS_REFCURSOR,
+                                 I_NOMBRE IN T_COEFICIENTES.N_COEFICIENTE%TYPE DEFAULT NULL);
+
+  --lista los coeficientes por nodo
+  PROCEDURE SP_LIST_COEFICIENTES_NODOS(O_CURSOR  OUT SYS_REFCURSOR,
+                                       I_ID_NODO IN T_COEFICIENTES_NODO.ID_NODO%TYPE DEFAULT NULL);
+
+  --lista los coeficientes por tramos
+  PROCEDURE SP_LIST_COEFICIENTES_TRAMOS(O_CURSOR   OUT SYS_REFCURSOR,
+                                        I_ID_TRAMO IN T_COEFICIENTES_TRAMO.ID_TRAMO%TYPE DEFAULT NULL);
+
+  --lista los coeficientes por subtramos
+  PROCEDURE SP_LIST_COEFICIENTES_SUBTRAMOS(O_CURSOR      OUT SYS_REFCURSOR,
+                                           I_ID_SUBTRAMO IN T_COEFICIENTES_SUBTRAMO.ID_SUBTRAMO%TYPE DEFAULT NULL);
+
+  --lista los coeficientes sin nodos
+  PROCEDURE SP_LIST_COEF_SIN_NODOS(O_CURSOR  OUT SYS_REFCURSOR,
+                                   I_ID_NODO IN T_COEFICIENTES_NODO.ID_NODO%TYPE DEFAULT NULL);
+
+  --lista los coeficientes sin tramos
+  PROCEDURE SP_LIST_COEF_SIN_TRAMOS(O_CURSOR   OUT SYS_REFCURSOR,
+                                    I_ID_TRAMO IN T_COEFICIENTES_TRAMO.ID_TRAMO%TYPE DEFAULT NULL);
+
+  --lista los coeficientes sin subtramos
+  PROCEDURE SP_LIST_COEF_SIN_SUBTRAMOS(O_CURSOR      OUT SYS_REFCURSOR,
+                                       I_ID_SUBTRAMO IN T_COEFICIENTES_SUBTRAMO.ID_SUBTRAMO%TYPE DEFAULT NULL);
+
+  /* --lista las variables
+  PROCEDURE SP_LIST_VARIABLES(O_CURSOR OUT SYS_REFCURSOR,
+                              I_FECHA  IN DATE DEFAULT NULL);*/
+
+  -- alta subtramos
+  PROCEDURE SP_ALTA_SUBTRAMOS(I_N_SUBTRAMO      IN T_SUBTRAMOS.N_SUBTRAMO%TYPE,
+                              I_CODIGO          IN T_SUBTRAMOS.COD_SUBTRAMO%TYPE DEFAULT NULL,
+                              I_DISTANCIA       IN T_SUBTRAMOS.DISTANCIA%TYPE,
+                              I_ID_TIPO_CAMINO  IN T_SUBTRAMOS.ID_TIPO_CAMINO%TYPE,
+                              I_ID_NODO_ORIGEN  IN T_SUBTRAMOS.ID_NODO_ORIGEN%TYPE,
+                              I_ID_NODO_DESTINO IN T_SUBTRAMOS.ID_NODO_DESTINO%TYPE,
+                              I_FEC_DESDE       IN T_SUBTRAMOS.FEC_DESDE%TYPE,
+                              I_FEC_HASTA       IN T_SUBTRAMOS.FEC_HASTA%TYPE DEFAULT NULL,
+                              O_ID_SUBTRAMO     OUT T_SUBTRAMOS.ID_SUBTRAMO%TYPE);
+  -- alta tipo de nodo
+  PROCEDURE SP_ALTA_TIPOS_NODOS(I_TIPO_NODO IN T_TIPOS_NODO.N_TIPO_NODO%TYPE DEFAULT NULL);
+
+  -- alta nodo
+  PROCEDURE SP_ALTA_NODOS(I_NOMBRE       IN T_NODOS.N_NODO%TYPE,
+                          I_DESCRIPCION  IN T_NODOS.DESCRIPCION%TYPE DEFAULT NULL,
+                          I_ID_LOCALIDAD IN T_NODOS.ID_LOCALIDAD%TYPE DEFAULT NULL,
+                          I_CODIGO       IN T_NODOS.COD_NODO%TYPE DEFAULT NULL,
+                          I_ID_TIPO_NODO IN T_NODOS.ID_TIPO_NODO%TYPE,
+                          I_LATITUD      IN T_NODOS.LATITUD%TYPE DEFAULT NULL,
+                          I_LONGITUD     IN T_NODOS.LONGITUD%TYPE DEFAULT NULL,
+                          O_ID_NODO      OUT T_NODOS.ID_NODO%TYPE);
+
+  -- alta tipo de servicio
+  PROCEDURE SP_ALTA_TIPOS_SERVICIO(I_NOMBRE       IN T_TIPOS_SERVICIO.N_TIPO_SERVICIO%TYPE,
+                                   I_TARIFA_DESDE IN T_TIPOS_SERVICIO.TARIFA_DESDE%TYPE,
+                                   I_TARIFA_HASTA IN T_TIPOS_SERVICIO.TARIFA_HASTA%TYPE,
+                                   I_CODIGO       IN T_TIPOS_SERVICIO.COD_TIPO_SERVICIO%TYPE DEFAULT NULL);
+
+  -- alta tipo de camino
+  PROCEDURE SP_ALTA_TIPOS_CAMINO(I_N_TIPO_CAMINO IN T_TIPOS_CAMINO.N_TIPO_CAMINO%TYPE,
+                                 I_CODIGO        IN T_TIPOS_CAMINO.COD_TIPO_CAMINO%TYPE,
+                                 I_COEFICIENTE   IN T_TIPOS_CAMINO.COEFICIENTE%TYPE);
+
+  -- alta de tramo
+  PROCEDURE SP_ALTA_TRAMOS(I_ID_EMPRESA       IN T_TRAMOS.ID_EMPRESA%TYPE,
+                           I_NOMBRE           IN T_TRAMOS.N_TRAMO%TYPE,
+                           I_CODIGO           IN T_TRAMOS.COD_TRAMO%TYPE DEFAULT NULL,
+                           I_OBSERVACIONES    IN T_TRAMOS.OBSERVACIONES%TYPE DEFAULT NULL,
+                           I_ID_TIPO_SERVICIO IN T_TRAMOS.ID_TIPO_SERVICIO%TYPE,
+                           I_FECHA_DESDE      IN T_TRAMOS.FEC_DESDE%TYPE,
+                           I_FECHA_HASTA      IN T_TRAMOS.FEC_HASTA%TYPE DEFAULT NULL,
+                           O_ID_TRAMO         OUT T_TRAMOS.ID_TRAMO%TYPE);
+
+  -- alta de coeficiente
+  PROCEDURE SP_ALTA_COEFICIENTES(I_N_COEFICIENTE    IN T_COEFICIENTES.N_COEFICIENTE%TYPE,
+                                 I_VALOR_FIJO       IN T_COEFICIENTES.VALOR_FIJO%TYPE,
+                                 I_VALOR_PORCENTUAL IN T_COEFICIENTES.VALOR_PORCENTUAL%TYPE,
+                                 O_ID_COEFICIENTE   OUT T_COEFICIENTES.ID_COEFICIENTE%TYPE);
+
+  -- alta coeficiente por nodo
+  PROCEDURE SP_ALTA_COEFICIENTES_NODOS(I_ID_COEFICIENTE IN T_COEFICIENTES_NODO.ID_COEFICIENTE%TYPE,
+                                       I_ID_NODO        IN T_COEFICIENTES_NODO.ID_NODO%TYPE,
+                                       I_FECHA_DESDE    IN T_COEFICIENTES_NODO.FEC_DESDE%TYPE,
+                                       I_FECHA_HASTA    IN T_COEFICIENTES_NODO.FEC_HASTA%TYPE DEFAULT NULL);
+  -- alta coeficiente por subtramo
+  PROCEDURE SP_ALTA_COEFICIENTES_SUBTRAMOS(I_ID_COEFICIENTE IN T_COEFICIENTES_SUBTRAMO.ID_COEFICIENTE%TYPE,
+                                           I_ID_SUBTRAMO    IN T_COEFICIENTES_SUBTRAMO.ID_SUBTRAMO%TYPE,
+                                           I_FECHA_DESDE    IN T_COEFICIENTES_SUBTRAMO.FEC_DESDE%TYPE,
+                                           I_FECHA_HASTA    IN T_COEFICIENTES_SUBTRAMO.FEC_HASTA%TYPE DEFAULT NULL);
+
+  -- alta coeficiente por tramo
+  PROCEDURE SP_ALTA_COEFICIENTES_TRAMOS(I_ID_COEFICIENTE IN T_COEFICIENTES_TRAMO.ID_COEFICIENTE%TYPE,
+                                        I_ID_TRAMO       IN T_COEFICIENTES_TRAMO.ID_TRAMO%TYPE,
+                                        I_FECHA_DESDE    IN T_COEFICIENTES_TRAMO.FEC_DESDE%TYPE,
+                                        I_FECHA_HASTA    IN T_COEFICIENTES_TRAMO.FEC_HASTA%TYPE DEFAULT NULL);
+
+  -- alta nodo referencia
+  PROCEDURE SP_ALTA_NODOS_REFERENCIA(I_ID_SUBTRAMO IN T_SUBTRAMOS_NODOS_REF.ID_SUBTRAMO%TYPE,
+                                     I_ID_NODO     IN T_SUBTRAMOS_NODOS_REF.ID_NODO%TYPE,
+                                     I_FECHA_DESDE IN T_SUBTRAMOS_NODOS_REF.FEC_DESDE%TYPE,
+                                     I_FECHA_HASTA IN T_SUBTRAMOS_NODOS_REF.FEC_HASTA%TYPE DEFAULT NULL);
+
+  -- alta subtramo por tramo
+  PROCEDURE SP_ALTA_SUBTRAMOS_TRAMOS(I_ID_TRAMO    IN T_SUBTRAMOS_TRAMO.ID_TRAMO%TYPE,
+                                     I_ID_SUBTRAMO IN T_SUBTRAMOS_TRAMO.ID_SUBTRAMO%TYPE,
+                                     I_FECHA_DESDE IN T_SUBTRAMOS_TRAMO.FEC_DESDE%TYPE,
+                                     I_FECHA_HASTA IN T_SUBTRAMOS_TRAMO.FEC_HASTA%TYPE DEFAULT NULL);
+
+  -- modificacion coeficiente
+  PROCEDURE SP_CAMBIO_COEFICIENTES(I_ID_COEFICIENTE   IN T_COEFICIENTES.ID_COEFICIENTE%TYPE,
+                                   I_N_COEFICIENTE    IN T_COEFICIENTES.N_COEFICIENTE%TYPE DEFAULT NULL,
+                                   I_VALOR_FIJO       IN T_COEFICIENTES.VALOR_FIJO%TYPE DEFAULT NULL,
+                                   I_VALOR_PORCENTUAL IN T_COEFICIENTES.VALOR_PORCENTUAL%TYPE DEFAULT NULL);
+
+  -- modificacion coeficiente por nodo
+  PROCEDURE SP_CAMBIO_COEFICIENTES_NODOS(I_ID_COEFICIENTE_NODO IN T_COEFICIENTES_NODO.ID_COEFICIENTE_NODO%TYPE /*,
+                                                                                                                                                                                                             I_ID_NODO             IN T_COEFICIENTES_NODO.ID_NODO%TYPE,
+                                                                                                                                                                                                             I_COEFICIENTE         IN T_COEFICIENTES_NODO.ID_COEFICIENTE%TYPE*/);
+
+  -- modificacion coeficiente por subtramo
+  PROCEDURE SP_CAMBIO_COEF_SUBTRAMOS(I_ID_COEFICIENTE_SUBTRAMO IN T_COEFICIENTES_SUBTRAMO.ID_COEFICIENTE_SUBTRAMO%TYPE /*,
+                                                                                                                                                                                                                               I_ID_SUBTRAMO             IN T_COEFICIENTES_SUBTRAMO.ID_SUBTRAMO%TYPE,
+                                                                                                                                                                                                                               I_COEFICIENTE         IN T_COEFICIENTES_NODO.ID_COEFICIENTE%TYPE*/);
+
+  -- modificacion coeficiente por tramo
+  PROCEDURE SP_CAMBIO_COEFICIENTES_TRAMOS(I_ID_COEFICIENTE_TRAMO IN T_COEFICIENTES_TRAMO.ID_COEFICIENTE_TRAMO%TYPE /*,
+                                                                                                                                                                                                                                                            I_ID_TRAMO             IN T_COEFICIENTES_TRAMO.ID_TRAMO%TYPE,
+                                                                                                                                                                                                                                                            I_COEFICIENTE          IN T_COEFICIENTES_NODO.ID_COEFICIENTE%TYPE*/);
+  -- modificacion tramo
+  PROCEDURE SP_CAMBIO_TRAMOS(I_ID_TRAMO         IN T_TRAMOS.ID_TRAMO%TYPE,
+                             I_NOMBRE           IN T_TRAMOS.N_TRAMO%TYPE DEFAULT NULL,
+                             I_CODIGO           IN T_TRAMOS.COD_TRAMO%TYPE DEFAULT NULL,
+                             I_OBSERVACIONES    IN T_TRAMOS.OBSERVACIONES%TYPE DEFAULT NULL,
+                             I_ID_EMPRESA       IN T_TRAMOS.ID_EMPRESA%TYPE DEFAULT NULL,
+                             I_ID_TIPO_SERVICIO IN T_TRAMOS.ID_TIPO_SERVICIO%TYPE DEFAULT NULL,
+                             O_ID_TRAMO         OUT T_TRAMOS.ID_TRAMO%TYPE);
+
+  -- modificacion nodo referencia
+  PROCEDURE SP_CAMBIO_NODOS_REFERENCIA(I_ID_SUBTRAMO_NODO_REFERENCIA IN T_SUBTRAMOS_NODOS_REF.ID_SUBTRAMO_NODO_REF%TYPE,
+                                       I_FECHA_DESDE                 IN T_SUBTRAMOS_NODOS_REF.FEC_ALTA%TYPE DEFAULT NULL,
+                                       I_FECHA_HASTA                 IN T_SUBTRAMOS_NODOS_REF.FEC_HASTA%TYPE);
+
+  -- modificacion subtramo por tramo
+  PROCEDURE SP_CAMBIO_SUBTRAMOS_TRAMOS(I_ID_SUBTRAMO_TRAMO IN T_SUBTRAMOS_TRAMO.ID_SUBTRAMO_TRAMO%TYPE,
+                                       I_FECHA_DESDE       IN T_SUBTRAMOS_TRAMO.FEC_DESDE%TYPE DEFAULT NULL,
+                                       I_FECHA_HASTA       IN T_SUBTRAMOS_TRAMO.FEC_HASTA%TYPE,
+                                       I_ORDEN             IN T_SUBTRAMOS_TRAMO.ORDEN%TYPE,
+                                       I_TRAMO             IN T_SUBTRAMOS_TRAMO.ID_TRAMO%TYPE);
+
+  -- calculo tarifas por tramo
+  PROCEDURE SP_TARIFAS_TRAMOS(O_CURSOR     OUT SYS_REFCURSOR,
+                              I_ID_TRAMO   IN T_TRAMOS.ID_TRAMO%TYPE DEFAULT NULL,
+                              I_FECHA      IN DATE DEFAULT NULL,
+                              I_ID_EMPRESA IN T_TRAMOS.ID_EMPRESA%TYPE DEFAULT NULL,
+                              I_ID_ORIGEN  IN T_NODOS.ID_NODO%TYPE DEFAULT NULL,
+                              I_ID_DESTINO IN T_NODOS.ID_NODO%TYPE DEFAULT NULL);
+
+  -- calculo tarifas por subtramo
+  PROCEDURE SP_TARIFAS_SUBTRAMOS(O_CURSOR   OUT SYS_REFCURSOR,
+                                 I_ID_TRAMO IN T_TRAMOS.ID_TRAMO%TYPE,
+                                 I_FECHA    IN DATE DEFAULT NULL);
+
+  -- muestra coeficientes aplicados a entidades
+  PROCEDURE SP_COEF_TRAMOS(O_CURSOR   OUT SYS_REFCURSOR,
+                           I_ID_TRAMO IN T_TRAMOS.ID_TRAMO%TYPE DEFAULT NULL,
+                           I_FECHA    IN DATE DEFAULT NULL);
+
+  PROCEDURE SP_CAMBIO_SUBTRAMOS(I_ID_SUBTRAMO  IN T_SUBTRAMOS.ID_SUBTRAMO%TYPE,
+                                I_NOMBRE       IN T_SUBTRAMOS.N_SUBTRAMO%TYPE DEFAULT NULL,
+                                I_CODIGO       IN T_SUBTRAMOS.COD_SUBTRAMO%TYPE DEFAULT NULL,
+                                I_DISTANCIA    IN T_SUBTRAMOS.DISTANCIA%TYPE DEFAULT NULL,
+                                I_TIPO_CAMINO  IN T_SUBTRAMOS.ID_TIPO_CAMINO%TYPE DEFAULT NULL,
+                                I_NODO_ORIGEN  IN T_SUBTRAMOS.ID_NODO_ORIGEN%TYPE DEFAULT NULL,
+                                I_NODO_DESTINO IN T_SUBTRAMOS.ID_NODO_DESTINO%TYPE DEFAULT NULL,
+                                I_FEC_DESDE    IN T_SUBTRAMOS.FEC_DESDE%TYPE,
+                                I_FEC_HASTA    IN DATE DEFAULT NULL,
+                                O_ID_SUBTRAMO  OUT T_SUBTRAMOS.ID_SUBTRAMO%TYPE);
+
+  --lista el tipo de servicio asociado a un determinado tramo
+  PROCEDURE SP_TIPO_SERV_TRAMO(O_NOM_TIPO_SERV OUT T_TIPOS_SERVICIO.N_TIPO_SERVICIO%TYPE,
+                               O_TARIFA_DESDE  OUT T_TIPOS_SERVICIO.TARIFA_DESDE%TYPE,
+                               O_TARIFA_HASTA  OUT T_TIPOS_SERVICIO.TARIFA_HASTA%TYPE,
+                               I_ID_TRAMO      IN T_TRAMOS.ID_TRAMO%TYPE DEFAULT NULL,
+                               I_FECHA         IN DATE DEFAULT NULL);
+
+  PROCEDURE SP_LIST_VARIABLES(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_ALTA_VARIABLES( /*I_FECHA_HASTA IN T_VARIABLES_TARIFICACION.FEC_HASTA%TYPE DEFAULT NULL,*/I_N_VARIABLE IN T_VARIABLES_TARIFICACION.N_VARIABLE%TYPE,
+                              --  I_CODIGO      IN T_VARIABLES_TARIFICACION.COD_VARIABLE%TYPE,
+                              I_VALOR IN T_VARIABLES.VALOR%TYPE DEFAULT NULL);
+
+END PKG_TRAMOS;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_TRAMOS IS
+
+  /***************************
+  * Lista los tipos de nodos *
+  ***************************/
+  PROCEDURE SP_LIST_TIPOS_NODOS(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT ID_TIPO_NODO, N_TIPO_NODO FROM T_TIPOS_NODO;
+  END SP_LIST_TIPOS_NODOS;
+
+  /************************
+  * Lista las localidades *
+  ************************/
+  PROCEDURE SP_LIST_LOCALIDADES(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT L.ID_LOCALIDAD,
+             L.N_LOCALIDAD,
+             D.ID_DEPARTAMENTO,
+             D.N_DEPARTAMENTO
+        FROM TRANSPORTE.T_LOCALIDADES L, TRANSPORTE.T_DEPARTAMENTOS D
+       WHERE L.ID_DEPARTAMENTO = D.ID_DEPARTAMENTO;
+  END SP_LIST_LOCALIDADES;
+
+  /******************
+  * Lista los nodos *
+  ******************/
+  PROCEDURE SP_LIST_NODOS(O_CURSOR      OUT SYS_REFCURSOR,
+                          I_NOMBRE_NODO IN T_NODOS.N_NODO%TYPE DEFAULT NULL,
+                          I_TIPO_NODO   IN T_NODOS.ID_TIPO_NODO%TYPE DEFAULT NULL,
+                          I_LOCALIDAD   IN T_NODOS.ID_LOCALIDAD%TYPE DEFAULT NULL) IS
+  
+    V_SQLFILTROS VARCHAR2(32000) := NULL;
+    V_SQL        VARCHAR2(32000) := NULL;
+  
+  BEGIN
+  
+    IF I_NOMBRE_NODO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND UPPER(NOD.N_NODO) LIKE ''%' ||
+                      UPPER(I_NOMBRE_NODO) || '%''';
+    END IF;
+  
+    IF I_TIPO_NODO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND NOD.ID_TIPO_NODO = ' ||
+                      I_TIPO_NODO;
+    END IF;
+  
+    IF I_LOCALIDAD IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND NOD.ID_LOCALIDAD = ' ||
+                      I_LOCALIDAD;
+    END IF;
+  
+    V_SQL := 'SELECT NOD.ID_NODO,
+                     NOD.N_NODO,
+                     NOD.DESCRIPCION,
+                     NOD.ID_LOCALIDAD,
+                     L.N_LOCALIDAD,
+                     NOD.COD_NODO,
+                     NOD.ID_TIPO_NODO,
+                     TND.N_TIPO_NODO,
+                     NOD.LATITUD,
+                     NOD.LONGITUD
+                FROM T_NODOS NOD, T_TIPOS_NODO TND, TRANSPORTE.T_LOCALIDADES L
+               WHERE NOD.ID_TIPO_NODO = TND.ID_TIPO_NODO 
+               AND L.ID_LOCALIDAD(+)=NOD.ID_LOCALIDAD ' ||
+             V_SQLFILTROS || ' ORDER BY NOD.ID_NODO';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de nodos. ' ||
+                              SQLERRM);
+  END SP_LIST_NODOS;
+
+  /*************************
+  * Lista los nodos parada *
+  **************************/
+  PROCEDURE SP_LIST_NODOS_PARADA(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT NOD.ID_NODO,
+             NOD.N_NODO,
+             NOD.DESCRIPCION,
+             NOD.ID_LOCALIDAD,
+             NOD.N_NODO N_LOCALIDAD,
+             NOD.COD_NODO,
+             NOD.ID_TIPO_NODO,
+             TND.N_TIPO_NODO,
+             NOD.LATITUD,
+             NOD.LONGITUD
+        FROM T_NODOS NOD, T_TIPOS_NODO TND
+       WHERE NOD.ID_TIPO_NODO = TND.ID_TIPO_NODO
+         AND NOD.ID_TIPO_NODO = 1
+       ORDER BY NOD.ID_NODO;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de nodos parada. ' ||
+                              SQLERRM);
+    
+  END SP_LIST_NODOS_PARADA;
+
+  /****************************
+  * Lista los tipos de camino *
+  ****************************/
+  PROCEDURE SP_LIST_TIPOS_CAMINO(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT TC.ID_TIPO_CAMINO,
+             TC.N_TIPO_CAMINO,
+             TC.COD_TIPO_CAMINO,
+             TC.COEFICIENTE
+        FROM T_TIPOS_CAMINO TC;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de tipos de camino. ' ||
+                              SQLERRM);
+  END SP_LIST_TIPOS_CAMINO;
+
+  /**********************
+  * Lista los subtramos *
+  **********************/
+  PROCEDURE SP_LIST_SUBTRAMOS(O_CURSOR       OUT SYS_REFCURSOR,
+                              I_NODO_ORIGEN  IN T_SUBTRAMOS.ID_NODO_ORIGEN%TYPE DEFAULT NULL,
+                              I_NODO_DESTINO IN T_SUBTRAMOS.ID_NODO_DESTINO%TYPE DEFAULT NULL,
+                              I_TIPO_CAMINO  IN T_TIPOS_CAMINO.ID_TIPO_CAMINO%TYPE DEFAULT NULL) IS
+  
+    V_SQLFILTROS VARCHAR2(32000) := NULL;
+    V_SQL        VARCHAR2(32000) := NULL;
+  
+  BEGIN
+  
+    IF I_NODO_ORIGEN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND TRA.ID_NODO_ORIGEN = ' ||
+                      I_NODO_ORIGEN;
+    END IF;
+  
+    IF I_NODO_DESTINO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND TRA.ID_NODO_DESTINO = ' ||
+                      I_NODO_DESTINO;
+    END IF;
+  
+    IF I_TIPO_CAMINO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND TCM.ID_TIPO_CAMINO = ' ||
+                      I_TIPO_CAMINO;
+    END IF;
+  
+    V_SQL := ' SELECT TRA.ID_SUBTRAMO,
+             TRA.N_SUBTRAMO,
+             TRA.COD_SUBTRAMO,
+             TRA.DISTANCIA,
+             TRA.ID_TIPO_CAMINO,
+             TCM.N_TIPO_CAMINO,
+             TRA.ID_NODO_ORIGEN,
+             NOA.N_NODO          N_NODO_ORIGEN,
+             TRA.ID_NODO_DESTINO,
+             NOB.N_NODO          N_NODO_DESTINO
+        FROM T_SUBTRAMOS TRA, T_TIPOS_CAMINO TCM, T_NODOS NOA, T_NODOS NOB
+       WHERE TRA.ID_TIPO_CAMINO = TCM.ID_TIPO_CAMINO
+         AND TRA.ID_NODO_ORIGEN = NOA.ID_NODO
+         AND TRA.ID_NODO_DESTINO = NOB.ID_NODO 
+         AND TRA.FEC_HASTA IS NULL ' || V_SQLFILTROS ||
+             ' ORDER BY ID_SUBTRAMO';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de subtramos. ' ||
+                              SQLERRM);
+    
+  END SP_LIST_SUBTRAMOS;
+
+  /*********************************************
+  * Lista los nodos de referencia por subtramo *
+  *********************************************/
+  PROCEDURE SP_LIST_NODOS_REFERENCIA(O_CURSOR      OUT SYS_REFCURSOR,
+                                     I_ID_SUBTRAMO IN T_SUBTRAMOS_NODOS_REF.ID_SUBTRAMO%TYPE DEFAULT NULL) IS
+  
+    V_SQLFILTROS VARCHAR2(32000) := NULL;
+    V_SQL        VARCHAR2(32000) := NULL;
+  
+  BEGIN
+    IF I_ID_SUBTRAMO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND NOD_REF.ID_SUBTRAMO = ' ||
+                      I_ID_SUBTRAMO;
+    END IF;
+  
+    V_SQL := ' SELECT NOD_REF.ID_SUBTRAMO_NODO_REF,
+             NOD_REF.ID_SUBTRAMO,
+             SEG.N_SUBTRAMO,
+             NOD_REF.ID_NODO,
+             NOD.N_NODO,
+             NOD_REF.FEC_DESDE,
+             NOD_REF.FEC_HASTA,
+             L.N_LOCALIDAD,
+             NOD.LATITUD,
+             NOD.LONGITUD,
+             TN.N_TIPO_NODO
+        FROM T_SUBTRAMOS_NODOS_REF NOD_REF,
+             T_SUBTRAMOS                  SEG,
+             T_NODOS                      NOD,
+             TRANSPORTE.T_LOCALIDADES     L,
+             T_TIPOS_NODO                 TN
+       WHERE NOD_REF.ID_SUBTRAMO = SEG.ID_SUBTRAMO
+         AND NOD_REF.ID_NODO = NOD.ID_NODO
+         AND SYSDATE BETWEEN NOD_REF.FEC_DESDE AND
+             NVL(NOD_REF.FEC_HASTA, SYSDATE)
+         AND L.ID_LOCALIDAD=NOD.ID_LOCALIDAD
+         AND TN.ID_TIPO_NODO=NOD.ID_TIPO_NODO ' || V_SQLFILTROS || '
+         ORDER BY 1';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      RAISE_APPLICATION_ERROR(-20002, 'La consulta no recupera registros.');
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de nodos de referencia. ' ||
+                              SQLERRM);
+    
+  END SP_LIST_NODOS_REFERENCIA;
+
+  /**************************************************
+  * Lista los nodos sin subtramos                   *
+  **************************************************/
+
+  PROCEDURE SP_LIST_NODOS_SIN_SUBTRAMOS(O_CURSOR      OUT SYS_REFCURSOR,
+                                        I_ID_SUBTRAMO IN T_SUBTRAMOS_NODOS_REF.ID_SUBTRAMO%TYPE) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT N.ID_NODO, N.N_NODO, N.COD_NODO
+        FROM T_NODOS N, T_TIPOS_NODO T
+       WHERE N.ID_TIPO_NODO = T.ID_TIPO_NODO
+         AND NOT EXISTS (SELECT 1
+                FROM T_SUBTRAMOS B
+               WHERE (B.ID_NODO_ORIGEN = N.ID_NODO OR
+                     B.ID_NODO_DESTINO = N.ID_NODO)
+                 AND B.ID_SUBTRAMO = I_ID_SUBTRAMO)
+       ORDER BY 2;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de nodos sin subtramos. ' ||
+                              SQLERRM);
+  END SP_LIST_NODOS_SIN_SUBTRAMOS;
+
+  /**************************************************
+  * Lista los tipos de servicio aplicables a tramos *
+  **************************************************/
+  PROCEDURE SP_LIST_TIPOS_SERVICIO(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT ID_TIPO_SERVICIO,
+             N_TIPO_SERVICIO,
+             TARIFA_DESDE,
+             TARIFA_HASTA,
+             COD_TIPO_SERVICIO
+        FROM T_TIPOS_SERVICIO;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de tipos de servicio. ' ||
+                              SQLERRM);
+  END SP_LIST_TIPOS_SERVICIO;
+
+  /**************************************************
+  * Lista los tramos                                *
+  **************************************************/
+  PROCEDURE SP_LIST_TRAMOS(O_CURSOR           OUT SYS_REFCURSOR,
+                           I_FECHA_DESDE      IN T_TRAMOS.FEC_DESDE%TYPE,
+                           I_FECHA_HASTA      IN T_TRAMOS.FEC_HASTA%TYPE DEFAULT NULL,
+                           I_NOMBRE           IN T_TRAMOS.N_TRAMO%TYPE DEFAULT NULL,
+                           I_ID_TIPO_SERVICIO IN T_TRAMOS.ID_TIPO_SERVICIO%TYPE DEFAULT NULL,
+                           I_ID_EMPRESA       IN T_TRAMOS.ID_EMPRESA%TYPE DEFAULT NULL,
+                           I_NODO_ORIGEN      IN T_NODOS.ID_NODO%TYPE DEFAULT NULL,
+                           I_NODO_DESTINO     IN T_NODOS.ID_NODO%TYPE DEFAULT NULL) IS
+  
+    V_SQLFILTROS VARCHAR2(32000) := NULL;
+    V_SQL        VARCHAR2(32000) := NULL;
+  
+  BEGIN
+  
+    IF I_ID_TIPO_SERVICIO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND B.ID_TIPO_SERVICIO = ' ||
+                      I_ID_TIPO_SERVICIO;
+    END IF;
+  
+    IF I_NODO_ORIGEN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND ID_ORIGEN = ' || I_NODO_ORIGEN;
+    END IF;
+  
+    IF I_NODO_DESTINO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND ID_DESTINO = ' ||
+                      I_NODO_DESTINO;
+    END IF;
+  
+    IF I_ID_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND E.ID_EMPRESA = ' ||
+                      I_ID_EMPRESA;
+    END IF;
+  
+    IF I_NOMBRE IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND A.NOMBRE LIKE upper(''%' ||
+                      I_NOMBRE || '%'') ';
+    END IF;
+  
+    V_SQL := 'SELECT A.ID_TRAMO,
+             A.ID_EMPRESA,
+             E.RAZON_SOCIAL,
+             B.ID_TIPO_SERVICIO,
+             A.N_TRAMO           NOMBRE_TRAMO,
+             A.COD_TRAMO,
+             A.OBSERVACIONES,
+             B.N_TIPO_SERVICIO         NOMBRE_TIPO_SERVICIO,
+             A.FEC_DESDE,
+             A.FEC_HASTA,
+             NOMBRE_ORIGEN,
+             NOMBRE_DESTINO,
+             ID_ORIGEN,
+             ID_DESTINO,
+             A.COD_TRAMO
+        FROM T_TRAMOS A, T_TIPOS_SERVICIO B, TRANSPORTE.T_EMPRESAS E
+        ,(SELECT B.ID_TRAMO, A1.N_NODO NOMBRE_ORIGEN, A1.ID_NODO ID_ORIGEN
+                  FROM T_NODOS                      A1,
+                       T_NODOS                      A2,
+                       T_TRAMOS                     B,
+                       T_SUBTRAMOS                  D,
+                       T_SUBTRAMOS_TRAMO            E
+                 WHERE E.ID_TRAMO = B.ID_TRAMO
+                   AND E.ID_SUBTRAMO = D.ID_SUBTRAMO
+                   AND A1.ID_NODO = D.ID_NODO_ORIGEN
+                   AND A2.ID_NODO = D.ID_NODO_DESTINO
+                   AND TRUNC(SYSDATE) BETWEEN TRUNC(D.FEC_DESDE) AND
+                   TRUNC(NVL(D.FEC_HASTA, SYSDATE))
+                   AND TRUNC(SYSDATE) BETWEEN TRUNC(E.FEC_DESDE) AND
+                   TRUNC(NVL(E.FEC_HASTA, SYSDATE))
+                   AND TRUNC(SYSDATE) BETWEEN TRUNC(B.FEC_DESDE) AND
+                   TRUNC(NVL(B.FEC_HASTA, SYSDATE))
+                   AND A1.ID_NODO NOT IN
+                       (SELECT F2.ID_NODO
+                          FROM T_NODOS                      F1,
+                               T_NODOS                      F2,
+                               T_TRAMOS                     G,
+                               T_SUBTRAMOS                  I,
+                               T_SUBTRAMOS_TRAMO            J
+                         WHERE J.ID_TRAMO = G.ID_TRAMO
+                           AND J.ID_SUBTRAMO = I.ID_SUBTRAMO
+                           AND F1.ID_NODO = I.ID_NODO_ORIGEN
+                           AND F2.ID_NODO = I.ID_NODO_DESTINO
+                           AND I.ID_NODO_ORIGEN<>I.ID_NODO_DESTINO
+                           AND B.ID_TRAMO = G.ID_TRAMO
+                           AND TRUNC(SYSDATE) BETWEEN TRUNC(I.FEC_DESDE) AND
+                           TRUNC(NVL(I.FEC_HASTA, SYSDATE))
+                           AND TRUNC(SYSDATE) BETWEEN TRUNC(J.FEC_DESDE) AND
+                           TRUNC(NVL(J.FEC_HASTA, SYSDATE))
+                           AND TRUNC(SYSDATE) BETWEEN TRUNC(G.FEC_DESDE) AND
+                           TRUNC(NVL(G.FEC_HASTA, SYSDATE)))) I  --1183 1180
+               ,(SELECT B.ID_TRAMO, A2.N_NODO NOMBRE_DESTINO, A2.ID_NODO ID_DESTINO
+                  FROM T_NODOS                      A1,
+                       T_NODOS                      A2,
+                       T_TRAMOS                     B,
+                       T_SUBTRAMOS                  D,
+                       T_SUBTRAMOS_TRAMO            E
+                 WHERE E.ID_TRAMO = B.ID_TRAMO
+                   AND E.ID_SUBTRAMO = D.ID_SUBTRAMO
+                   AND A1.ID_NODO = D.ID_NODO_ORIGEN
+                   AND A2.ID_NODO = D.ID_NODO_DESTINO
+                   AND TRUNC(SYSDATE) BETWEEN TRUNC(D.FEC_DESDE) AND
+                   TRUNC(NVL(D.FEC_HASTA, SYSDATE))
+                    AND TRUNC(SYSDATE) BETWEEN TRUNC(E.FEC_DESDE) AND
+                   TRUNC(NVL(E.FEC_HASTA, SYSDATE))
+                    AND TRUNC(SYSDATE) BETWEEN TRUNC(B.FEC_DESDE) AND
+                   TRUNC(NVL(B.FEC_HASTA, SYSDATE))
+                   AND A2.ID_NODO NOT IN
+                       (SELECT F1.ID_NODO
+                          FROM T_NODOS                      F1,
+                               T_NODOS                      F2,
+                               T_TRAMOS                     G,
+                               T_SUBTRAMOS                  I,
+                               T_SUBTRAMOS_TRAMO            J
+                         WHERE J.ID_TRAMO = G.ID_TRAMO
+                           AND J.ID_SUBTRAMO = I.ID_SUBTRAMO
+                           AND F1.ID_NODO = I.ID_NODO_ORIGEN
+                           AND F2.ID_NODO = I.ID_NODO_DESTINO
+                           AND I.ID_NODO_ORIGEN<>I.ID_NODO_DESTINO
+                           AND B.ID_TRAMO = G.ID_TRAMO
+                           AND TRUNC(SYSDATE) BETWEEN TRUNC(I.FEC_DESDE) AND
+                           TRUNC(NVL(I.FEC_HASTA, SYSDATE))
+                           AND TRUNC(SYSDATE) BETWEEN TRUNC(J.FEC_DESDE) AND
+                           TRUNC(NVL(J.FEC_HASTA, SYSDATE))
+                           AND TRUNC(SYSDATE) BETWEEN TRUNC(G.FEC_DESDE) AND
+                           TRUNC(NVL(G.FEC_HASTA, SYSDATE))))K
+       WHERE A.ID_TIPO_SERVICIO = B.ID_TIPO_SERVICIO
+         AND E.ID_EMPRESA = A.ID_EMPRESA
+         AND A.ID_TRAMO=I.ID_TRAMO(+)
+         AND A.ID_TRAMO=K.ID_TRAMO(+)
+          AND TRUNC(SYSDATE) BETWEEN TRUNC(A.FEC_DESDE) AND
+                   TRUNC(NVL(A.FEC_HASTA, SYSDATE)) ' ||
+             V_SQLFILTROS || 'ORDER BY A.ID_TRAMO';
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de tramos. ' ||
+                              SQLERRM);
+  END SP_LIST_TRAMOS;
+
+  /**************************************************
+  * Lista los subtramos por tramo                   *
+  **************************************************/
+  PROCEDURE SP_LIST_SUBTRAMOS_TRAMOS(O_CURSOR   OUT SYS_REFCURSOR,
+                                     I_ID_TRAMO IN T_SUBTRAMOS_TRAMO.ID_TRAMO%TYPE DEFAULT NULL) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT SS.ID_SUBTRAMO_TRAMO,
+             S.N_TRAMO,
+             SE.N_SUBTRAMO,
+             SS.FEC_DESDE,
+             SS.FEC_HASTA,
+             SE.DISTANCIA,
+             TC.N_TIPO_CAMINO,
+             TC.ID_TIPO_CAMINO,
+             N1.N_NODO            NOMBRE_ORIGEN,
+             N2.N_NODO            NOMBRE_DESTINO,
+             SS.ORDEN
+        FROM T_SUBTRAMOS_TRAMO SS,
+             T_TRAMOS          S,
+             T_SUBTRAMOS       SE,
+             T_TIPOS_CAMINO    TC,
+             T_NODOS           N1,
+             T_NODOS           N2
+       WHERE SS.ID_TRAMO = S.ID_TRAMO
+         AND SS.ID_TRAMO = NVL(I_ID_TRAMO, SS.ID_TRAMO)
+         AND SS.ID_SUBTRAMO = SE.ID_SUBTRAMO
+         AND SE.ID_TIPO_CAMINO = TC.ID_TIPO_CAMINO
+         AND SE.ID_NODO_ORIGEN = N1.ID_NODO
+         AND SE.ID_NODO_DESTINO = N2.ID_NODO
+         AND TRUNC(SYSDATE) BETWEEN TRUNC(SS.FEC_DESDE) AND
+             TRUNC(NVL(SS.FEC_HASTA, SYSDATE))
+       ORDER BY SS.ORDEN;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de subtramos tramos. ' ||
+                              SQLERRM);
+  END SP_LIST_SUBTRAMOS_TRAMOS;
+
+  /**************************************************
+  * Lista los subtramos sin tramo                   *
+  **************************************************/
+
+  PROCEDURE SP_LIST_SUBTRAMOS_SIN_TRAMOS(O_CURSOR   OUT SYS_REFCURSOR,
+                                         I_ID_TRAMO IN T_SUBTRAMOS_TRAMO.ID_TRAMO%TYPE DEFAULT NULL) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT SE.ID_SUBTRAMO, SE.N_SUBTRAMO, SE.COD_SUBTRAMO
+        FROM T_SUBTRAMOS SE
+       WHERE NOT EXISTS (SELECT SS.ID_SUBTRAMO
+                FROM T_SUBTRAMOS_TRAMO SS, T_TRAMOS S
+               WHERE SS.ID_TRAMO = S.ID_TRAMO
+                 AND SS.ID_TRAMO = I_ID_TRAMO
+                 AND SE.ID_SUBTRAMO = SS.ID_SUBTRAMO)
+       ORDER BY 2;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de subtramos sin tramos. ' ||
+                              SQLERRM);
+  END SP_LIST_SUBTRAMOS_SIN_TRAMOS;
+
+  /****************************
+  * Lista los coeficientes *
+  ****************************/
+  PROCEDURE SP_LIST_COEFICIENTES(O_CURSOR OUT SYS_REFCURSOR,
+                                 I_NOMBRE IN T_COEFICIENTES.N_COEFICIENTE%TYPE DEFAULT NULL) IS
+  
+    V_SQLFILTROS VARCHAR2(32000) := NULL;
+    V_SQL        VARCHAR2(32000) := NULL;
+  
+  BEGIN
+  
+    IF I_NOMBRE IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS ||
+                      ' AND UPPER(C.N_COEFICIENTE) LIKE UPPER(''%' ||
+                      I_NOMBRE || '%'') ';
+    END IF;
+  
+    V_SQL := 'SELECT C.ID_COEFICIENTE,
+             C.N_COEFICIENTE,
+             C.VALOR_FIJO,
+             C.VALOR_PORCENTUAL
+        FROM T_COEFICIENTES C
+        WHERE C.MASIVO=''N''' || V_SQLFILTROS;
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de coeficientes. ' ||
+                              SQLERRM);
+  END SP_LIST_COEFICIENTES;
+
+  /************************************
+  * Lista los coeficientes por nodos  *
+  *************************************/
+  PROCEDURE SP_LIST_COEFICIENTES_NODOS(O_CURSOR  OUT SYS_REFCURSOR,
+                                       I_ID_NODO IN T_COEFICIENTES_NODO.ID_NODO%TYPE DEFAULT NULL) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT ID_COEFICIENTE_NODO, N_COEFICIENTE, FEC_DESDE, FEC_HASTA
+        FROM T_COEFICIENTES_NODO CN, T_COEFICIENTES C
+       WHERE CN.ID_COEFICIENTE = C.ID_COEFICIENTE
+         AND CN.ID_NODO = I_ID_NODO
+         AND C.VALOR_PORCENTUAL = 0
+         AND TRUNC(SYSDATE) BETWEEN TRUNC(CN.FEC_DESDE) AND
+             TRUNC(NVL(CN.FEC_HASTA, SYSDATE));
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de coeficientes por nodos. ' ||
+                              SQLERRM);
+  END SP_LIST_COEFICIENTES_NODOS;
+
+  /************************************
+  * Lista los coeficientes por tramos *
+  *************************************/
+  PROCEDURE SP_LIST_COEFICIENTES_TRAMOS(O_CURSOR   OUT SYS_REFCURSOR,
+                                        I_ID_TRAMO IN T_COEFICIENTES_TRAMO.ID_TRAMO%TYPE) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT CT.ID_COEFICIENTE_TRAMO,
+             C.N_COEFICIENTE,
+             CT.FEC_DESDE,
+             CT.FEC_HASTA
+        FROM T_COEFICIENTES_TRAMO CT, T_COEFICIENTES C
+       WHERE CT.ID_COEFICIENTE = C.ID_COEFICIENTE
+         AND CT.ID_TRAMO = I_ID_TRAMO
+         AND TRUNC(SYSDATE) BETWEEN TRUNC(CT.FEC_DESDE) AND
+             TRUNC(NVL(CT.FEC_HASTA, SYSDATE));
+  END SP_LIST_COEFICIENTES_TRAMOS;
+
+  /************************************
+  * Lista los coeficientes por subtramos *
+  *************************************/
+  PROCEDURE SP_LIST_COEFICIENTES_SUBTRAMOS(O_CURSOR      OUT SYS_REFCURSOR,
+                                           I_ID_SUBTRAMO IN T_COEFICIENTES_SUBTRAMO.ID_SUBTRAMO%TYPE) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT CS.ID_COEFICIENTE_SUBTRAMO,
+             C.N_COEFICIENTE,
+             CS.FEC_DESDE,
+             CS.FEC_HASTA
+        FROM T_COEFICIENTES_SUBTRAMO CS, T_COEFICIENTES C
+       WHERE CS.ID_COEFICIENTE = C.ID_COEFICIENTE
+         AND CS.ID_SUBTRAMO = I_ID_SUBTRAMO
+         AND TRUNC(SYSDATE) BETWEEN TRUNC(CS.FEC_DESDE) AND
+             TRUNC(NVL(CS.FEC_HASTA, SYSDATE));
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de coeficientes por subtramos. ' ||
+                              SQLERRM);
+  END SP_LIST_COEFICIENTES_SUBTRAMOS;
+
+  /**************************************************
+  * Lista los coeficientes sin nodos asociados      *
+  **************************************************/
+
+  PROCEDURE SP_LIST_COEF_SIN_NODOS(O_CURSOR  OUT SYS_REFCURSOR,
+                                   I_ID_NODO IN T_COEFICIENTES_NODO.ID_NODO%TYPE DEFAULT NULL) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT N.ID_COEFICIENTE, N.N_COEFICIENTE
+        FROM T_COEFICIENTES N
+       WHERE N.ID_COEFICIENTE NOT IN
+             (SELECT A.ID_COEFICIENTE
+                FROM T_COEFICIENTES_NODO A
+               WHERE A.ID_NODO = NVL(I_ID_NODO, A.ID_NODO)
+                 AND TRUNC(SYSDATE) BETWEEN TRUNC(A.FEC_DESDE) AND
+                     TRUNC(NVL(A.FEC_HASTA, SYSDATE)));
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de coeficientes sin nodos. ' ||
+                              SQLERRM);
+  END SP_LIST_COEF_SIN_NODOS;
+
+  /**************************************************
+  * Lista los coeficientes sin tramos asociados                   *
+  **************************************************/
+
+  PROCEDURE SP_LIST_COEF_SIN_TRAMOS(O_CURSOR   OUT SYS_REFCURSOR,
+                                    I_ID_TRAMO IN T_COEFICIENTES_TRAMO.ID_TRAMO%TYPE DEFAULT NULL) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT N.ID_COEFICIENTE, N.N_COEFICIENTE
+        FROM T_COEFICIENTES N
+       WHERE N.ID_COEFICIENTE NOT IN
+             (SELECT A.ID_COEFICIENTE
+                FROM T_COEFICIENTES_TRAMO A
+               WHERE A.ID_TRAMO = NVL(I_ID_TRAMO, A.ID_TRAMO)
+                 AND TRUNC(SYSDATE) BETWEEN TRUNC(A.FEC_DESDE) AND
+                     TRUNC(NVL(A.FEC_HASTA, SYSDATE)));
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de coeficientes sin tramos. ' ||
+                              SQLERRM);
+  END SP_LIST_COEF_SIN_TRAMOS;
+
+  /**************************************************
+  * Lista los coeficientes sin subtramos asociados
+  **************************************************/
+
+  PROCEDURE SP_LIST_COEF_SIN_SUBTRAMOS(O_CURSOR      OUT SYS_REFCURSOR,
+                                       I_ID_SUBTRAMO IN T_COEFICIENTES_SUBTRAMO.ID_SUBTRAMO%TYPE DEFAULT NULL) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT N.ID_COEFICIENTE, N.N_COEFICIENTE
+        FROM T_COEFICIENTES N
+       WHERE NOT EXISTS
+       (SELECT A.ID_COEFICIENTE
+                FROM T_COEFICIENTES_SUBTRAMO A
+               WHERE A.ID_SUBTRAMO = NVL(I_ID_SUBTRAMO, A.ID_SUBTRAMO)
+                 AND TRUNC(SYSDATE) BETWEEN TRUNC(A.FEC_DESDE) AND
+                     TRUNC(NVL(A.FEC_HASTA, SYSDATE))
+                 AND A.ID_COEFICIENTE = N.ID_COEFICIENTE);
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de coeficientes sin subtramos. ' ||
+                              SQLERRM);
+  END SP_LIST_COEF_SIN_SUBTRAMOS;
+
+  /*\**************************************************
+  * Lista las variables                             *
+  **************************************************\
+  
+  PROCEDURE SP_LIST_VARIABLES(O_CURSOR OUT SYS_REFCURSOR, I_FECHA IN DATE) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT N_VARIABLE DESCRIPCION, VALOR MONTO
+        FROM T_VARIABLES
+       WHERE TRUNC(I_FECHA) BETWEEN TRUNC(FEC_DESDE) AND
+             TRUNC(NVL(FEC_HASTA, SYSDATE));
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar la lista de variables. ' ||
+                              SQLERRM);
+  END SP_LIST_VARIABLES;*/
+
+  /******************************************************
+  * Alta de un nuevo subtramo                           *
+  ******************************************************/
+  PROCEDURE SP_ALTA_SUBTRAMOS(I_N_SUBTRAMO      IN T_SUBTRAMOS.N_SUBTRAMO%TYPE,
+                              I_CODIGO          IN T_SUBTRAMOS.COD_SUBTRAMO%TYPE DEFAULT NULL,
+                              I_DISTANCIA       IN T_SUBTRAMOS.DISTANCIA%TYPE,
+                              I_ID_TIPO_CAMINO  IN T_SUBTRAMOS.ID_TIPO_CAMINO%TYPE,
+                              I_ID_NODO_ORIGEN  IN T_SUBTRAMOS.ID_NODO_ORIGEN%TYPE,
+                              I_ID_NODO_DESTINO IN T_SUBTRAMOS.ID_NODO_DESTINO%TYPE,
+                              I_FEC_DESDE       IN T_SUBTRAMOS.FEC_DESDE%TYPE,
+                              I_FEC_HASTA       IN T_SUBTRAMOS.FEC_HASTA%TYPE DEFAULT NULL,
+                              O_ID_SUBTRAMO     OUT T_SUBTRAMOS.ID_SUBTRAMO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_SUBTRAMO T_SUBTRAMOS.ID_SUBTRAMO%TYPE;
+    V_COD         NUMBER;
+  
+  BEGIN
+  
+    SELECT COUNT(1)
+      INTO V_COD
+      FROM T_SUBTRAMOS S
+     WHERE S.COD_SUBTRAMO = I_CODIGO
+     AND S.FEC_HASTA IS NULL;
+  
+    IF V_COD = 0 THEN
+    
+      V_ID_SUBTRAMO := SEQ_GENERAL_TRAMOS.NEXTVAL;
+      O_ID_SUBTRAMO := V_ID_SUBTRAMO;
+    
+      INSERT INTO T_SUBTRAMOS
+        (ID_SUBTRAMO,
+         N_SUBTRAMO,
+         COD_SUBTRAMO,
+         DISTANCIA,
+         ID_TIPO_CAMINO,
+         ID_NODO_ORIGEN,
+         ID_NODO_DESTINO,
+         FEC_DESDE,
+         FEC_HASTA)
+      VALUES
+        (V_ID_SUBTRAMO,
+         I_N_SUBTRAMO,
+         I_CODIGO,
+         I_DISTANCIA,
+         I_ID_TIPO_CAMINO,
+         I_ID_NODO_ORIGEN,
+         I_ID_NODO_DESTINO,
+         I_FEC_DESDE,
+         I_FEC_HASTA);
+    
+      COMMIT;
+    ELSE
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Ya existe un nodo con el mismo codigo');
+    END IF;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al dar de alta el subtramo - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_SUBTRAMOS;
+
+  /******************************************************
+  * Alta de un nuevo tipo de nodo                       *
+  ******************************************************/
+  PROCEDURE SP_ALTA_TIPOS_NODOS(I_TIPO_NODO IN T_TIPOS_NODO.N_TIPO_NODO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_TIPO_NODO T_TIPOS_NODO.ID_TIPO_NODO%TYPE;
+  
+  BEGIN
+  
+    V_ID_TIPO_NODO := SEQ_GENERAL_TRAMOS.NEXTVAL;
+  
+    INSERT INTO T_TIPOS_NODO
+      (ID_TIPO_NODO, N_TIPO_NODO)
+    VALUES
+      (V_ID_TIPO_NODO, I_TIPO_NODO);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el tipo de nodo - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_TIPOS_NODOS;
+
+  /******************************************************
+  * Alta de un nuevo nodo                               *
+  ******************************************************/
+  PROCEDURE SP_ALTA_NODOS(I_NOMBRE       IN T_NODOS.N_NODO%TYPE,
+                          I_DESCRIPCION  IN T_NODOS.DESCRIPCION%TYPE DEFAULT NULL,
+                          I_ID_LOCALIDAD IN T_NODOS.ID_LOCALIDAD%TYPE DEFAULT NULL,
+                          I_CODIGO       IN T_NODOS.COD_NODO%TYPE DEFAULT NULL,
+                          I_ID_TIPO_NODO IN T_NODOS.ID_TIPO_NODO%TYPE,
+                          I_LATITUD      IN T_NODOS.LATITUD%TYPE DEFAULT NULL,
+                          I_LONGITUD     IN T_NODOS.LONGITUD%TYPE DEFAULT NULL,
+                          O_ID_NODO      OUT T_NODOS.ID_NODO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_COD NUMBER;
+  BEGIN
+  
+    O_ID_NODO := SEQ_GENERAL_TRAMOS.NEXTVAL;
+  
+    IF I_ID_TIPO_NODO = 1 AND I_ID_LOCALIDAD IS NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'La localidad para un Nodo tipo parada no puede ser nula');
+    ELSE
+    
+      SELECT COUNT(1)
+        INTO V_COD
+        FROM T_NODOS N
+       WHERE N.COD_NODO = I_CODIGO/*
+       AND N.FEC_HASTA IS NULL*/;
+    
+      IF V_COD = 0 THEN
+      
+        INSERT INTO T_NODOS
+          (ID_NODO,
+           N_NODO,
+           DESCRIPCION,
+           ID_LOCALIDAD,
+           COD_NODO,
+           ID_TIPO_NODO,
+           LATITUD,
+           LONGITUD)
+        VALUES
+          (O_ID_NODO,
+           I_NOMBRE,
+           I_DESCRIPCION,
+           I_ID_LOCALIDAD,
+           I_CODIGO,
+           I_ID_TIPO_NODO,
+           I_LATITUD,
+           I_LONGITUD);
+        COMMIT;
+      
+      ELSE
+        RAISE_APPLICATION_ERROR(-20002,
+                                'Ya existe un nodo con el mismo codigo');
+      END IF;
+    END IF;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20003,
+                              'Error al dar de alta el nodo - ' || SQLERRM);
+    
+  END SP_ALTA_NODOS;
+
+  /******************************************************
+  * Alta de un nuevo tipo servicio                      *
+  ******************************************************/
+  PROCEDURE SP_ALTA_TIPOS_SERVICIO(I_NOMBRE       IN T_TIPOS_SERVICIO.N_TIPO_SERVICIO%TYPE,
+                                   I_TARIFA_DESDE IN T_TIPOS_SERVICIO.TARIFA_DESDE%TYPE,
+                                   I_TARIFA_HASTA IN T_TIPOS_SERVICIO.TARIFA_HASTA%TYPE,
+                                   I_CODIGO       IN T_TIPOS_SERVICIO.COD_TIPO_SERVICIO%TYPE DEFAULT NULL) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_TIPO_SERVICIO T_TIPOS_SERVICIO.ID_TIPO_SERVICIO%TYPE;
+  
+  BEGIN
+  
+    V_ID_TIPO_SERVICIO := SEQ_GENERAL_TRAMOS.NEXTVAL;
+  
+    INSERT INTO T_TIPOS_SERVICIO
+      (ID_TIPO_SERVICIO,
+       N_TIPO_SERVICIO,
+       TARIFA_DESDE,
+       TARIFA_HASTA,
+       COD_TIPO_SERVICIO)
+    VALUES
+      (V_ID_TIPO_SERVICIO,
+       I_NOMBRE,
+       I_TARIFA_DESDE,
+       I_TARIFA_HASTA,
+       I_CODIGO);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al dar de alta el tipo de servicio - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_TIPOS_SERVICIO;
+
+  /******************************************************
+  * Alta de un nuevo tipo camino                        *
+  ******************************************************/
+  PROCEDURE SP_ALTA_TIPOS_CAMINO(I_N_TIPO_CAMINO IN T_TIPOS_CAMINO.N_TIPO_CAMINO%TYPE,
+                                 I_CODIGO        IN T_TIPOS_CAMINO.COD_TIPO_CAMINO%TYPE,
+                                 I_COEFICIENTE   IN T_TIPOS_CAMINO.COEFICIENTE%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_TIPO_CAMINO T_TIPOS_CAMINO.ID_TIPO_CAMINO%TYPE;
+  
+  BEGIN
+  
+    V_ID_TIPO_CAMINO := SEQ_GENERAL_TRAMOS.NEXTVAL;
+  
+    INSERT INTO T_TIPOS_CAMINO
+      (ID_TIPO_CAMINO, N_TIPO_CAMINO, COD_TIPO_CAMINO, COEFICIENTE)
+    VALUES
+      (V_ID_TIPO_CAMINO, I_N_TIPO_CAMINO, I_CODIGO, I_COEFICIENTE);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el tipo de camino - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_TIPOS_CAMINO;
+
+  /******************************************************
+  * Alta de un nuevo tramo                           *
+  ******************************************************/
+  PROCEDURE SP_ALTA_TRAMOS(I_ID_EMPRESA       IN T_TRAMOS.ID_EMPRESA%TYPE,
+                           I_NOMBRE           IN T_TRAMOS.N_TRAMO%TYPE,
+                           I_CODIGO           IN T_TRAMOS.COD_TRAMO%TYPE DEFAULT NULL,
+                           I_OBSERVACIONES    IN T_TRAMOS.OBSERVACIONES%TYPE DEFAULT NULL,
+                           I_ID_TIPO_SERVICIO IN T_TRAMOS.ID_TIPO_SERVICIO%TYPE,
+                           I_FECHA_DESDE      IN T_TRAMOS.FEC_DESDE%TYPE,
+                           I_FECHA_HASTA      IN T_TRAMOS.FEC_HASTA%TYPE DEFAULT NULL,
+                           O_ID_TRAMO         OUT T_TRAMOS.ID_TRAMO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_TRAMO T_TRAMOS.ID_TRAMO%TYPE;
+    V_COD      NUMBER;
+  
+  BEGIN
+  
+    SELECT COUNT(1)
+      INTO V_COD
+      FROM T_TRAMOS T
+     WHERE T.COD_TRAMO = I_CODIGO
+     AND T.FEC_HASTA IS NULL;
+  
+    V_ID_TRAMO := SEQ_GENERAL_TRAMOS.NEXTVAL;
+    O_ID_TRAMO := V_ID_TRAMO;
+  
+    IF V_COD = 0 THEN
+    
+      INSERT INTO T_TRAMOS
+        (ID_TRAMO,
+         ID_EMPRESA,
+         N_TRAMO,
+         COD_TRAMO,
+         OBSERVACIONES,
+         ID_TIPO_SERVICIO,
+         FEC_DESDE,
+         FEC_HASTA)
+      VALUES
+        (V_ID_TRAMO,
+         I_ID_EMPRESA,
+         I_NOMBRE,
+         I_CODIGO,
+         I_OBSERVACIONES,
+         I_ID_TIPO_SERVICIO,
+         I_FECHA_DESDE,
+         I_FECHA_HASTA);
+    
+      COMMIT;
+    ELSE
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Ya existe un nodo con el mismo codigo');
+    END IF;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al dar de alta un tramo - ' || SQLERRM);
+    
+  END SP_ALTA_TRAMOS;
+
+  /******************************************************
+  * Alta de un nuevo coeficiente                           *
+  ******************************************************/
+  PROCEDURE SP_ALTA_COEFICIENTES(I_N_COEFICIENTE    IN T_COEFICIENTES.N_COEFICIENTE%TYPE,
+                                 I_VALOR_FIJO       IN T_COEFICIENTES.VALOR_FIJO%TYPE,
+                                 I_VALOR_PORCENTUAL IN T_COEFICIENTES.VALOR_PORCENTUAL%TYPE,
+                                 O_ID_COEFICIENTE   OUT T_COEFICIENTES.ID_COEFICIENTE%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_COEFICIENTE T_COEFICIENTES.ID_COEFICIENTE%TYPE;
+  
+  BEGIN
+    V_ID_COEFICIENTE := SEQ_GENERAL_TRAMOS.NEXTVAL;
+    O_ID_COEFICIENTE := V_ID_COEFICIENTE;
+  
+    INSERT INTO T_COEFICIENTES
+      (ID_COEFICIENTE, N_COEFICIENTE, VALOR_FIJO, VALOR_PORCENTUAL, MASIVO)
+    VALUES
+      (V_ID_COEFICIENTE,
+       I_N_COEFICIENTE,
+       I_VALOR_FIJO,
+       I_VALOR_PORCENTUAL,
+       'N');
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta un coeficiente - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_COEFICIENTES;
+
+  /******************************************************
+  * Alta de un nuevo coeficiente por nodo              *
+  ******************************************************/
+  PROCEDURE SP_ALTA_COEFICIENTES_NODOS(I_ID_COEFICIENTE IN T_COEFICIENTES_NODO.ID_COEFICIENTE%TYPE,
+                                       I_ID_NODO        IN T_COEFICIENTES_NODO.ID_NODO%TYPE,
+                                       I_FECHA_DESDE    IN T_COEFICIENTES_NODO.FEC_DESDE%TYPE,
+                                       I_FECHA_HASTA    IN T_COEFICIENTES_NODO.FEC_HASTA%TYPE DEFAULT NULL) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_COEFICIENTE_NODO T_COEFICIENTES_NODO.ID_COEFICIENTE_NODO%TYPE;
+    V_VALOR_FIJO          T_COEFICIENTES.VALOR_FIJO%TYPE;
+  BEGIN
+  
+    V_ID_COEFICIENTE_NODO := SEQ_GENERAL_TRAMOS.NEXTVAL;
+  
+    SELECT VALOR_FIJO
+      INTO V_VALOR_FIJO
+      FROM T_COEFICIENTES
+     WHERE ID_COEFICIENTE = I_ID_COEFICIENTE;
+  
+    IF V_VALOR_FIJO = 0 THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Solo se pueden asociar coeficiente que suman a un nodo');
+    END IF;
+  
+    INSERT INTO T_COEFICIENTES_NODO
+      (ID_COEFICIENTE_NODO, ID_COEFICIENTE, ID_NODO, FEC_DESDE, FEC_HASTA)
+    VALUES
+      (V_ID_COEFICIENTE_NODO,
+       I_ID_COEFICIENTE,
+       I_ID_NODO,
+       I_FECHA_DESDE,
+       I_FECHA_HASTA);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al dar de alta un coeficiente por nodo - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_COEFICIENTES_NODOS;
+
+  /******************************************************
+  * Alta de un nuevo coeficiente por subtramos          *
+  ******************************************************/
+  PROCEDURE SP_ALTA_COEFICIENTES_SUBTRAMOS(I_ID_COEFICIENTE IN T_COEFICIENTES_SUBTRAMO.ID_COEFICIENTE%TYPE,
+                                           I_ID_SUBTRAMO    IN T_COEFICIENTES_SUBTRAMO.ID_SUBTRAMO%TYPE,
+                                           I_FECHA_DESDE    IN T_COEFICIENTES_SUBTRAMO.FEC_DESDE%TYPE,
+                                           I_FECHA_HASTA    IN T_COEFICIENTES_SUBTRAMO.FEC_HASTA%TYPE DEFAULT NULL) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_COEFICIENTE_SUBTRAMO T_COEFICIENTES_SUBTRAMO.ID_COEFICIENTE_SUBTRAMO%TYPE;
+  
+  BEGIN
+  
+    V_ID_COEFICIENTE_SUBTRAMO := SEQ_GENERAL_TRAMOS.NEXTVAL;
+  
+    INSERT INTO T_COEFICIENTES_SUBTRAMO
+      (ID_COEFICIENTE_SUBTRAMO,
+       ID_COEFICIENTE,
+       ID_SUBTRAMO,
+       FEC_DESDE,
+       FEC_HASTA)
+    VALUES
+      (V_ID_COEFICIENTE_SUBTRAMO,
+       I_ID_COEFICIENTE,
+       I_ID_SUBTRAMO,
+       I_FECHA_DESDE,
+       I_FECHA_HASTA);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta un coeficiente por subtramo - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_COEFICIENTES_SUBTRAMOS;
+
+  /******************************************************
+  * Alta de un nuevo coeficiente por tramo              *
+  ******************************************************/
+  PROCEDURE SP_ALTA_COEFICIENTES_TRAMOS(I_ID_COEFICIENTE IN T_COEFICIENTES_TRAMO.ID_COEFICIENTE%TYPE,
+                                        I_ID_TRAMO       IN T_COEFICIENTES_TRAMO.ID_TRAMO%TYPE,
+                                        I_FECHA_DESDE    IN T_COEFICIENTES_TRAMO.FEC_DESDE%TYPE,
+                                        I_FECHA_HASTA    IN T_COEFICIENTES_TRAMO.FEC_HASTA%TYPE DEFAULT NULL) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_COEFICIENTE_TRAMO T_COEFICIENTES_TRAMO.ID_COEFICIENTE_TRAMO%TYPE;
+  
+  BEGIN
+  
+    V_ID_COEFICIENTE_TRAMO := SEQ_GENERAL_TRAMOS.NEXTVAL;
+  
+    INSERT INTO T_COEFICIENTES_TRAMO
+      (ID_COEFICIENTE_TRAMO,
+       ID_COEFICIENTE,
+       ID_TRAMO,
+       FEC_DESDE,
+       FEC_HASTA)
+    VALUES
+      (V_ID_COEFICIENTE_TRAMO,
+       I_ID_COEFICIENTE,
+       I_ID_TRAMO,
+       I_FECHA_DESDE,
+       I_FECHA_HASTA);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta un coeficiente por tramo - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_COEFICIENTES_TRAMOS;
+
+  /******************************************************
+  * Alta de un nuevo nodo referencia                    *
+  ******************************************************/
+  PROCEDURE SP_ALTA_NODOS_REFERENCIA(I_ID_SUBTRAMO IN T_SUBTRAMOS_NODOS_REF.ID_SUBTRAMO%TYPE,
+                                     I_ID_NODO     IN T_SUBTRAMOS_NODOS_REF.ID_NODO%TYPE,
+                                     I_FECHA_DESDE IN T_SUBTRAMOS_NODOS_REF.FEC_DESDE%TYPE,
+                                     I_FECHA_HASTA IN T_SUBTRAMOS_NODOS_REF.FEC_HASTA%TYPE DEFAULT NULL) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_SUBTRAMO_NODO_REFERENCIA T_SUBTRAMOS_NODOS_REF.ID_SUBTRAMO_NODO_REF%TYPE;
+  
+  BEGIN
+  
+    V_ID_SUBTRAMO_NODO_REFERENCIA := SEQ_GENERAL_TRAMOS.NEXTVAL;
+  
+    INSERT INTO T_SUBTRAMOS_NODOS_REF
+      (ID_SUBTRAMO_NODO_REF, ID_SUBTRAMO, ID_NODO, FEC_DESDE, FEC_HASTA)
+    VALUES
+      (V_ID_SUBTRAMO_NODO_REFERENCIA,
+       I_ID_SUBTRAMO,
+       I_ID_NODO,
+       I_FECHA_DESDE,
+       I_FECHA_HASTA);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta un nodo referencia - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_NODOS_REFERENCIA;
+
+  /******************************************************
+  * Alta de un nuevo subtramo por tramo                 *
+  ******************************************************/
+  PROCEDURE SP_ALTA_SUBTRAMOS_TRAMOS(I_ID_TRAMO    IN T_SUBTRAMOS_TRAMO.ID_TRAMO%TYPE,
+                                     I_ID_SUBTRAMO IN T_SUBTRAMOS_TRAMO.ID_SUBTRAMO%TYPE,
+                                     I_FECHA_DESDE IN T_SUBTRAMOS_TRAMO.FEC_DESDE%TYPE,
+                                     I_FECHA_HASTA IN T_SUBTRAMOS_TRAMO.FEC_HASTA%TYPE DEFAULT NULL) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_SUBTRAMO_TRAMO T_SUBTRAMOS_TRAMO.ID_SUBTRAMO_TRAMO%TYPE;
+    V_ORDEN             T_SUBTRAMOS_TRAMO.ORDEN%TYPE;
+    V_NODO_DESTINO      T_SUBTRAMOS.ID_NODO_DESTINO%TYPE;
+    V_EXISTE            NUMBER;
+    V_DESDE             DATE;
+    V_HASTA             DATE;
+  
+  BEGIN
+  
+    -- controlar la continuidad de tramos
+  
+    SELECT NVL(MAX(ORDEN) + 1, 1)
+      INTO V_ORDEN
+      FROM T_SUBTRAMOS_TRAMO
+     WHERE ID_TRAMO = I_ID_TRAMO;
+  
+    SELECT TRUNC(FEC_DESDE), NVL(TRUNC(FEC_HASTA), SYSDATE)
+      INTO V_DESDE, V_HASTA
+      FROM T_TRAMOS
+     WHERE ID_TRAMO = I_ID_TRAMO;
+  
+    V_ID_SUBTRAMO_TRAMO := SEQ_GENERAL_TRAMOS.NEXTVAL;
+  
+    SELECT MAX(S.ID_NODO_DESTINO)
+      INTO V_NODO_DESTINO
+      FROM T_SUBTRAMOS_TRAMO ST, T_SUBTRAMOS S
+     WHERE ST.ID_SUBTRAMO = S.ID_SUBTRAMO
+       AND ID_TRAMO = I_ID_TRAMO
+     ORDER BY ST.ORDEN;
+  
+    SELECT COUNT(1)
+      INTO V_EXISTE
+      FROM T_SUBTRAMOS
+     WHERE ID_NODO_ORIGEN = V_NODO_DESTINO
+       AND ID_SUBTRAMO = I_ID_SUBTRAMO;
+  
+    IF I_FECHA_DESDE BETWEEN V_DESDE AND V_HASTA THEN
+      INSERT INTO T_SUBTRAMOS_TRAMO
+        (ID_SUBTRAMO_TRAMO,
+         ID_TRAMO,
+         ID_SUBTRAMO,
+         FEC_DESDE,
+         FEC_HASTA,
+         ORDEN)
+      VALUES
+        (V_ID_SUBTRAMO_TRAMO,
+         I_ID_TRAMO,
+         I_ID_SUBTRAMO,
+         I_FECHA_DESDE,
+         I_FECHA_HASTA,
+         V_ORDEN);
+      COMMIT;
+    ELSE
+      RAISE_APPLICATION_ERROR(-20001,
+                              'la fecha de vigencia del subtramo ingresado no esta comprendido entre la fecha de vigencia de tramo ingresado');
+    END IF;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta un subtramo asociado a un tramo - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_SUBTRAMOS_TRAMOS;
+
+  /******************************************************
+  * Modificacion de un coeficiente                     *
+  ******************************************************/
+  PROCEDURE SP_CAMBIO_COEFICIENTES(I_ID_COEFICIENTE   IN T_COEFICIENTES.ID_COEFICIENTE%TYPE,
+                                   I_N_COEFICIENTE    IN T_COEFICIENTES.N_COEFICIENTE%TYPE DEFAULT NULL,
+                                   I_VALOR_FIJO       IN T_COEFICIENTES.VALOR_FIJO%TYPE DEFAULT NULL,
+                                   I_VALOR_PORCENTUAL IN T_COEFICIENTES.VALOR_PORCENTUAL%TYPE DEFAULT NULL) IS
+  
+  BEGIN
+  
+    UPDATE T_COEFICIENTES S
+       SET S.VALOR_FIJO       = NVL(I_VALOR_FIJO, S.VALOR_FIJO),
+           S.VALOR_PORCENTUAL = NVL(I_VALOR_PORCENTUAL, S.VALOR_PORCENTUAL),
+           S.N_COEFICIENTE    = NVL(I_N_COEFICIENTE, S.N_COEFICIENTE)
+     WHERE S.ID_COEFICIENTE = I_ID_COEFICIENTE;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el coeficiente - ' ||
+                              SQLERRM);
+  END SP_CAMBIO_COEFICIENTES;
+
+  /******************************************************
+  * Modificacion de coeficientes por nodo                *
+  ******************************************************/
+  PROCEDURE SP_CAMBIO_COEFICIENTES_NODOS(I_ID_COEFICIENTE_NODO IN T_COEFICIENTES_NODO.ID_COEFICIENTE_NODO%TYPE /*,
+                                                                                                                                                                                                             I_ID_NODO             IN T_COEFICIENTES_NODO.ID_NODO%TYPE,
+                                                                                                                                                                                                             I_COEFICIENTE         IN T_COEFICIENTES_NODO.ID_COEFICIENTE%TYPE*/) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_COEFICIENTES_NODO S
+       SET S.FEC_HASTA = SYSDATE - 1
+     WHERE S.ID_COEFICIENTE_NODO = I_ID_COEFICIENTE_NODO;
+  
+    /*  SP_ALTA_COEFICIENTES_NODOS(I_ID_COEFICIENTE => I_COEFICIENTE,
+    I_ID_NODO        => I_ID_NODO,
+    I_FECHA_DESDE    => SYSDATE,
+    I_FECHA_HASTA    => NULL);*/
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el coeficiente por nodo - ' ||
+                              SQLERRM);
+  END SP_CAMBIO_COEFICIENTES_NODOS;
+
+  /******************************************************
+  * Modificacion de coeficientes por subtramo          *
+  ******************************************************/
+  PROCEDURE SP_CAMBIO_COEF_SUBTRAMOS(I_ID_COEFICIENTE_SUBTRAMO IN T_COEFICIENTES_SUBTRAMO.ID_COEFICIENTE_SUBTRAMO%TYPE /*,
+                                                                                                                                                                                                                              I_ID_SUBTRAMO             IN T_COEFICIENTES_SUBTRAMO.ID_SUBTRAMO%TYPE,
+                                                                                                                                                                                                                              I_COEFICIENTE         IN T_COEFICIENTES_NODO.ID_COEFICIENTE%TYPE*/) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_COEFICIENTES_SUBTRAMO S
+       SET S.FEC_HASTA = SYSDATE - 1
+     WHERE S.ID_COEFICIENTE_SUBTRAMO = I_ID_COEFICIENTE_SUBTRAMO;
+  
+    /*   SP_ALTA_COEFICIENTES_SUBTRAMOS(I_ID_COEFICIENTE => I_COEFICIENTE,
+    I_ID_SUBTRAMO    => I_ID_SUBTRAMO,
+    I_FECHA_DESDE    => SYSDATE,
+    I_FECHA_HASTA    => NULL);*/
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el coeficiente por subtramo - ' ||
+                              SQLERRM);
+  END SP_CAMBIO_COEF_SUBTRAMOS;
+
+  /******************************************************
+  * Modificacion de coeficientes por tramo              *
+  ******************************************************/
+  PROCEDURE SP_CAMBIO_COEFICIENTES_TRAMOS(I_ID_COEFICIENTE_TRAMO IN T_COEFICIENTES_TRAMO.ID_COEFICIENTE_TRAMO%TYPE /*,
+                                                                                                                                                                                                                  I_ID_TRAMO             IN T_COEFICIENTES_TRAMO.ID_TRAMO%TYPE,
+                                                                                                                                                                                                                  I_COEFICIENTE          IN T_COEFICIENTES_NODO.ID_COEFICIENTE%TYPE*/) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_COEFICIENTES_TRAMO S
+       SET S.FEC_HASTA = SYSDATE - 1
+     WHERE S.ID_COEFICIENTE_TRAMO = I_ID_COEFICIENTE_TRAMO;
+  
+    /* SP_ALTA_COEFICIENTES_TRAMOS(I_ID_COEFICIENTE => I_COEFICIENTE,
+    I_ID_TRAMO       => I_ID_TRAMO,
+    I_FECHA_DESDE    => SYSDATE,
+    I_FECHA_HASTA    => NULL);*/
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el coeficiente por tramo - ' ||
+                              SQLERRM);
+  END SP_CAMBIO_COEFICIENTES_TRAMOS;
+
+  /******************************************************
+  * Modificacion de un tramo                            *
+  ******************************************************/
+  PROCEDURE SP_CAMBIO_TRAMOS(I_ID_TRAMO         IN T_TRAMOS.ID_TRAMO%TYPE,
+                             I_NOMBRE           IN T_TRAMOS.N_TRAMO%TYPE DEFAULT NULL,
+                             I_CODIGO           IN T_TRAMOS.COD_TRAMO%TYPE DEFAULT NULL,
+                             I_OBSERVACIONES    IN T_TRAMOS.OBSERVACIONES%TYPE DEFAULT NULL,
+                             I_ID_EMPRESA       IN T_TRAMOS.ID_EMPRESA%TYPE DEFAULT NULL,
+                             I_ID_TIPO_SERVICIO IN T_TRAMOS.ID_TIPO_SERVICIO%TYPE DEFAULT NULL,
+                             O_ID_TRAMO         OUT T_TRAMOS.ID_TRAMO%TYPE) IS
+  
+    --  V_ID_TRAMO T_TRAMOS.ID_TRAMO%TYPE;
+  
+  BEGIN
+  
+    UPDATE T_TRAMOS S
+       SET S.FEC_HASTA = SYSDATE - 1
+     WHERE S.ID_TRAMO = I_ID_TRAMO;
+  
+    SP_ALTA_TRAMOS(I_ID_EMPRESA       => I_ID_EMPRESA,
+                   I_NOMBRE           => I_NOMBRE,
+                   I_CODIGO           => I_CODIGO,
+                   I_OBSERVACIONES    => I_OBSERVACIONES,
+                   I_ID_TIPO_SERVICIO => I_ID_TIPO_SERVICIO,
+                   I_FECHA_DESDE      => SYSDATE,
+                   I_FECHA_HASTA      => NULL,
+                   O_ID_TRAMO         => O_ID_TRAMO);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el tramo - ' || SQLERRM);
+  END SP_CAMBIO_TRAMOS;
+
+  /******************************************************
+  * Modificacion de un subtramo                         *
+  *******************************************************/
+  PROCEDURE SP_CAMBIO_SUBTRAMOS(I_ID_SUBTRAMO  IN T_SUBTRAMOS.ID_SUBTRAMO%TYPE,
+                                I_NOMBRE       IN T_SUBTRAMOS.N_SUBTRAMO%TYPE DEFAULT NULL,
+                                I_CODIGO       IN T_SUBTRAMOS.COD_SUBTRAMO%TYPE DEFAULT NULL,
+                                I_DISTANCIA    IN T_SUBTRAMOS.DISTANCIA%TYPE DEFAULT NULL,
+                                I_TIPO_CAMINO  IN T_SUBTRAMOS.ID_TIPO_CAMINO%TYPE DEFAULT NULL,
+                                I_NODO_ORIGEN  IN T_SUBTRAMOS.ID_NODO_ORIGEN%TYPE DEFAULT NULL,
+                                I_NODO_DESTINO IN T_SUBTRAMOS.ID_NODO_DESTINO%TYPE DEFAULT NULL,
+                                I_FEC_DESDE    IN T_SUBTRAMOS.FEC_DESDE%TYPE,
+                                I_FEC_HASTA    IN DATE DEFAULT NULL,
+                                O_ID_SUBTRAMO  OUT T_SUBTRAMOS.ID_SUBTRAMO%TYPE) IS
+  
+    V_SUBTRAMO T_SUBTRAMOS.ID_SUBTRAMO%TYPE;
+  
+  BEGIN
+  
+    UPDATE T_SUBTRAMOS S
+       SET S.FEC_HASTA = SYSDATE
+     WHERE S.ID_SUBTRAMO = I_ID_SUBTRAMO;
+  
+    SP_ALTA_SUBTRAMOS(I_N_SUBTRAMO      => I_NOMBRE,
+                      I_CODIGO          => I_CODIGO,
+                      I_DISTANCIA       => I_DISTANCIA,
+                      I_ID_TIPO_CAMINO  => I_TIPO_CAMINO,
+                      I_ID_NODO_ORIGEN  => I_NODO_ORIGEN,
+                      I_ID_NODO_DESTINO => I_NODO_DESTINO,
+                      I_FEC_DESDE       => I_FEC_DESDE,
+                      I_FEC_HASTA       => I_FEC_HASTA,
+                      O_ID_SUBTRAMO     => V_SUBTRAMO);
+  
+    COMMIT;
+  
+    O_ID_SUBTRAMO := V_SUBTRAMO;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el tramo - ' || SQLERRM);
+  END SP_CAMBIO_SUBTRAMOS;
+
+  /******************************************************
+  * Modificacion de nodo de referencia                          *
+  ******************************************************/
+  PROCEDURE SP_CAMBIO_NODOS_REFERENCIA(I_ID_SUBTRAMO_NODO_REFERENCIA IN T_SUBTRAMOS_NODOS_REF.ID_SUBTRAMO_NODO_REF%TYPE,
+                                       I_FECHA_DESDE                 IN T_SUBTRAMOS_NODOS_REF.FEC_ALTA%TYPE DEFAULT NULL,
+                                       I_FECHA_HASTA                 IN T_SUBTRAMOS_NODOS_REF.FEC_HASTA%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_SUBTRAMOS_NODOS_REF S
+       SET S.FEC_HASTA = I_FECHA_HASTA,
+           S.FEC_DESDE = NVL(I_FECHA_DESDE, SYSDATE)
+     WHERE S.ID_SUBTRAMO_NODO_REF = I_ID_SUBTRAMO_NODO_REFERENCIA;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el nodo de referencia - ' ||
+                              SQLERRM);
+  END SP_CAMBIO_NODOS_REFERENCIA;
+
+  /******************************************************
+  * Modificacion de un subtramo por tramo               *
+  ******************************************************/
+  PROCEDURE SP_CAMBIO_SUBTRAMOS_TRAMOS(I_ID_SUBTRAMO_TRAMO IN T_SUBTRAMOS_TRAMO.ID_SUBTRAMO_TRAMO%TYPE,
+                                       I_FECHA_DESDE       IN T_SUBTRAMOS_TRAMO.FEC_DESDE%TYPE DEFAULT NULL,
+                                       I_FECHA_HASTA       IN T_SUBTRAMOS_TRAMO.FEC_HASTA%TYPE,
+                                       I_ORDEN             IN T_SUBTRAMOS_TRAMO.ORDEN%TYPE,
+                                       I_TRAMO             IN T_SUBTRAMOS_TRAMO.ID_TRAMO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_MAX NUMBER;
+    V_MIN NUMBER;
+  
+  BEGIN
+  
+    SELECT MAX(ORDEN), MIN(ORDEN)
+      INTO V_MAX, V_MIN
+      FROM T_SUBTRAMOS_TRAMO S
+     WHERE S.ID_TRAMO = I_TRAMO
+       AND TRUNC(SYSDATE) BETWEEN TRUNC(S.FEC_DESDE) AND
+           TRUNC(NVL(S.FEC_HASTA, SYSDATE));
+  
+    IF I_ORDEN <> V_MAX AND I_ORDEN <> V_MIN THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'No se puede eliminar un subtramo intermedio');
+    END IF;
+  
+    UPDATE T_SUBTRAMOS_TRAMO S
+       SET S.FEC_HASTA = I_FECHA_HASTA,
+           S.FEC_DESDE = NVL(I_FECHA_DESDE, SYSDATE)
+     WHERE S.ID_SUBTRAMO_TRAMO = I_ID_SUBTRAMO_TRAMO;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al modificar el subtramo por tramo - ' ||
+                              SQLERRM);
+    
+  END SP_CAMBIO_SUBTRAMOS_TRAMOS;
+
+  /******************************************************
+  * Calculo de tarifas por tramo                        *
+  ******************************************************/
+  PROCEDURE SP_TARIFAS_TRAMOS(O_CURSOR     OUT SYS_REFCURSOR,
+                              I_ID_TRAMO   IN T_TRAMOS.ID_TRAMO%TYPE DEFAULT NULL,
+                              I_FECHA      IN DATE,
+                              I_ID_EMPRESA IN T_TRAMOS.ID_EMPRESA%TYPE DEFAULT NULL,
+                              I_ID_ORIGEN  IN T_NODOS.ID_NODO%TYPE DEFAULT NULL,
+                              I_ID_DESTINO IN T_NODOS.ID_NODO%TYPE DEFAULT NULL) IS
+  
+    V_VALOR_TA   T_VARIABLES_TARIFICACION.VALOR%TYPE;
+    V_VALOR_TBK  T_VARIABLES_TARIFICACION.VALOR%TYPE;
+    V_SQLFILTROS VARCHAR2(32767) := NULL;
+    V_SQL        VARCHAR2(32767) := NULL;
+  
+  BEGIN
+  
+    BEGIN
+      SELECT V.VALOR
+        INTO V_VALOR_TA
+        FROM T_VARIABLES_TARIFICACION V
+       WHERE V.N_VARIABLE = 'TARIFA DE ARRANQUE'
+         AND V.FEC_HASTA IS NULL;
+    EXCEPTION
+      WHEN OTHERS THEN
+      
+        RAISE_APPLICATION_ERROR(-20001,
+                                'Error al consultar la tarifa de arranque - ' ||
+                                SQLERRM);
+    END;
+  
+    BEGIN
+      SELECT V.VALOR
+        INTO V_VALOR_TBK
+        FROM T_VARIABLES_TARIFICACION V
+       WHERE V.N_VARIABLE = 'TARIFA BASICA KILOMETRICA'
+         AND V.FEC_HASTA IS NULL;
+    EXCEPTION
+      WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20001,
+                                'Error al consultar la tarifa por Km - ' ||
+                                SQLERRM);
+    END;
+  
+    IF I_FECHA IS NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro I_FECHA es obligatorio');
+    END IF;
+  
+    IF I_ID_TRAMO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND T.ID_TRAMO = ' || I_ID_TRAMO;
+    END IF;
+  
+    IF I_ID_ORIGEN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND S.ID_NODO_ORIGEN = ' ||
+                      I_ID_ORIGEN;
+    END IF;
+  
+    IF I_ID_DESTINO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND S.ID_NODO_DESTINO = ' ||
+                      I_ID_DESTINO;
+    END IF;
+  
+    IF I_ID_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND E.ID_EMPRESA = ' ||
+                      I_ID_EMPRESA;
+    END IF;
+  
+    V_SQL := 'SELECT NOMBRE_ORIGEN NombreOrigen,
+       NOMBRE_DESTINO NombreDestino,
+       RAZON_SOCIAL Empresa,
+       DISTANCIA Km,
+       ''' || V_VALOR_TA || ''' + (''' || V_VALOR_TBK ||
+             ''' * COEF) TarifaRegular,
+       (((''' || V_VALOR_TA || ''' + (((''' || V_VALOR_TBK ||
+             ''' * COEFICIENTE)* NVL(TARIFA_FIJA_SUBTRAMO,0))+ NVL(TARIFA_PORCENTUAL_SUBTRAMO,0))) + NVL(VALOR_FIJO_NODO,0) + NVL(VALOR_FIJO_TRAMO,0)) * DECODE(VALOR_PORCENTUAL_TRAMO, NULL, 1, 0, 1, VALOR_PORCENTUAL_TRAMO) * DECODE(VALOR_PORCENTUAL_NODO, NULL, 1, 0, 1, VALOR_PORCENTUAL_NODO)) * TARIFA_DESDE TarifaDesde,
+       (((''' || V_VALOR_TA || ''' + (((''' || V_VALOR_TBK ||
+             ''' * COEFICIENTE)* NVL(TARIFA_FIJA_SUBTRAMO,0))+ NVL(TARIFA_PORCENTUAL_SUBTRAMO,0))) + NVL(VALOR_FIJO_NODO,0) + NVL(VALOR_FIJO_TRAMO,0)) * DECODE(VALOR_PORCENTUAL_TRAMO, NULL, 1, 0, 1, VALOR_PORCENTUAL_TRAMO) * DECODE(VALOR_PORCENTUAL_NODO, NULL, 1, 0, 1, VALOR_PORCENTUAL_NODO)) * TARIFA_HASTA TarifaHasta, 
+       N_TIPO_SERVICIO TipoServicio,
+       ID_TRAMO tramoId,
+       FEC_DESDE tramoFechaDesde,
+       FEC_HASTA tramoFechaHasta
+  FROM (SELECT E.RAZON_SOCIAL,
+               SUM(S.DISTANCIA) DISTANCIA,
+               COEF,
+               TS.TARIFA_DESDE,
+               TS.TARIFA_HASTA,
+               TS.N_TIPO_SERVICIO,
+               VALOR_FIJO_NODO,
+               VALOR_PORCENTUAL_NODO,
+               VALOR_FIJO_TRAMO,
+               VALOR_PORCENTUAL_TRAMO,
+               T.ID_TRAMO,
+               TARIFA_PORCENTUAL_SUBTRAMO,
+               TARIFA_FIJA_SUBTRAMO,
+               NOMBRE_ORIGEN,
+               NOMBRE_DESTINO,
+               ID_ORIGEN,
+               ID_DESTINO,
+               T.FEC_DESDE,
+               T.FEC_HASTA,
+               TP.COEFICIENTE
+          FROM T_SUBTRAMOS S,
+               T_SUBTRAMOS_TRAMO ST,
+               T_TIPOS_CAMINO TP,
+               T_TIPOS_SERVICIO TS,
+               T_TRAMOS T,
+               TRANSPORTE.T_EMPRESAS E,
+               (SELECT SUM(DISTANCIA * TP.COEFICIENTE) COEF, T2.ID_TRAMO
+                  FROM T_SUBTRAMOS       T1,
+                       T_TIPOS_CAMINO    TP,
+                       T_TRAMOS          T2,
+                       T_SUBTRAMOS_TRAMO T3
+                 WHERE T1.ID_TIPO_CAMINO = TP.ID_TIPO_CAMINO
+                   AND T3.ID_TRAMO = T2.ID_TRAMO
+                   AND T3.ID_SUBTRAMO = T1.ID_SUBTRAMO
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(T1.FEC_DESDE) AND
+                       TRUNC(NVL(T1.FEC_HASTA, SYSDATE))
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(T2.FEC_DESDE) AND
+                       TRUNC(NVL(T2.FEC_HASTA, SYSDATE))
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(T3.FEC_DESDE) AND
+                       TRUNC(NVL(T3.FEC_HASTA, SYSDATE))
+                 GROUP BY T2.ID_TRAMO) X,
+               (SELECT D.ID_TRAMO,
+                       SUM(C.VALOR_FIJO) VALOR_FIJO_NODO,
+                       SUM(C.VALOR_PORCENTUAL) VALOR_PORCENTUAL_NODO
+                  FROM T_COEFICIENTES_NODO A,
+                       T_NODOS             B,
+                       T_COEFICIENTES      C,
+                       T_TRAMOS            D,
+                       T_SUBTRAMOS         F,
+                       T_SUBTRAMOS_TRAMO   G
+                 WHERE A.ID_COEFICIENTE = C.ID_COEFICIENTE
+                   AND A.ID_NODO = B.ID_NODO
+                   AND (F.ID_NODO_ORIGEN = B.ID_NODO OR
+                       F.ID_NODO_DESTINO = B.ID_NODO)
+                   AND G.ID_TRAMO = D.ID_TRAMO
+                   AND G.ID_SUBTRAMO = F.ID_SUBTRAMO
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(D.FEC_DESDE) AND
+                       TRUNC(NVL(D.FEC_HASTA, SYSDATE))
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(F.FEC_DESDE) AND
+                       TRUNC(NVL(F.FEC_HASTA, SYSDATE))
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(G.FEC_DESDE) AND
+                       TRUNC(NVL(G.FEC_HASTA, SYSDATE))
+                 GROUP BY D.ID_TRAMO) J,
+               (SELECT D.ID_TRAMO,
+                       SUM(C.VALOR_FIJO) VALOR_FIJO_TRAMO,
+                       SUM(C.VALOR_PORCENTUAL) VALOR_PORCENTUAL_TRAMO
+                  FROM T_COEFICIENTES_TRAMO A, T_COEFICIENTES C, T_TRAMOS D
+                 WHERE A.ID_COEFICIENTE = C.ID_COEFICIENTE
+                   AND A.ID_TRAMO = D.ID_TRAMO
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(D.FEC_DESDE) AND
+                       TRUNC(NVL(D.FEC_HASTA, SYSDATE))
+                 GROUP BY D.ID_TRAMO) K,
+               (SELECT X.ID_TRAMO,
+                       SUM(DISTANCIA *  NVL(VALOR_PORCENTUAL, 0)) TARIFA_PORCENTUAL_SUBTRAMO,
+                       SUM(DECODE(VALOR_FIJO, 0, 0,(DISTANCIA + NVL(VALOR_FIJO, 0)))) TARIFA_FIJA_SUBTRAMO
+                  FROM T_SUBTRAMOS             S,
+                       T_SUBTRAMOS_TRAMO       ST,
+                       T_TIPOS_CAMINO          TP,
+                       T_TIPOS_SERVICIO        TS,
+                       T_TRAMOS                X,
+                       T_COEFICIENTES_SUBTRAMO A,
+                       T_COEFICIENTES          C
+                 WHERE S.ID_SUBTRAMO = ST.ID_SUBTRAMO
+                   AND TP.ID_TIPO_CAMINO = S.ID_TIPO_CAMINO
+                   AND ST.ID_TRAMO = X.ID_TRAMO
+                   AND X.ID_TIPO_SERVICIO = TS.ID_TIPO_SERVICIO
+                   AND A.ID_COEFICIENTE = C.ID_COEFICIENTE(+)
+                   AND A.ID_SUBTRAMO(+) = S.ID_SUBTRAMO
+                 GROUP BY X.ID_TRAMO) L,
+               (SELECT B.ID_TRAMO,
+                       A1.N_NODO  NOMBRE_ORIGEN,
+                       A1.ID_NODO ID_ORIGEN
+                  FROM T_NODOS           A1,
+                       T_NODOS           A2,
+                       T_TRAMOS          B,
+                       T_SUBTRAMOS       D,
+                       T_SUBTRAMOS_TRAMO E
+                 WHERE E.ID_TRAMO = B.ID_TRAMO
+                   AND E.ID_SUBTRAMO = D.ID_SUBTRAMO
+                   AND A1.ID_NODO = D.ID_NODO_ORIGEN
+                   AND A2.ID_NODO = D.ID_NODO_DESTINO
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(B.FEC_DESDE) AND
+                       TRUNC(NVL(B.FEC_HASTA, SYSDATE))
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(D.FEC_DESDE) AND
+                       TRUNC(NVL(D.FEC_HASTA, SYSDATE))
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(E.FEC_DESDE) AND
+                       TRUNC(NVL(E.FEC_HASTA, SYSDATE))
+                   AND A1.ID_NODO NOT IN
+                       (SELECT F2.ID_NODO
+                          FROM T_NODOS           F1,
+                               T_NODOS           F2,
+                               T_TRAMOS          G,
+                               T_SUBTRAMOS       I,
+                               T_SUBTRAMOS_TRAMO J
+                         WHERE J.ID_TRAMO = G.ID_TRAMO
+                           AND J.ID_SUBTRAMO = I.ID_SUBTRAMO
+                           AND F1.ID_NODO = I.ID_NODO_ORIGEN
+                           AND F2.ID_NODO = I.ID_NODO_DESTINO
+                           AND I.ID_NODO_ORIGEN <> I.ID_NODO_DESTINO
+                           AND B.ID_TRAMO = G.ID_TRAMO
+                           AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                               TRUNC(G.FEC_DESDE) AND
+                               TRUNC(NVL(G.FEC_HASTA, SYSDATE))
+                           AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                               TRUNC(I.FEC_DESDE) AND
+                               TRUNC(NVL(I.FEC_HASTA, SYSDATE))
+                           AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                               TRUNC(J.FEC_DESDE) AND
+                               TRUNC(NVL(J.FEC_HASTA, SYSDATE)))) R,
+               (SELECT B.ID_TRAMO,
+                       A2.N_NODO  NOMBRE_DESTINO,
+                       A2.ID_NODO ID_DESTINO
+                  FROM T_NODOS           A1,
+                       T_NODOS           A2,
+                       T_TRAMOS          B,
+                       T_SUBTRAMOS       D,
+                       T_SUBTRAMOS_TRAMO E
+                 WHERE E.ID_TRAMO = B.ID_TRAMO
+                   AND E.ID_SUBTRAMO = D.ID_SUBTRAMO
+                   AND A1.ID_NODO = D.ID_NODO_ORIGEN
+                   AND A2.ID_NODO = D.ID_NODO_DESTINO
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(B.FEC_DESDE) AND
+                       TRUNC(NVL(B.FEC_HASTA, SYSDATE))
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(D.FEC_DESDE) AND
+                       TRUNC(NVL(D.FEC_HASTA, SYSDATE))
+                   AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                       TRUNC(E.FEC_DESDE) AND
+                       TRUNC(NVL(E.FEC_HASTA, SYSDATE))
+                   AND A2.ID_NODO NOT IN
+                       (SELECT F1.ID_NODO
+                          FROM T_NODOS           F1,
+                               T_NODOS           F2,
+                               T_TRAMOS          G,
+                               T_SUBTRAMOS       I,
+                               T_SUBTRAMOS_TRAMO J
+                         WHERE J.ID_TRAMO = G.ID_TRAMO
+                           AND J.ID_SUBTRAMO = I.ID_SUBTRAMO
+                           AND F1.ID_NODO = I.ID_NODO_ORIGEN
+                           AND F2.ID_NODO = I.ID_NODO_DESTINO
+                           AND I.ID_NODO_ORIGEN <> I.ID_NODO_DESTINO
+                           AND B.ID_TRAMO = G.ID_TRAMO
+                           AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                               TRUNC(G.FEC_DESDE) AND
+                               TRUNC(NVL(G.FEC_HASTA, SYSDATE))
+                           AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                               TRUNC(I.FEC_DESDE) AND
+                               TRUNC(NVL(I.FEC_HASTA, SYSDATE))
+                           AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+                               TRUNC(J.FEC_DESDE) AND
+                               TRUNC(NVL(J.FEC_HASTA, SYSDATE)))) U
+         WHERE S.ID_SUBTRAMO = ST.ID_SUBTRAMO
+           AND TP.ID_TIPO_CAMINO = S.ID_TIPO_CAMINO
+           AND ST.ID_TRAMO = T.ID_TRAMO
+           AND T.ID_TIPO_SERVICIO = TS.ID_TIPO_SERVICIO
+           AND E.ID_EMPRESA = T.ID_EMPRESA
+           AND T.ID_TRAMO = J.ID_TRAMO(+)
+           AND T.ID_TRAMO = K.ID_TRAMO(+)
+           AND T.ID_TRAMO = L.ID_TRAMO(+)
+           AND R.ID_TRAMO = T.ID_TRAMO
+           AND U.ID_TRAMO = T.ID_TRAMO
+           AND X.ID_TRAMO = T.ID_TRAMO
+           AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+               TRUNC(T.FEC_DESDE) AND TRUNC(NVL(T.FEC_HASTA, SYSDATE))
+           AND TRUNC(TO_DATE(''' || I_FECHA ||
+             ''', ''DD/MM/RRRR'')) BETWEEN
+               TRUNC(ST.FEC_DESDE) AND TRUNC(NVL(ST.FEC_HASTA, SYSDATE))
+           AND TRUNC(TO_DATE(''' || I_FECHA || ''', ''DD/MM/RRRR'')) BETWEEN
+               TRUNC(T.FEC_DESDE) AND TRUNC(NVL(T.FEC_HASTA, SYSDATE))
+           ' || V_SQLFILTROS || '
+         GROUP BY NOMBRE_ORIGEN,
+                  NOMBRE_DESTINO,
+                  ID_ORIGEN,
+                  ID_DESTINO,
+                  T.ID_TRAMO,
+                  E.RAZON_SOCIAL,
+                  COEF,
+                  TS.N_TIPO_SERVICIO,
+                  TS.TARIFA_DESDE,
+                  TS.TARIFA_HASTA,
+                  VALOR_FIJO_NODO,
+                  VALOR_PORCENTUAL_NODO,
+                  VALOR_FIJO_TRAMO,
+                  VALOR_PORCENTUAL_TRAMO,
+                  TARIFA_PORCENTUAL_SUBTRAMO,
+                  TARIFA_FIJA_SUBTRAMO,
+                  T.ID_TRAMO,
+                  T.FEC_DESDE,
+                  T.FEC_HASTA,
+                  TP.COEFICIENTE)';
+  
+    --   DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+    /*  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar cuadro tarifario. ' ||
+                              SQLERRM);*/
+  END SP_TARIFAS_TRAMOS;
+
+  /******************************************************
+  * Calculo de tarifas por subtramo                     *
+  ******************************************************/
+  PROCEDURE SP_TARIFAS_SUBTRAMOS(O_CURSOR   OUT SYS_REFCURSOR,
+                                 I_ID_TRAMO IN T_TRAMOS.ID_TRAMO%TYPE,
+                                 I_FECHA    IN DATE) IS
+  
+    V_VALOR_TBK T_VARIABLES.VALOR%TYPE;
+  
+  BEGIN
+  
+    BEGIN
+      SELECT V.VALOR
+        INTO V_VALOR_TBK
+        FROM T_VARIABLES_TARIFICACION V
+       WHERE V.N_VARIABLE = 'TARIFA BASICA KILOMETRICA'
+         AND V.FEC_HASTA IS NULL;
+    EXCEPTION
+      WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20001,
+                                'Error al consultar la tarifa por Km - ' ||
+                                SQLERRM);
+    END;
+  
+    OPEN O_CURSOR FOR
+      SELECT N1.N_NODO NOMBRE_ORIGEN,
+             N2.N_NODO NOMBRE_DESTINO,
+             S.DISTANCIA,
+             TP.N_TIPO_CAMINO NOM_TIPO_CAMINO,
+             COEFICIENTE,
+             (V_VALOR_TBK * DISTANCIA * COEFICIENTE) CALCULO,
+             ST.ORDEN
+        FROM T_SUBTRAMOS           S,
+             T_SUBTRAMOS_TRAMO     ST,
+             T_TIPOS_CAMINO        TP,
+             T_TIPOS_SERVICIO      TS,
+             T_TRAMOS              T,
+             TRANSPORTE.T_EMPRESAS E,
+             T_NODOS               N1,
+             T_NODOS               N2
+       WHERE S.ID_SUBTRAMO = ST.ID_SUBTRAMO
+         AND TP.ID_TIPO_CAMINO = S.ID_TIPO_CAMINO
+         AND T.ID_TRAMO = T.ID_TRAMO
+         AND ST.ID_TRAMO = T.ID_TRAMO
+         AND T.ID_TIPO_SERVICIO = TS.ID_TIPO_SERVICIO
+         AND N1.ID_NODO = S.ID_NODO_ORIGEN
+         AND N2.ID_NODO = S.ID_NODO_DESTINO
+         AND E.ID_EMPRESA = T.ID_EMPRESA
+         AND T.ID_TRAMO = I_ID_TRAMO
+         AND TRUNC(TO_DATE(I_FECHA, 'DD/MM/RRRR')) BETWEEN
+             TRUNC(T.FEC_DESDE) AND TRUNC(NVL(T.FEC_HASTA, SYSDATE))
+         AND TRUNC(TO_DATE(I_FECHA, 'DD/MM/RRRR')) BETWEEN
+             TRUNC(ST.FEC_DESDE) AND TRUNC(NVL(ST.FEC_HASTA, SYSDATE))
+         AND TRUNC(TO_DATE(I_FECHA, 'DD/MM/RRRR')) BETWEEN
+             TRUNC(S.FEC_DESDE) AND TRUNC(NVL(S.FEC_HASTA, SYSDATE))
+       GROUP BY N1.N_NODO,
+                N2.N_NODO,
+                E.RAZON_SOCIAL,
+                S.DISTANCIA,
+                TS.N_TIPO_SERVICIO,
+                COEFICIENTE,
+                ORDEN,
+                TP.N_TIPO_CAMINO
+       ORDER BY ORDEN;
+  
+  END SP_TARIFAS_SUBTRAMOS;
+
+  /******************************************************
+  * Muestra coeficientes asociados a un tramo          *
+  ******************************************************/
+  PROCEDURE SP_COEF_TRAMOS(O_CURSOR   OUT SYS_REFCURSOR,
+                           I_ID_TRAMO IN T_TRAMOS.ID_TRAMO%TYPE DEFAULT NULL,
+                           I_FECHA    IN DATE DEFAULT NULL) IS
+  
+    V_VALOR_TA      T_VARIABLES.VALOR%TYPE;
+    V_VALOR_TBK     T_VARIABLES.VALOR%TYPE;
+    V_CALCULO_TRAMO NUMBER(8, 2);
+  
+  BEGIN
+  
+    BEGIN
+      SELECT V.VALOR
+        INTO V_VALOR_TA
+        FROM T_VARIABLES_TARIFICACION V
+       WHERE V.N_VARIABLE = 'TARIFA DE ARRANQUE'
+         AND V.FEC_HASTA IS NULL;
+    EXCEPTION
+      WHEN OTHERS THEN
+      
+        RAISE_APPLICATION_ERROR(-20001,
+                                'Error al consultar la tarifa de arranque - ' ||
+                                SQLERRM);
+    END;
+  
+    BEGIN
+      SELECT V.VALOR
+        INTO V_VALOR_TBK
+        FROM T_VARIABLES_TARIFICACION V
+       WHERE V.N_VARIABLE = 'TARIFA BASICA KILOMETRICA'
+         AND V.FEC_HASTA IS NULL;
+    EXCEPTION
+      WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20001,
+                                'Error al consultar la tarifa por Km - ' ||
+                                SQLERRM);
+    END;
+  
+    OPEN O_CURSOR FOR
+      SELECT COEFICIENTE_NODO NOMBRE,
+             TIPO,
+             'Nodo ' || N1.N_NODO APLICA,
+             NVL(VALOR_FIJO_NODO, 0) VALOR
+        FROM T_SUBTRAMOS S,
+             T_SUBTRAMOS_TRAMO ST,
+             T_TIPOS_CAMINO TP,
+             T_TIPOS_SERVICIO TS,
+             T_TRAMOS T,
+             T_NODOS N1,
+             (SELECT B.ID_NODO,
+                     'Fijo' TIPO,
+                     C.VALOR_FIJO VALOR_FIJO_NODO,
+                     C.N_COEFICIENTE COEFICIENTE_NODO
+                FROM T_COEFICIENTES_NODO A,
+                     T_NODOS             B,
+                     T_COEFICIENTES      C,
+                     T_TRAMOS            D,
+                     T_SUBTRAMOS         F,
+                     T_SUBTRAMOS_TRAMO   G
+               WHERE A.ID_COEFICIENTE = C.ID_COEFICIENTE
+                 AND A.ID_NODO = B.ID_NODO
+                 AND G.ID_TRAMO = D.ID_TRAMO
+                 AND G.ID_SUBTRAMO = F.ID_SUBTRAMO
+                 AND (F.ID_NODO_ORIGEN = B.ID_NODO OR
+                     F.ID_NODO_DESTINO = B.ID_NODO)
+                 AND D.ID_TRAMO = I_ID_TRAMO
+                 AND NVL(C.VALOR_FIJO, 0) <> 0) J
+       WHERE S.ID_SUBTRAMO = ST.ID_SUBTRAMO
+         AND TP.ID_TIPO_CAMINO = S.ID_TIPO_CAMINO
+         AND T.ID_TRAMO = T.ID_TRAMO
+         AND ST.ID_TRAMO = T.ID_TRAMO
+         AND N1.ID_NODO = J.ID_NODO
+         AND T.ID_TIPO_SERVICIO = TS.ID_TIPO_SERVICIO
+         AND (S.ID_NODO_ORIGEN = N1.ID_NODO OR
+             S.ID_NODO_DESTINO = N1.ID_NODO)
+         AND T.ID_TRAMO = I_ID_TRAMO
+       GROUP BY N1.N_NODO,
+                TIPO,
+                VALOR_FIJO_NODO,
+                COEFICIENTE,
+                COEFICIENTE_NODO
+      UNION
+      SELECT COEFICIENTE_SUBTRAMO NOMBRE,
+             TIPO,
+             'Subtramo ' || S.N_SUBTRAMO APLICA,
+             NVL(VALOR_PORCENTUAL_SUBTRAMO, 0) MONTO
+        FROM T_SUBTRAMOS S,
+             T_SUBTRAMOS_TRAMO ST,
+             T_TIPOS_CAMINO TP,
+             T_TIPOS_SERVICIO TS,
+             T_TRAMOS T,
+             T_NODOS N1,
+             (SELECT S.ID_SUBTRAMO,
+                     'Porcentual' TIPO,
+                     C.N_COEFICIENTE COEFICIENTE_SUBTRAMO,
+                     NVL(VALOR_PORCENTUAL, 0) VALOR_PORCENTUAL_SUBTRAMO
+                FROM T_SUBTRAMOS             S,
+                     T_SUBTRAMOS_TRAMO       ST,
+                     T_TIPOS_CAMINO          TP,
+                     T_TIPOS_SERVICIO        TS,
+                     T_TRAMOS                X,
+                     T_COEFICIENTES_SUBTRAMO A,
+                     T_COEFICIENTES          C
+               WHERE S.ID_SUBTRAMO = ST.ID_SUBTRAMO
+                 AND TP.ID_TIPO_CAMINO = S.ID_TIPO_CAMINO
+                 AND ST.ID_TRAMO = X.ID_TRAMO
+                 AND X.ID_TIPO_SERVICIO = TS.ID_TIPO_SERVICIO
+                 AND A.ID_COEFICIENTE = C.ID_COEFICIENTE(+)
+                 AND A.ID_SUBTRAMO(+) = S.ID_SUBTRAMO
+                 AND (VALOR_PORCENTUAL IS NOT NULL OR VALOR_FIJO IS NOT NULL)
+                 AND X.ID_TRAMO = I_ID_TRAMO
+                 AND NVL(VALOR_PORCENTUAL, 0) <> 0
+              UNION
+              SELECT S.ID_SUBTRAMO,
+                     'Fijo' TIPO,
+                     C.N_COEFICIENTE COEFICIENTE_SUBTRAMO,
+                     NVL(VALOR_FIJO, 0) VALOR_FIJO_SUBTRAMO
+                FROM T_SUBTRAMOS             S,
+                     T_SUBTRAMOS_TRAMO       ST,
+                     T_TIPOS_CAMINO          TP,
+                     T_TIPOS_SERVICIO        TS,
+                     T_TRAMOS                X,
+                     T_COEFICIENTES_SUBTRAMO A,
+                     T_COEFICIENTES          C
+               WHERE S.ID_SUBTRAMO = ST.ID_SUBTRAMO
+                 AND TP.ID_TIPO_CAMINO = S.ID_TIPO_CAMINO
+                 AND ST.ID_TRAMO = X.ID_TRAMO
+                 AND X.ID_TIPO_SERVICIO = TS.ID_TIPO_SERVICIO
+                 AND A.ID_COEFICIENTE = C.ID_COEFICIENTE(+)
+                 AND A.ID_SUBTRAMO(+) = S.ID_SUBTRAMO
+                 AND (VALOR_PORCENTUAL IS NOT NULL OR VALOR_FIJO IS NOT NULL)
+                 AND X.ID_TRAMO = I_ID_TRAMO
+                 AND NVL(VALOR_FIJO, 0) <> 0) I
+       WHERE S.ID_SUBTRAMO = ST.ID_SUBTRAMO
+         AND TP.ID_TIPO_CAMINO = S.ID_TIPO_CAMINO
+         AND S.ID_SUBTRAMO = I.ID_SUBTRAMO
+         AND ST.ID_TRAMO = T.ID_TRAMO
+         AND T.ID_TIPO_SERVICIO = TS.ID_TIPO_SERVICIO
+         AND T.ID_TRAMO = I_ID_TRAMO
+       GROUP BY S.N_SUBTRAMO,
+                TIPO,
+                VALOR_PORCENTUAL_SUBTRAMO,
+                COEFICIENTE,
+                COEFICIENTE_SUBTRAMO
+      UNION
+      SELECT COEFICIENTE_TRAMO,
+             TIPO,
+             'Tramo ' || T.N_TRAMO NOMBRE_TRAMO,
+             NVL(VALOR_PORCENTUAL_TRAMO, 1)
+        FROM T_SUBTRAMOS S,
+             T_SUBTRAMOS_TRAMO ST,
+             T_TIPOS_CAMINO TP,
+             T_TIPOS_SERVICIO TS,
+             T_TRAMOS T,
+             T_NODOS N1,
+             (SELECT D.ID_TRAMO,
+                     'Porcentual' TIPO,
+                     C.N_COEFICIENTE COEFICIENTE_TRAMO,
+                     NVL(VALOR_PORCENTUAL, 0) VALOR_PORCENTUAL_TRAMO
+                FROM T_COEFICIENTES_TRAMO A,
+                     T_COEFICIENTES       C,
+                     T_TRAMOS             D,
+                     T_SUBTRAMOS          F,
+                     T_SUBTRAMOS_TRAMO    G,
+                     T_TIPOS_SERVICIO     H,
+                     T_TIPOS_CAMINO       I
+               WHERE A.ID_COEFICIENTE = C.ID_COEFICIENTE
+                 AND A.ID_TRAMO = D.ID_TRAMO
+                 AND G.ID_TRAMO = D.ID_TRAMO
+                 AND G.ID_SUBTRAMO = F.ID_SUBTRAMO
+                 AND I.ID_TIPO_CAMINO = F.ID_TIPO_CAMINO
+                 AND D.ID_TIPO_SERVICIO = H.ID_TIPO_SERVICIO
+                 AND NVL(C.VALOR_PORCENTUAL, 0) <> 0
+                 AND D.ID_TRAMO = I_ID_TRAMO
+              UNION
+              SELECT X.ID_TRAMO,
+                     'Fijo' TIPO,
+                     C.N_COEFICIENTE COEFICIENTE_TRAMO,
+                     NVL(VALOR_FIJO, 0) VALOR_FIJO_SUBTRAMO
+                FROM T_TRAMOS X, T_COEFICIENTES_TRAMO A, T_COEFICIENTES C
+               WHERE A.ID_COEFICIENTE = C.ID_COEFICIENTE(+)
+                 AND A.ID_TRAMO(+) = X.ID_TRAMO
+                 AND X.ID_TRAMO = I_ID_TRAMO
+                 AND NVL(VALOR_FIJO, 0) <> 0) I
+       WHERE S.ID_SUBTRAMO = ST.ID_SUBTRAMO
+         AND TP.ID_TIPO_CAMINO = S.ID_TIPO_CAMINO
+         AND ST.ID_TRAMO = T.ID_TRAMO
+         AND T.ID_TIPO_SERVICIO = TS.ID_TIPO_SERVICIO
+         AND (S.ID_NODO_ORIGEN = N1.ID_NODO OR
+             S.ID_NODO_DESTINO = N1.ID_NODO)
+         AND T.ID_TRAMO = I_ID_TRAMO
+       GROUP BY T.N_TRAMO,
+                TIPO,
+                VALOR_PORCENTUAL_TRAMO,
+                COEFICIENTE,
+                COEFICIENTE_TRAMO
+       ORDER BY 3 DESC;
+  
+  END SP_COEF_TRAMOS;
+  /**************************************************************
+  * Lista el tipo de servicio asociado a un determinado tramo   *
+  ***************************************************************/
+  PROCEDURE SP_TIPO_SERV_TRAMO(O_NOM_TIPO_SERV OUT T_TIPOS_SERVICIO.N_TIPO_SERVICIO%TYPE,
+                               O_TARIFA_DESDE  OUT T_TIPOS_SERVICIO.TARIFA_DESDE%TYPE,
+                               O_TARIFA_HASTA  OUT T_TIPOS_SERVICIO.TARIFA_HASTA%TYPE,
+                               I_ID_TRAMO      IN T_TRAMOS.ID_TRAMO%TYPE,
+                               I_FECHA         IN DATE DEFAULT NULL) IS
+  
+  BEGIN
+    SELECT S.N_TIPO_SERVICIO, S.TARIFA_DESDE, S.TARIFA_HASTA
+      INTO O_NOM_TIPO_SERV, O_TARIFA_DESDE, O_TARIFA_HASTA
+      FROM T_TRAMOS T, T_TIPOS_SERVICIO S
+     WHERE T.ID_TIPO_SERVICIO = S.ID_TIPO_SERVICIO
+       AND T.ID_TRAMO = I_ID_TRAMO
+       AND TRUNC(NVL(I_FECHA, SYSDATE)) BETWEEN TRUNC(T.FEC_DESDE) AND
+           TRUNC(NVL(T.FEC_HASTA, SYSDATE));
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      RETURN;
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar los tipos de servicio por tramo. ' ||
+                              SQLERRM);
+    
+  END SP_TIPO_SERV_TRAMO;
+
+  /******************************************************
+  * Lista los parametros                               *
+  ******************************************************/
+  PROCEDURE SP_LIST_VARIABLES(O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT V.N_VARIABLE,
+             V.VALOR,
+             V.FEC_DESDE  FECHA_DESDE,
+             V.FEC_HASTA  FECHA_HASTA
+        FROM T_VARIABLES_TARIFICACION V
+       WHERE V.FEC_HASTA IS NULL;
+  
+  END SP_LIST_VARIABLES;
+
+  /******************************************************
+  * Alta parametros                                    *
+  ******************************************************/
+  PROCEDURE SP_ALTA_VARIABLES( /*I_FECHA_HASTA IN T_VARIABLES_TARIFICACION.FEC_HASTA%TYPE DEFAULT NULL,*/I_N_VARIABLE IN T_VARIABLES_TARIFICACION.N_VARIABLE%TYPE,
+                              --  I_CODIGO      IN T_VARIABLES_TARIFICACION.COD_VARIABLE%TYPE,
+                              I_VALOR IN T_VARIABLES.VALOR%TYPE DEFAULT NULL) IS
+  
+    V_VARIABLE     T_VARIABLES_TARIFICACION.ID_VARIABLE%TYPE;
+    V_COD_VARIABLE T_VARIABLES_TARIFICACION.COD_VARIABLE%TYPE;
+    V_CANTIDAD     NUMBER;
+  
+  BEGIN
+  
+    SELECT COUNT(1)
+      INTO V_CANTIDAD
+      FROM T_VARIABLES_TARIFICACION
+     WHERE N_VARIABLE = I_N_VARIABLE
+       AND FEC_HASTA IS NULL;
+  
+    IF V_CANTIDAD > 0 THEN
+    
+      BEGIN
+        SELECT COD_VARIABLE
+          INTO V_COD_VARIABLE
+          FROM T_VARIABLES_TARIFICACION
+         WHERE N_VARIABLE = I_N_VARIABLE
+           AND FEC_HASTA IS NULL /*TRUNC(SYSDATE) BETWEEN TRUNC(FEC_DESDE) AND
+                                                                                               TRUNC(FEC_HASTA) OR FEC_HASTA IS NULL*/
+        ;
+      EXCEPTION
+        WHEN OTHERS THEN
+          V_COD_VARIABLE := NULL;
+      END;
+    ELSE
+      IF I_N_VARIABLE = 'TARIFA BASICA KILOMETRICA' THEN
+        V_COD_VARIABLE := 'TBK';
+      ELSE
+        V_COD_VARIABLE := 'TA';
+      END IF;
+    END IF;
+  
+    SELECT NVL(MAX(ID_VARIABLE) + 1, 1)
+      INTO V_VARIABLE
+      FROM T_VARIABLES_TARIFICACION;
+  
+    UPDATE T_VARIABLES_TARIFICACION V
+       SET V.FEC_HASTA = SYSDATE
+     WHERE V.FEC_HASTA IS NULL
+       AND N_VARIABLE = I_N_VARIABLE;
+  
+    INSERT INTO T_VARIABLES_TARIFICACION
+      (ID_VARIABLE, N_VARIABLE, COD_VARIABLE, VALOR, FEC_DESDE, FEC_HASTA)
+    VALUES
+      (V_VARIABLE, I_N_VARIABLE, V_COD_VARIABLE, I_VALOR, SYSDATE, NULL);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el parametro - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_VARIABLES;
+
+/******************************************************
+  * Baja parametros                                    *
+  ******************************************************/
+/* PROCEDURE SP_BAJA_VARIABLES(I_N_VARIABLE IN T_VARIABLES_TARIFICACION.N_VARIABLE%TYPE DEFAULT NULL) IS
+  
+  BEGIN
+    UPDATE T_VARIABLES_TARIFICACION V
+       SET V.FEC_HASTA = SYSDATE
+     WHERE V.FEC_HASTA IS NULL;
+    \* DELETE FROM T_VARIABLES_TARIFICACION V
+    WHERE V.FEC_ALTA = (SELECT MAX(FEC_ALTA) FROM T_VARIABLES_TARIFICACION);*\
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de baja el parametro - ' ||
+                              SQLERRM);
+    
+  END SP_BAJA_VARIABLES;*/
+
+END PKG_TRAMOS;
+/
