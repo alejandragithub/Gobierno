@@ -1,0 +1,1599 @@
+CREATE OR REPLACE PACKAGE PKG_LIQUIDACIONES AS
+
+  ----------------------------------------------------------------------------------------------------------
+  -- List T_PERIDOS_LIQUIDACION
+  ----------------------------------------------------------------------------------------------------------
+  PROCEDURE SP_LIST_PERIODOS_LIQUIDACION(O_CURSOR   OUT SYS_REFCURSOR,
+                                         I_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE DEFAULT NULL);
+
+  -- consulta principal de la pantalla de preliquidacion
+  PROCEDURE SP_LIST_PRELIQUIDACION(I_ID_PERIODO              IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                   I_LISTA_ID_EMPRESA        IN VARCHAR2 DEFAULT NULL,
+                                   I_LISTA_ID_ADMINISTRADORA IN VARCHAR2 DEFAULT NULL,
+                                   I_LISTA_ID_TIPO_EMPRESA   IN VARCHAR2 DEFAULT NULL,
+                                   I_LIQUIDADO_SN            IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL,
+                                   I_ID_PROGRAMA             IN T_PROGRAMAS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                   O_CURSOR                  OUT SYS_REFCURSOR);
+
+  ----------------------------------------------------------------------------------------------------------
+  -- Procedimiento para la Liquidacion
+  ----------------------------------------------------------------------------------------------------------
+  PROCEDURE SP_PRELIQUIDAR(I_ID_PERIODO       IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                           I_USUARIO          IN T_LIQUIDACIONES.USR_LIQUIDACION%TYPE,
+                           I_ID_EMPRESA       IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE DEFAULT NULL,
+                           I_ID_PROGRAMA      IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                           I_TIPO_LIQUIDACION IN T_LIQUIDACIONES.ID_TIPO_LIQUIDACION%TYPE,
+                           I_LOTE             IN T_LIQUIDACIONES.ID_LOTE_LIQUIDACION%TYPE);
+
+  PROCEDURE SP_LIQUIDAR(I_ID_PERIODO  IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                        I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE);
+
+  PROCEDURE SP_PRELIQ_A_CONFIRMAR(I_ID_PERIODO  IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                  I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                  O_CURSOR      OUT SYS_REFCURSOR);
+
+  -- consulta de tarjetas en la pantalla de preliquidacion
+  PROCEDURE SP_LIST_TARJETAS(I_ID_PERIODO              IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                             I_LISTA_ID_EMPRESA        IN VARCHAR2 DEFAULT NULL,
+                             I_LISTA_ID_ADMINISTRADORA IN VARCHAR2 DEFAULT NULL,
+                             I_LISTA_ID_TIPO_EMPRESA   IN VARCHAR2 DEFAULT NULL,
+                             O_CURSOR                  OUT SYS_REFCURSOR);
+
+  -- consulta principal de la pantalla de liquidacion                            
+  PROCEDURE SP_LIST_LIQUIDACION(I_ID_PERIODO  IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                O_CURSOR      OUT SYS_REFCURSOR);
+
+  -- lista tipo liquidaciones                             
+  PROCEDURE SP_LIST_TIPO_LIQUIDACION(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LLAMA_PRELIQUIDADOR(I_ID_PERIODO     IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                   I_USUARIO        IN T_LIQUIDACIONES.USR_LIQUIDACION%TYPE,
+                                   I_LISTA_EMPRESAS IN VARCHAR2 DEFAULT NULL,
+                                   I_ID_PROGRAMA    IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                   I_FECHA_DESDE    IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                   I_FECHA_HASTA    IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE);
+
+  PROCEDURE SP_REP_VALIDACIONES(I_ID_PROGRAMA    NUMBER,
+                                I_VIGENCIA_DESDE DATE DEFAULT NULL,
+                                I_VIGENCIA_HASTA DATE DEFAULT NULL,
+                                O_CURSOR         OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_CANT_RECTIFICATIVAS(I_PERIODO      IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE DEFAULT NULL,
+                                        I_PROGRAMA     IN T_MOVIMIENTOS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                        I_EMPRESA      IN T_MOVIMIENTOS.ID_EMPRESA%TYPE DEFAULT NULL,
+                                        I_CUIL_USUARIO IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                        O_CURSOR       OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_CABECERA_PRELIQUIDACION(I_ID_PERIODO  IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                       I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                       O_CURSOR      OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_BORRAR_PRELIQUIDACION(I_ID_PERIODO  IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                     I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE);
+
+  PROCEDURE SP_VERIFICAR_RECTIFICATIVAS(I_ID_PERIODO  IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                        I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                        O_MENSAJE     OUT VARCHAR2);
+
+  PROCEDURE SP_LLAMA_LIQUIDADOR(I_ID_PERIODO     IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                I_USUARIO        IN T_LIQUIDACIONES.USR_LIQUIDACION%TYPE,
+                                I_LISTA_EMPRESAS IN VARCHAR2 DEFAULT NULL,
+                                I_ID_PROGRAMA    IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                I_FECHA_DESDE    IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_FECHA_HASTA    IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE);
+
+  PROCEDURE SP_LIQUIDADOR(I_ID_PERIODO       IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                          I_USUARIO          IN T_LIQUIDACIONES.USR_LIQUIDACION%TYPE,
+                          I_ID_EMPRESA       IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE DEFAULT NULL,
+                          I_ID_PROGRAMA      IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                          I_TIPO_LIQUIDACION IN T_LIQUIDACIONES.ID_TIPO_LIQUIDACION%TYPE,
+                          I_LOTE             IN T_LIQUIDACIONES.ID_LOTE_LIQUIDACION%TYPE);
+END PKG_LIQUIDACIONES;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_LIQUIDACIONES AS
+
+  /*************************************************
+  * Lista los periodos de liquidacion              *
+  * Se usa para armar los filtros de las consultas *
+  *************************************************/
+  PROCEDURE SP_LIST_PERIODOS_LIQUIDACION(O_CURSOR   OUT SYS_REFCURSOR,
+                                         I_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE DEFAULT NULL) IS
+  
+    V_SQL        VARCHAR2(10000);
+    V_SQLFILTROS VARCHAR2(10000);
+  
+  BEGIN
+    IF I_PROGRAMA <> 0 THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND P.ID_PROGRAMA = ' || I_PROGRAMA;
+    END IF;
+  
+    V_SQL := 'SELECT DISTINCT P.ID_PERIODO,
+                      P.N_PERIODO,
+                      P.ACTIVO,
+                      P.DIAS_REAJUSTE,
+                      PR.N_PROGRAMA,
+                      TRUNC(P.FEC_DESDE) AS FEC_DESDE,
+                      TRUNC(P.FEC_HASTA) AS FEC_HASTA,
+                      TRUNC(P.FEC_CIERRE) AS FECHA_CIERRE,
+                      P.ID_PROGRAMA
+        FROM T_PERIODOS_LIQUIDACION P, T_LIQUIDACIONES L, T_PROGRAMAS PR
+       WHERE L.ID_PERIODO(+) = P.ID_PERIODO 
+       AND PR.ID_PROGRAMA=P.ID_PROGRAMA ' || V_SQLFILTROS ||
+             ' ORDER BY P.ID_PERIODO';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar el listado de periodos liquidados. ' ||
+                              SQLERRM);
+  END SP_LIST_PERIODOS_LIQUIDACION;
+
+  /********************************************************
+  * Procedimiento principal de la pantalla de liquidación *
+  * Lista los boletos en condiciones de ser liquidados    *
+  ********************************************************/
+  PROCEDURE SP_LIST_LIQUIDACION(I_ID_PERIODO  IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                O_CURSOR      OUT SYS_REFCURSOR) IS
+  
+    V_FEC_DESDE             T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE;
+    V_FEC_HASTA             T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE;
+    V_LIQUIDACIONES_PERIODO NUMBER;
+  
+  BEGIN
+  
+    SELECT P.FEC_DESDE, P.FEC_HASTA
+      INTO V_FEC_DESDE, V_FEC_HASTA
+      FROM T_PERIODOS_LIQUIDACION P
+     WHERE P.ID_PERIODO = I_ID_PERIODO;
+  
+    SELECT COUNT(8)
+      INTO V_LIQUIDACIONES_PERIODO
+      FROM T_LIQUIDACIONES L
+     WHERE L.ID_PERIODO = I_ID_PERIODO
+       AND L.ID_PROGRAMA = NVL(I_ID_PROGRAMA, L.ID_PROGRAMA);
+  
+    OPEN O_CURSOR FOR
+    /* SELECT A.ID_ADMINISTRADORA
+                                                                                        ,A.N_ADMINISTRADORA
+                                                                                        ,M.ID_EMPRESA
+                                                                                        ,E.CUIT
+                                                                                        ,E.RAZON_SOCIAL
+                                                                                        ,COUNT(M.ID_MOVIMIENTO) CANTIDAD_BOLETOS
+                                                                                        ,SUM(NVL(M.PRECIO_GOBIERNO, 0) + NVL(M.PRECIO_VALORIZADO, 0)) MONTO_BOLETOS
+                                                                                        ,(SELECT COUNT(8)
+                                                                                            FROM ABONO_ESTUDIANTIL.T_STOCK_TARJETA S
+                                                                                           WHERE S.ID_EMPRESA = M.ID_EMPRESA
+                                                                                             AND S.ANIO = 2019
+                                                                                             AND S.COBRA_SN = 'N'
+                                                                                             AND to_date(S.FECHA,'dd/mm/rrrr') BETWEEN to_date(V_FEC_DESDE,'dd/mm/rrrr') AND to_date(V_FEC_HASTA,'dd/mm/rrrr')
+                                                                                             AND V_LIQUIDACIONES_PERIODO = 0) CANTIDAD_TARJETAS
+                                                                                        ,(SELECT COUNT(8) * 60
+                                                                                            FROM ABONO_ESTUDIANTIL.T_STOCK_TARJETA S
+                                                                                           WHERE S.ID_EMPRESA = M.ID_EMPRESA
+                                                                                             AND S.ANIO = 2019
+                                                                                             AND S.COBRA_SN = 'N'
+                                                                                             AND to_date(S.FECHA,'dd/mm/rrrr') BETWEEN to_date(V_FEC_DESDE,'dd/mm/rrrr') AND to_date(V_FEC_HASTA,'dd/mm/rrrr')
+                                                                                             AND V_LIQUIDACIONES_PERIODO = 0) MONTO_TARJETAS
+                                                                                    FROM T_MOVIMIENTOS                M
+                                                                                        ,TRANSPORTE.T_EMPRESAS        E
+                                                                                        ,TRANSPORTE.T_ADMINISTRADORAS A
+                                                                                   WHERE M.ID_EMPRESA = E.ID_EMPRESA
+                                                                                     AND M.ID_ADMINISTRADORA = A.ID_ADMINISTRADORA
+                                                                                     AND M.ID_TIPO_MOVIMIENTO = 1
+                                                                                     AND M.ID_ESTADO = 1
+                                                                                     AND M.ID_RESULTADO IN (1, 4)
+                                                                                     AND M.VALORIZAR_SN = 'S'
+                                                                                     AND M.LIQUIDADO_SN IS NULL
+                                                                                     AND M.FEC_MOVIMIENTO BETWEEN TRUNC(V_FEC_DESDE) AND
+                                                                                         TRUNC(V_FEC_HASTA + 1) - 1 / 24 / 60 / 60
+                                                                                     AND M.ID_PROGRAMA = NVL(I_ID_PROGRAMA, M.ID_PROGRAMA)
+                                                                                   GROUP BY A.ID_ADMINISTRADORA
+                                                                                           ,A.N_ADMINISTRADORA
+                                                                                           ,M.ID_EMPRESA
+                                                                                           ,E.CUIT
+                                                                                           ,E.RAZON_SOCIAL
+                                                                                   ORDER BY A.N_ADMINISTRADORA
+                                                                                           ,E.RAZON_SOCIAL;*/
+    
+      SELECT A.ID_ADMINISTRADORA,
+             A.N_ADMINISTRADORA,
+             M.ID_EMPRESA,
+             E.CUIT,
+             E.RAZON_SOCIAL,
+             COUNT(M.ID_MOVIMIENTO) CANTIDAD_BOLETOS,
+             SUM(NVL(M.PRECIO_GOBIERNO, 0) + NVL(M.PRECIO_VALORIZADO, 0)) MONTO_BOLETOS,
+             (SELECT COUNT(DISTINCT UIDS)
+                FROM T_TARJETAS              S,
+                     T_TARJETAS_AUTORIZACION TA,
+                     T_AUTORIZACIONES        AU
+               WHERE S.ID_ADMINISTRADORA = A.ID_ADMINISTRADORA
+                 AND S.ID_TARJETA = TA.ID_TARJETA
+                 AND S.ANIO = 2019
+                 AND AU.ID_AUTORIZACION = TA.ID_AUTORIZACION
+                 AND M.ID_EMPRESA = AU.ID_EMPRESA
+                 AND S.COBRA_SN = 'N'
+                 AND TO_DATE(TA.FEC_DESDE, 'DD/MM/RRRR') BETWEEN
+                     TO_DATE(V_FEC_DESDE, 'DD/MM/RRRR') AND
+                     TO_DATE(V_FEC_HASTA, 'DD/MM/RRRR')
+                 AND V_LIQUIDACIONES_PERIODO = 0) CANTIDAD_TARJETAS,
+             (SELECT COUNT(DISTINCT UIDS) * 60
+                FROM T_TARJETAS              S,
+                     T_TARJETAS_AUTORIZACION TA,
+                     T_AUTORIZACIONES        AU
+               WHERE S.ID_ADMINISTRADORA = A.ID_ADMINISTRADORA
+                 AND AU.ID_AUTORIZACION = TA.ID_AUTORIZACION
+                 AND M.ID_EMPRESA = AU.ID_EMPRESA
+                 AND S.ID_TARJETA = TA.ID_TARJETA
+                 AND S.ANIO = 2019
+                 AND S.COBRA_SN = 'N'
+                 AND TO_DATE(TA.FEC_DESDE, 'DD/MM/RRRR') BETWEEN
+                     TO_DATE(V_FEC_DESDE, 'DD/MM/RRRR') AND
+                     TO_DATE(V_FEC_HASTA, 'DD/MM/RRRR')
+                 AND V_LIQUIDACIONES_PERIODO = 0) MONTO_TARJETAS
+        FROM T_MOVIMIENTOS                M,
+             TRANSPORTE.T_EMPRESAS        E,
+             TRANSPORTE.T_ADMINISTRADORAS A
+       WHERE M.ID_EMPRESA = E.ID_EMPRESA
+         AND M.ID_ADMINISTRADORA = A.ID_ADMINISTRADORA
+         AND M.ID_TIPO_MOVIMIENTO = 1
+         AND M.ID_ESTADO = 1
+         AND M.ID_RESULTADO IN (1, 4)
+         AND M.VALORIZAR_SN = 'S'
+         AND M.LIQUIDADO_SN IS NULL
+         AND M.FEC_MOVIMIENTO BETWEEN TRUNC(V_FEC_DESDE) AND
+             TRUNC(V_FEC_HASTA + 1) - 1 / 24 / 60 / 60
+         AND M.ID_PROGRAMA = NVL(I_ID_PROGRAMA, M.ID_PROGRAMA)
+       GROUP BY A.ID_ADMINISTRADORA,
+                A.N_ADMINISTRADORA,
+                M.ID_EMPRESA,
+                E.CUIT,
+                E.RAZON_SOCIAL
+       ORDER BY A.N_ADMINISTRADORA, E.RAZON_SOCIAL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al recuperar el listado de boletos y tarjetas a liquidar. ' ||
+                              SQLERRM);
+  END SP_LIST_LIQUIDACION;
+
+  PROCEDURE SP_PRELIQ_A_CONFIRMAR(I_ID_PERIODO  IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                  I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                  O_CURSOR      OUT SYS_REFCURSOR) IS
+  
+    V_FEC_DESDE             T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE;
+    V_FEC_HASTA             T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE;
+  --  V_LIQUIDACIONES_PERIODO NUMBER;
+  
+  BEGIN
+  
+    SELECT P.FEC_DESDE, P.FEC_HASTA
+      INTO V_FEC_DESDE, V_FEC_HASTA
+      FROM T_PERIODOS_LIQUIDACION P
+     WHERE P.ID_PERIODO = I_ID_PERIODO;
+  
+ /*   SELECT COUNT(8)
+      INTO V_LIQUIDACIONES_PERIODO
+      FROM T_LIQUIDACIONES L
+     WHERE L.ID_PERIODO = I_ID_PERIODO
+       AND L.ID_PROGRAMA = NVL(I_ID_PROGRAMA, L.ID_PROGRAMA)
+       AND L.ID_TIPO_LIQUIDACION = 7;*/
+  
+    OPEN O_CURSOR FOR
+    
+      SELECT A.ID_ADMINISTRADORA,
+             A.N_ADMINISTRADORA,
+             M.ID_EMPRESA,
+             E.CUIT,
+             E.RAZON_SOCIAL,
+             COUNT(M.ID_MOVIMIENTO) CANTIDAD_BOLETOS,
+             SUM(NVL(M.PRECIO_GOBIERNO, 0) + NVL(M.PRECIO_VALORIZADO, 0)) MONTO_BOLETOS,
+             (SELECT COUNT(DISTINCT UIDS)
+                FROM T_TARJETAS              S,
+                     T_TARJETAS_AUTORIZACION TA,
+                     T_AUTORIZACIONES        AU
+               WHERE S.ID_ADMINISTRADORA = A.ID_ADMINISTRADORA
+                 AND S.ID_TARJETA = TA.ID_TARJETA
+                 AND S.ANIO = 2019
+                 AND AU.ID_AUTORIZACION = TA.ID_AUTORIZACION
+                 AND M.ID_EMPRESA = AU.ID_EMPRESA
+                 AND S.COBRA_SN = 'N'
+                 AND TO_DATE(TA.FEC_DESDE, 'DD/MM/RRRR') BETWEEN
+                     TO_DATE(V_FEC_DESDE, 'DD/MM/RRRR') AND
+                     TO_DATE(V_FEC_HASTA, 'DD/MM/RRRR')/*
+                 AND V_LIQUIDACIONES_PERIODO = 0*/) CANTIDAD_TARJETAS,
+             (SELECT COUNT(DISTINCT UIDS) * 60
+                FROM T_TARJETAS              S,
+                     T_TARJETAS_AUTORIZACION TA,
+                     T_AUTORIZACIONES        AU
+               WHERE S.ID_ADMINISTRADORA = A.ID_ADMINISTRADORA
+                 AND AU.ID_AUTORIZACION = TA.ID_AUTORIZACION
+                 AND M.ID_EMPRESA = AU.ID_EMPRESA
+                 AND S.ID_TARJETA = TA.ID_TARJETA
+                 AND S.ANIO = 2019
+                 AND S.COBRA_SN = 'N'
+                 AND TO_DATE(TA.FEC_DESDE, 'DD/MM/RRRR') BETWEEN
+                     TO_DATE(V_FEC_DESDE, 'DD/MM/RRRR') AND
+                     TO_DATE(V_FEC_HASTA, 'DD/MM/RRRR')/*
+                 AND V_LIQUIDACIONES_PERIODO = 0*/) MONTO_TARJETAS
+        FROM T_MOVIMIENTOS                             M,
+             TRANSPORTE.T_EMPRESAS                     E,
+             TRANSPORTE.T_ADMINISTRADORAS              A,
+             MAASP_TUNI_TPTE.t_Liquidaciones           l,
+             MAASP_TUNI_TPTE.t_Movimientos_Liquidacion mv
+       WHERE M.ID_EMPRESA = E.ID_EMPRESA
+         AND M.ID_ADMINISTRADORA = A.ID_ADMINISTRADORA
+         AND M.ID_TIPO_MOVIMIENTO = 1
+         AND M.ID_ESTADO = 1
+         AND M.ID_RESULTADO IN (1, 4)
+         AND M.VALORIZAR_SN = 'S'
+        -- AND M.LIQUIDADO_SN = 'S'
+         AND M.FEC_MOVIMIENTO BETWEEN TRUNC(V_FEC_DESDE) AND
+             TRUNC(V_FEC_HASTA + 1) - 1 / 24 / 60 / 60
+         AND M.ID_PROGRAMA = NVL(I_ID_PROGRAMA, M.ID_PROGRAMA)
+         AND L.ID_LIQUIDACION = MV.ID_LIQUIDACION
+         AND M.ID_MOVIMIENTO = MV.ID_MOVIMIENTO
+         AND L.ID_TIPO_LIQUIDACION IN (7, 8)
+       GROUP BY A.ID_ADMINISTRADORA,
+                A.N_ADMINISTRADORA,
+                M.ID_EMPRESA,
+                E.CUIT,
+                E.RAZON_SOCIAL
+       ORDER BY A.N_ADMINISTRADORA, E.RAZON_SOCIAL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al recuperar el listado de boletos y tarjetas a liquidar. ' ||
+                              SQLERRM);
+  END SP_PRELIQ_A_CONFIRMAR;
+
+  /***************************************************************
+  * Procedimiento principal de la pantalla de preliquidación     *
+  * Lista los boletos agrupados que esten liquidados y validados *
+  ***************************************************************/
+  PROCEDURE SP_LIST_PRELIQUIDACION(I_ID_PERIODO              IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                   I_LISTA_ID_EMPRESA        IN VARCHAR2 DEFAULT NULL,
+                                   I_LISTA_ID_ADMINISTRADORA IN VARCHAR2 DEFAULT NULL,
+                                   I_LISTA_ID_TIPO_EMPRESA   IN VARCHAR2 DEFAULT NULL,
+                                   I_LIQUIDADO_SN            IN T_MOVIMIENTOS.LIQUIDADO_SN%TYPE DEFAULT NULL,
+                                   I_ID_PROGRAMA             IN T_PROGRAMAS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                   O_CURSOR                  OUT SYS_REFCURSOR) IS
+  
+    V_SQL        VARCHAR2(10000);
+    V_SQLFILTROS VARCHAR2(10000);
+    V_FEC_DESDE  T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE;
+    V_FEC_HASTA  T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE;
+  
+  BEGIN
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_EMPRESA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_EMPRESA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ADMINISTRADORA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_ADMINISTRADORA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_EMPRESA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_TIPO_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    -- Armar Filtros
+    V_SQLFILTROS := '';
+  
+    IF I_LISTA_ID_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND m.ID_EMPRESA in( ' ||
+                      I_LISTA_ID_EMPRESA || ' )';
+    END IF;
+  
+    IF I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND m.ID_ADMINISTRADORA in( ' ||
+                      I_LISTA_ID_ADMINISTRADORA || ' )';
+    END IF;
+  
+    IF I_LIQUIDADO_SN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' and NVL(m.LIQUIDADO_SN,''N'') = ''' ||
+                      I_LIQUIDADO_SN || ''' ';
+    END IF;
+  
+    IF I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND m.ID_TIPO_EMPRESA IN( ' ||
+                      I_LISTA_ID_TIPO_EMPRESA || ' )';
+    END IF;
+  
+    IF I_ID_PROGRAMA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND m.ID_PROGRAMA = ' ||
+                      I_ID_PROGRAMA || ' ';
+    END IF;
+  
+    V_SQL := 'WITH BOLETOS AS
+       (SELECT ID_ADMINISTRADORA
+              ,ID_EMPRESA
+              ,SUM(DECODE(M.ID_RESULTADO, 1, 1, 0)) CANTIDAD_BOLETOS_APROBADOS
+              ,SUM(DECODE(M.ID_RESULTADO
+                         ,1
+                         ,NVL(M.PRECIO_GOBIERNO, 0) + NVL(M.PRECIO_VALORIZADO, 0)
+                         ,0)) MONTO_APROBADOS
+              ,SUM(DECODE(M.ID_RESULTADO, 2, 1, 0)) CANTIDAD_BOLETOS_OBSERVADOS
+              ,SUM(DECODE(M.ID_RESULTADO
+                         ,2
+                         ,NVL(M.PRECIO_GOBIERNO, 0) + NVL(M.PRECIO_VALORIZADO, 0)
+                         ,0)) MONTO_OBSERVADOS
+              ,SUM(DECODE(M.ID_RESULTADO, 3, 1, 0)) CANTIDAD_BOLETOS_RECHAZADOS
+              ,SUM(DECODE(M.ID_RESULTADO
+                         ,3
+                         ,NVL(M.PRECIO_GOBIERNO, 0) + NVL(M.PRECIO_VALORIZADO, 0)
+                         ,0)) MONTO_RECHAZADOS
+              ,SUM(DECODE(M.ID_RESULTADO, 4, 1, 0)) CANTIDAD_BOLETOS_OBS_APROBADOS
+              ,SUM(DECODE(M.ID_RESULTADO
+                         ,4
+                         ,NVL(M.PRECIO_GOBIERNO, 0) + NVL(M.PRECIO_VALORIZADO, 0)
+                         ,0)) MONTO_OBS_APROBADOS
+          FROM T_MOVIMIENTOS M
+         WHERE M.FEC_MOVIMIENTO BETWEEN TRUNC(:FD) AND TRUNC(:FH+1) -1/24/60/60
+           AND M.ID_TIPO_MOVIMIENTO = 1
+           AND M.ID_ESTADO = 1
+           AND m.VALORIZAR_SN = ''S''
+           AND m.VALIDADO_SN = ''S'' ' || V_SQLFILTROS || '
+         GROUP BY m.ID_ADMINISTRADORA
+                 ,m.ID_EMPRESA)
+      SELECT A.N_ADMINISTRADORA
+            ,B.ID_EMPRESA
+            ,E.CUIT
+            ,E.RAZON_SOCIAL N_EMPRESA
+            ,T.N_TIPO_EMPRESA
+            ,B.CANTIDAD_BOLETOS_APROBADOS
+            ,B.MONTO_APROBADOS
+            ,B.CANTIDAD_BOLETOS_OBSERVADOS
+            ,B.MONTO_OBSERVADOS
+            ,B.CANTIDAD_BOLETOS_RECHAZADOS
+            ,B.MONTO_RECHAZADOS
+            ,B.CANTIDAD_BOLETOS_OBS_APROBADOS
+            ,B.MONTO_OBS_APROBADOS
+        FROM BOLETOS                      B
+            ,TRANSPORTE.T_EMPRESAS        E
+            ,TRANSPORTE.T_EMPRESAS_X_TIPO X
+            ,TRANSPORTE.T_TIPOS_EMPRESA   T
+            ,TRANSPORTE.T_ADMINISTRADORAS A
+       WHERE B.ID_EMPRESA = E.ID_EMPRESA
+         AND B.ID_EMPRESA = X.ID_EMPRESA
+         AND X.ID_TIPO_EMPRESA = T.ID_TIPO_EMPRESA
+         AND B.ID_ADMINISTRADORA = A.ID_ADMINISTRADORA
+       ORDER BY N_ADMINISTRADORA
+               ,N_EMPRESA';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    -- busco las fechas del periodo indicado
+    SELECT P.FEC_DESDE, P.FEC_HASTA
+      INTO V_FEC_DESDE, V_FEC_HASTA
+      FROM T_PERIODOS_LIQUIDACION P
+     WHERE P.ID_PERIODO = I_ID_PERIODO;
+  
+    OPEN O_CURSOR FOR V_SQL
+      USING V_FEC_DESDE, V_FEC_HASTA;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar el listado de movimientos para la preliquidacion. ' ||
+                              SQLERRM);
+  END SP_LIST_PRELIQUIDACION;
+
+  /* **************************************************************************
+  * Procedimiento principal de liquidacion                                    *
+  *                                                                           *
+  * Toma los boletos en condiciones de liquidar para un periodo, determina el *
+  * tipo de liquidacion y la genera. Tambien liquida tarjetas en caso de ser  *
+  * la primera liquidación de ese periodo.                                    *
+  ****************************************************************************/
+  PROCEDURE SP_PRELIQUIDAR(I_ID_PERIODO       IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                           I_USUARIO          IN T_LIQUIDACIONES.USR_LIQUIDACION%TYPE,
+                           I_ID_EMPRESA       IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE DEFAULT NULL,
+                           I_ID_PROGRAMA      IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                           I_TIPO_LIQUIDACION IN T_LIQUIDACIONES.ID_TIPO_LIQUIDACION%TYPE,
+                           I_LOTE             IN T_LIQUIDACIONES.ID_LOTE_LIQUIDACION%TYPE) IS
+  
+    V_ID_LIQUIDACION T_LIQUIDACIONES.ID_LIQUIDACION%TYPE;
+    V_ID_GRUPO       T_LIQUIDACIONES.ID_GRUPO%TYPE;
+    --V_ID_TIPO_LIQUIDACION T_LIQUIDACIONES.ID_TIPO_LIQUIDACION%TYPE;
+    V_FEC_DESDE     T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE;
+    V_FEC_HASTA     T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE;
+    V_CANT_TARJETAS NUMBER;
+    --  V_ID_LOTE_LIQUIDACION T_LIQUIDACIONES.ID_LOTE_LIQUIDACION%TYPE;
+    --  V_ID_EMPRESA          VARCHAR2(50);
+  
+    CURSOR PRINCIPAL(I_DESDE T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                     I_HASTA T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE) IS
+      SELECT M.ID_EMPRESA,
+             NVL(SUM(CASE
+                       WHEN M.ID_RESULTADO IN (1, 4) THEN
+                        M.PRECIO
+                       ELSE
+                        0.0
+                     END),
+                 0) PRECIO_EMPRESA,
+             NVL(SUM(CASE
+                       WHEN M.ID_RESULTADO IN (1, 4) THEN
+                        M.PRECIO_GOBIERNO
+                       ELSE
+                        0.0
+                     END),
+                 0) PRECIO_GOBIERNO,
+             NVL(SUM(CASE
+                       WHEN M.ID_RESULTADO IN (1, 4) THEN
+                        (NVL(M.PRECIO_GOBIERNO, 0) + NVL(M.PRECIO_VALORIZADO, 0))
+                       ELSE
+                        0.0
+                     END),
+                 0) PRECIO_VALORIZADO,
+             COUNT(DECODE(M.ID_RESULTADO, 1, 1)) CANT_APROBADOS,
+             COUNT(DECODE(M.ID_RESULTADO, 4, 1)) CANT_OBSERVADOSAPROBADOS,
+             COUNT(DECODE(M.ID_RESULTADO, 2, 1)) CANT_OBSERVADOS,
+             COUNT(DECODE(M.ID_RESULTADO, 3, 1)) CANT_RECHAZADOS
+        FROM T_MOVIMIENTOS M
+       WHERE M.FEC_MOVIMIENTO BETWEEN TRUNC(I_DESDE) AND
+             TRUNC(I_HASTA + 1) - 1 / 24 / 60 / 60
+         AND M.ID_TIPO_MOVIMIENTO = 1
+         AND M.ID_ESTADO = 1
+         AND M.VALIDADO_SN = 'S' --VALIDADO
+         AND M.VALORIZAR_SN = 'S' -- TARIFICADO
+         AND M.LIQUIDADO_SN IS NULL --NO DEBE ESTAR LIQUIDADO
+         AND M.ID_EMPRESA = NVL(I_ID_EMPRESA, M.ID_EMPRESA)
+         AND M.ID_PROGRAMA = I_ID_PROGRAMA
+       GROUP BY M.ID_EMPRESA
+       ORDER BY M.ID_EMPRESA;
+  
+  BEGIN
+  
+    --seteo info de sesion
+    DBMS_APPLICATION_INFO.SET_MODULE(MODULE_NAME => 'LIQUIDADOR_BEG',
+                                     -- controlo que se informe el programa
+                                     ACTION_NAME => 'Determinando el Lote a Liquidar');
+  
+    IF I_ID_PROGRAMA IS NULL THEN
+      RAISE_APPLICATION_ERROR(-20098,
+                              'Debe indicarse el programa a liquidar');
+    END IF;
+  
+    -- determino fechas y si se puede liquidar el periodo indicado
+    SELECT P.FEC_DESDE, P.FEC_HASTA
+      INTO V_FEC_DESDE, V_FEC_HASTA
+      FROM T_PERIODOS_LIQUIDACION P
+     WHERE P.ID_PERIODO = I_ID_PERIODO;
+  
+    IF TRUNC(V_FEC_HASTA) >= TRUNC(SYSDATE) THEN
+      RAISE_APPLICATION_ERROR(-20099,
+                              'No se puede liquidar un período aún no cerrado. El período indicado cierra el ' ||
+                              TO_CHAR(V_FEC_HASTA, 'dd/mm/yyyy'));
+    END IF;
+  
+    FOR P IN PRINCIPAL(V_FEC_DESDE, V_FEC_HASTA) LOOP
+    
+      DBMS_APPLICATION_INFO.SET_ACTION('Liquidando Empresa: ' ||
+                                       P.ID_EMPRESA);
+    
+      -- si no hay boletos a pagar no genero liquidacion
+      IF P.CANT_APROBADOS + P.CANT_OBSERVADOSAPROBADOS = 0 THEN
+        CONTINUE;
+      END IF;
+    
+      V_ID_LIQUIDACION := SEQ_LIQUIDACIONES.NEXTVAL;
+    
+      SELECT ID_GRUPO
+        INTO V_ID_GRUPO
+        FROM TRANSPORTE.T_EMPRESAS_X_TIPO ET
+       WHERE ET.ID_EMPRESA = P.ID_EMPRESA;
+    
+      --inserto T_LIQUIDACIONES
+      INSERT INTO T_LIQUIDACIONES
+        (ID_LIQUIDACION,
+         MES,
+         ANIO,
+         FEC_DESDE,
+         FEC_HASTA,
+         FEC_LIQUIDACION,
+         USR_LIQUIDACION,
+         ID_EMPRESA,
+         CANT_USOS,
+         CANT_RECHAZOS,
+         CANT_OBSERVADOS,
+         CANT_OBS_APROB,
+         MONTO_LIQUIDADO,
+         MONTO_LIQUIDADO_GOB,
+         MONTO_INFORMADO,
+         ID_GRUPO,
+         ID_TIPO_LIQUIDACION,
+         ID_PERIODO,
+         ID_LOTE_LIQUIDACION,
+         ID_PROGRAMA)
+      VALUES
+        (V_ID_LIQUIDACION,
+         TO_NUMBER(TO_CHAR(V_FEC_HASTA, 'MM')),
+         TO_NUMBER(TO_CHAR(V_FEC_HASTA, 'YYYY')),
+         V_FEC_DESDE,
+         V_FEC_HASTA,
+         SYSDATE,
+         I_USUARIO,
+         P.ID_EMPRESA,
+         P.CANT_APROBADOS,
+         P.CANT_RECHAZADOS,
+         P.CANT_OBSERVADOS,
+         P.CANT_OBSERVADOSAPROBADOS,
+         P.PRECIO_VALORIZADO,
+         P.PRECIO_GOBIERNO,
+         P.PRECIO_EMPRESA,
+         V_ID_GRUPO,
+         I_TIPO_LIQUIDACION, --V_ID_TIPO_LIQUIDACION,
+         I_ID_PERIODO,
+         I_LOTE, ---V_ID_LOTE_LIQUIDACION,
+         I_ID_PROGRAMA);
+    
+      DBMS_APPLICATION_INFO.SET_ACTION('Liquidando Empresa: ' ||
+                                       P.ID_EMPRESA ||
+                                       ' - Vinculando Boletos a  la liquidacion');
+    
+      INSERT INTO T_MOVIMIENTOS_LIQUIDACION
+        (ID_MOVIMIENTO, ID_LIQUIDACION, MONTO)
+        SELECT M.ID_MOVIMIENTO,
+               V_ID_LIQUIDACION,
+               NVL(M.PRECIO_GOBIERNO, 0) + NVL(M.PRECIO_VALORIZADO, 0)
+          FROM T_MOVIMIENTOS M
+         WHERE M.FEC_MOVIMIENTO BETWEEN TRUNC(V_FEC_DESDE) AND
+               TRUNC(V_FEC_HASTA + 1) - 1 / 24 / 60 / 60
+           AND ID_TIPO_MOVIMIENTO = 1
+           AND M.ID_ESTADO = 1
+           AND M.VALORIZAR_SN = 'S' -- tarificado
+           AND M.VALIDADO_SN = 'S' --VALIDADO
+           AND M.LIQUIDADO_SN IS NULL --NO DEBE ESTAR LIQUIDADO
+           AND M.ID_RESULTADO IN (1, 4)
+           AND M.ID_EMPRESA = P.ID_EMPRESA;
+    
+      UPDATE T_MOVIMIENTOS M
+         SET M.LIQUIDADO_SN = 'S', M.FEC_LIQUIDACION = SYSDATE
+       WHERE M.FEC_MOVIMIENTO BETWEEN TRUNC(V_FEC_DESDE) AND
+             TRUNC(V_FEC_HASTA + 1) - 1 / 24 / 60 / 60
+         AND ID_TIPO_MOVIMIENTO = 1
+         AND M.ID_ESTADO = 1
+         AND M.VALORIZAR_SN = 'S' -- tarificado
+         AND M.VALIDADO_SN = 'S' --VALIDADO
+         AND M.LIQUIDADO_SN IS NULL --NO DEBE ESTAR LIQUIDADO
+         AND M.ID_RESULTADO IN (1, 4)
+         AND M.ID_EMPRESA = P.ID_EMPRESA;
+    
+      -- liquido tarjetas si corresponde
+      -- ## refactorizar y extraer
+      IF I_TIPO_LIQUIDACION = 7 THEN
+        --V_ID_TIPO_LIQUIDACION = 2 THEN
+      
+        DBMS_APPLICATION_INFO.SET_ACTION('Liquidando Empresa: ' ||
+                                         P.ID_EMPRESA ||
+                                         ' - Liquidando Tarjetas');
+      
+        V_ID_LIQUIDACION := SEQ_LIQUIDACIONES.NEXTVAL;
+      
+        SELECT COUNT(DISTINCT UIDS) Q_TARJETAS
+          INTO V_CANT_TARJETAS
+          FROM MAASP_TUNI_TPTE.T_TARJETAS              S,
+               MAASP_TUNI_TPTE.T_TARJETAS_AUTORIZACION TA,
+               MAASP_TUNI_TPTE.T_AUTORIZACIONES        A
+         WHERE S.ID_TARJETA = TA.ID_TARJETA
+           AND TA.ID_AUTORIZACION = A.ID_AUTORIZACION
+           AND A.ID_EMPRESA = P.ID_EMPRESA
+           AND S.COBRA_SN = 'N'
+           AND S.ANIO = 2019
+           AND TRUNC(TA.FEC_DESDE) BETWEEN V_FEC_DESDE AND V_FEC_HASTA;
+      
+        INSERT INTO T_LIQUIDACIONES
+          (ID_LIQUIDACION,
+           ID_PERIODO,
+           MES,
+           ANIO,
+           FEC_DESDE,
+           FEC_HASTA,
+           FEC_LIQUIDACION,
+           USR_LIQUIDACION,
+           ID_EMPRESA,
+           CANT_USOS,
+           CANT_RECHAZOS,
+           CANT_OBSERVADOS,
+           CANT_OBS_APROB,
+           MONTO_LIQUIDADO,
+           MONTO_LIQUIDADO_GOB,
+           MONTO_INFORMADO,
+           ID_GRUPO,
+           ID_TIPO_LIQUIDACION,
+           ID_LOTE_LIQUIDACION,
+           ID_PROGRAMA)
+        VALUES
+          (V_ID_LIQUIDACION,
+           I_ID_PERIODO,
+           TO_NUMBER(TO_CHAR(V_FEC_HASTA, 'MM')),
+           TO_NUMBER(TO_CHAR(V_FEC_HASTA, 'YYYY')),
+           V_FEC_DESDE,
+           V_FEC_HASTA,
+           SYSDATE,
+           I_USUARIO,
+           P.ID_EMPRESA,
+           V_CANT_TARJETAS,
+           0,
+           0,
+           0,
+           V_CANT_TARJETAS * 60,
+           0,
+           0,
+           V_ID_GRUPO,
+           8,
+           I_LOTE, --V_ID_LOTE_LIQUIDACION,
+           I_ID_PROGRAMA);
+      
+      END IF;
+    
+    END LOOP;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al realizar el proceso de pre liquidacion. ' ||
+                              SQLERRM);
+    
+  END SP_PRELIQUIDAR;
+
+  PROCEDURE SP_LIQUIDAR(I_ID_PERIODO  IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                        I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE) IS
+  
+    V_ID_TIPO_LIQUIDACION T_LIQUIDACIONES.ID_TIPO_LIQUIDACION%TYPE;
+    V_FEC_DESDE           T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE;
+    V_FEC_HASTA           T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE;
+  
+    CURSOR PRINCIPAL IS
+      SELECT L.*
+        FROM T_LIQUIDACIONES L
+       WHERE L.ID_PERIODO = I_ID_PERIODO
+         AND L.ID_TIPO_LIQUIDACION IN (7, 8)
+         AND L.ID_PROGRAMA = I_ID_PROGRAMA;
+  
+  BEGIN
+  
+    DBMS_APPLICATION_INFO.SET_MODULE(MODULE_NAME => 'LIQUIDADOR_BEG',
+                                     -- controlo que se informe el programa
+                                     ACTION_NAME => 'Determinando el Lote a Liquidar');
+  
+    IF I_ID_PROGRAMA IS NULL THEN
+      RAISE_APPLICATION_ERROR(-20098,
+                              'Debe indicarse el programa a liquidar');
+    END IF;
+  
+    -- determino fechas y si se puede liquidar el periodo indicado
+    SELECT P.FEC_DESDE, P.FEC_HASTA
+      INTO V_FEC_DESDE, V_FEC_HASTA
+      FROM T_PERIODOS_LIQUIDACION P
+     WHERE P.ID_PERIODO = I_ID_PERIODO;
+  
+    IF TRUNC(V_FEC_HASTA) >= TRUNC(SYSDATE) THEN
+      RAISE_APPLICATION_ERROR(-20099,
+                              'No se puede liquidar un periodo aun no cerrado. El periodo indicado cierra el ' ||
+                              TO_CHAR(V_FEC_HASTA, 'dd/mm/yyyy'));
+    END IF;
+  
+    -- determino el tipo de liquidacion
+  
+    V_ID_TIPO_LIQUIDACION := 2; -- LIQUIDACION
+    FOR R IN (SELECT 1
+                FROM T_LIQUIDACIONES L
+               WHERE L.ID_PERIODO = I_ID_PERIODO
+                 AND L.ID_PROGRAMA = I_ID_PROGRAMA
+                 AND L.ID_TIPO_LIQUIDACION = 2) LOOP
+      -- si encuentra es un ajuste
+      V_ID_TIPO_LIQUIDACION := 3;
+      EXIT;
+    END LOOP;
+  
+    FOR P IN PRINCIPAL LOOP
+    
+      DBMS_APPLICATION_INFO.SET_ACTION('Liquidando Empresa: ' ||
+                                       P.ID_EMPRESA);
+    
+      -- si no hay boletos a pagar no genero liquidacion
+    
+      UPDATE T_LIQUIDACIONES L
+         SET L.ID_TIPO_LIQUIDACION = V_ID_TIPO_LIQUIDACION
+       WHERE L.ID_LIQUIDACION = P.ID_LIQUIDACION
+         AND L.ID_TIPO_LIQUIDACION = 7;
+    
+      UPDATE T_LIQUIDACIONES L
+         SET L.ID_TIPO_LIQUIDACION = 4
+       WHERE L.ID_LIQUIDACION = P.ID_LIQUIDACION
+         AND L.ID_TIPO_LIQUIDACION = 8;
+    
+    END LOOP;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al realizar el proceso de liquidacion. ' ||
+                              SQLERRM);
+    
+  END SP_LIQUIDAR;
+  /*******************************************************
+  * lista las tarjetas para mostrar en la preliquidacion *
+  *******************************************************/
+  PROCEDURE SP_LIST_TARJETAS(I_ID_PERIODO              IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                             I_LISTA_ID_EMPRESA        IN VARCHAR2 DEFAULT NULL,
+                             I_LISTA_ID_ADMINISTRADORA IN VARCHAR2 DEFAULT NULL,
+                             I_LISTA_ID_TIPO_EMPRESA   IN VARCHAR2 DEFAULT NULL,
+                             O_CURSOR                  OUT SYS_REFCURSOR) IS
+  
+    V_SQL       VARCHAR2(10000);
+    V_FILTROS   VARCHAR2(10000);
+    V_FEC_DESDE T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE;
+    V_FEC_HASTA T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE;
+  
+  BEGIN
+  
+    --## refactorizar y replantear liquidacion de tarjetas por separado de liquidacion de boletos
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_EMPRESA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_EMPRESA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_ADMINISTRADORA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro i_LISTA_ID_ADMINISTRADORA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    IF NOT REGEXP_LIKE(I_LISTA_ID_TIPO_EMPRESA, '^(\d+(,\d+)*)?$') AND
+       I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'El parametro I_LISTA_ID_TIPO_EMPRESA tiene un valor incompatible con una lista de enteros separados por comas');
+    END IF;
+  
+    -- filtros
+    IF I_LISTA_ID_ADMINISTRADORA IS NOT NULL THEN
+      V_FILTROS := V_FILTROS || ' and s.id_administradora in (' ||
+                   I_LISTA_ID_ADMINISTRADORA || ') ';
+    END IF;
+  
+    IF I_LISTA_ID_EMPRESA IS NOT NULL THEN
+      V_FILTROS := V_FILTROS || ' and s.id_empresa in (' ||
+                   I_LISTA_ID_EMPRESA || ') ';
+    END IF;
+  
+    IF I_LISTA_ID_TIPO_EMPRESA IS NOT NULL THEN
+      V_FILTROS := V_FILTROS || ' AND T.ID_TIPO_EMPRESA in (' ||
+                   I_LISTA_ID_TIPO_EMPRESA || ') ';
+    END IF;
+  
+    -- controlo si existe liquidacion para el periodo a listar
+    FOR R IN (SELECT 1
+                FROM T_LIQUIDACIONES L
+               WHERE L.ID_PERIODO = I_ID_PERIODO) LOOP
+    
+      V_FILTROS := V_FILTROS || ' and 1=2 ';
+      EXIT;
+    END LOOP;
+  
+    -- query
+    V_SQL := 'SELECT E.ID_EMPRESA
+          ,E.RAZON_SOCIAL
+          ,A.ID_ADMINISTRADORA
+          ,A.N_ADMINISTRADORA
+          ,E.CUIT
+          ,COUNT(DISTINCT UIDS) Q_TARJETAS
+          ,COUNT(DISTINCT UIDS) * 60 PRECIO
+      FROM MAASP_TUNI_TPTE.T_TARJETAS        S
+          ,MAASP_TUNI_TPTE.T_TARJETAS_AUTORIZACION TA
+          ,MAASP_TUNI_TPTE.T_AUTORIZACIONES  AU
+          ,TRANSPORTE.T_EMPRESAS             E
+          ,TRANSPORTE.T_EMPRESAS_X_TIPO      T
+          ,TRANSPORTE.T_ADMINISTRADORAS      A
+     WHERE AU.ID_EMPRESA = E.ID_EMPRESA
+       AND A.ID_ADMINISTRADORA = S.ID_ADMINISTRADORA
+       AND T.ID_EMPRESA = AU.ID_EMPRESA
+       AND S.ID_TARJETA=TA.ID_TARJETA
+       AND TA.ID_AUTORIZACION=AU.ID_AUTORIZACION
+       AND S.COBRA_SN = ''N''
+       AND S.ANIO = 2019
+       AND TRUNC(FECHA) BETWEEN :FD AND :FH ' || V_FILTROS || ' 
+     GROUP BY E.ID_EMPRESA
+             ,E.RAZON_SOCIAL
+             ,A.ID_ADMINISTRADORA
+             ,A.N_ADMINISTRADORA
+             ,E.CUIT
+     ORDER BY 3
+             ,1';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    SELECT P.FEC_DESDE, P.FEC_HASTA
+      INTO V_FEC_DESDE, V_FEC_HASTA
+      FROM T_PERIODOS_LIQUIDACION P
+     WHERE P.ID_PERIODO = I_ID_PERIODO;
+  
+    OPEN O_CURSOR FOR V_SQL
+      USING V_FEC_DESDE, V_FEC_HASTA;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al listar las tarjetas a liquidar. ' ||
+                              SQLERRM);
+  END SP_LIST_TARJETAS;
+
+  /************************************
+  * lista los tipos de liquidaciones  *
+  ************************************/
+  PROCEDURE SP_LIST_TIPO_LIQUIDACION(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT T.ID_TIPO_LIQUIDACION, T.N_TIPO_LIQUIDACION
+        FROM T_TIPOS_LIQUIDACION T
+       ORDER BY 1 DESC;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al recuperar el listado de tipos de liquidacion. ' ||
+                              SQLERRM);
+  END SP_LIST_TIPO_LIQUIDACION;
+
+  PROCEDURE SP_LLAMA_PRELIQUIDADOR(I_ID_PERIODO     IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                   I_USUARIO        IN T_LIQUIDACIONES.USR_LIQUIDACION%TYPE,
+                                   I_LISTA_EMPRESAS IN VARCHAR2 DEFAULT NULL,
+                                   I_ID_PROGRAMA    IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                   I_FECHA_DESDE    IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                   I_FECHA_HASTA    IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE) IS
+  
+    V_SQL                 VARCHAR2(10000);
+    V_SQLFILTROS          VARCHAR2(10000);
+    L_EMPRESA             TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE;
+    V_ID_TIPO_LIQUIDACION T_LIQUIDACIONES.ID_TIPO_LIQUIDACION%TYPE;
+    V_ID_LOTE_LIQUIDACION T_LIQUIDACIONES.ID_LOTE_LIQUIDACION%TYPE;
+    O_CURSOR              SYS_REFCURSOR;
+  
+  BEGIN
+  
+    IF I_FECHA_DESDE IS NULL OR I_FECHA_HASTA IS NULL THEN
+    
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Debe indicar obligatoriamente rango de fechas para consumir esta funcionalidad');
+    
+    END IF;
+  
+    IF I_LISTA_EMPRESAS IS NOT NULL THEN
+      V_SQLFILTROS := ' AND ID_EMPRESA IN(' || I_LISTA_EMPRESAS || ')';
+    END IF;
+  
+    -- determino el tipo de liquidacion
+    V_ID_TIPO_LIQUIDACION := 7; -- liquidacion
+   /*  FOR R IN (SELECT 1
+                FROM T_LIQUIDACIONES L
+               WHERE L.ID_PERIODO = I_ID_PERIODO
+                 AND L.ID_PROGRAMA = I_ID_PROGRAMA
+                 AND L.ID_TIPO_LIQUIDACION=7) LOOP
+      -- si encuentra es un ajuste
+      V_ID_TIPO_LIQUIDACION := 3;
+      EXIT;
+    END LOOP;*/
+  
+    -- determino el lote de liquidacion
+    SELECT NVL(MAX(ID_LOTE_LIQUIDACION), 0) + 1
+      INTO V_ID_LOTE_LIQUIDACION
+      FROM T_LIQUIDACIONES;
+  
+    V_SQL := 'SELECT DISTINCT ID_EMPRESA
+              FROM T_MOVIMIENTOS
+       WHERE ID_TIPO_MOVIMIENTO = 1
+         AND ID_ESTADO = 1
+         AND ID_RESULTADO IN (1, 4)
+         AND VALORIZAR_SN = ''S''
+         AND TRUNC(FEC_MOVIMIENTO) BETWEEN TRUNC(:FD) AND TRUNC(:FH +1) -1/24/60/60
+         AND ID_PROGRAMA =' || I_ID_PROGRAMA || V_SQLFILTROS;
+  
+    OPEN O_CURSOR FOR V_SQL
+      USING I_FECHA_DESDE, I_FECHA_HASTA;
+  
+    LOOP
+    
+      FETCH O_CURSOR
+        INTO L_EMPRESA;
+      EXIT WHEN O_CURSOR%NOTFOUND;
+      PKG_LIQUIDACIONES.SP_PRELIQUIDAR(I_ID_PERIODO,
+                                       I_USUARIO,
+                                       L_EMPRESA,
+                                       I_ID_PROGRAMA,
+                                       I_TIPO_LIQUIDACION => V_ID_TIPO_LIQUIDACION,
+                                       I_LOTE             => V_ID_LOTE_LIQUIDACION);
+    END LOOP;
+    CLOSE O_CURSOR;
+  
+  END SP_LLAMA_PRELIQUIDADOR;
+
+  PROCEDURE SP_REP_VALIDACIONES(I_ID_PROGRAMA    NUMBER,
+                                I_VIGENCIA_DESDE DATE DEFAULT NULL,
+                                I_VIGENCIA_HASTA DATE DEFAULT NULL,
+                                O_CURSOR         OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT V.N_VALIDACION,
+             V.COD_RECHAZO,
+             V.PROCEDIMIENTO,
+             VP.PRIORIDAD,
+             VP.RECHAZA_SN,
+             V.FEC_ALTA,
+             V.FEC_MODIF
+      
+        FROM T_VALIDACIONES V, T_VALIDACIONES_PROGRAMA VP
+       WHERE V.ID_VALIDACION = VP.ID_VALIDACION
+         AND VP.VIGENCIA_DESDE <=
+             (SELECT NVL(MIN(M.FEC_VALIDACION), SYSDATE)
+                FROM T_LIQUIDACIONES L, T_MOVIMIENTOS M
+               WHERE L.ID_LIQUIDACION = M.ID_LIQUIDACION
+                 AND M.LIQUIDADO_SN = 'S'
+                 AND M.FEC_VALIDACION >= I_VIGENCIA_DESDE)
+         AND VP.VIGENCIA_HASTA >=
+             (SELECT NVL(MAX(M.FEC_VALIDACION), SYSDATE)
+                FROM T_LIQUIDACIONES L, T_MOVIMIENTOS M
+               WHERE L.ID_LIQUIDACION = M.ID_LIQUIDACION
+                 AND M.LIQUIDADO_SN = 'S'
+                 AND M.FEC_VALIDACION <= I_VIGENCIA_HASTA)
+         AND VP.ID_PROGRAMA = NVL(I_ID_PROGRAMA, VP.ID_PROGRAMA);
+  
+  END SP_REP_VALIDACIONES;
+
+  PROCEDURE SP_LIST_CANT_RECTIFICATIVAS(I_PERIODO      IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE DEFAULT NULL,
+                                        I_PROGRAMA     IN T_MOVIMIENTOS.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                        I_EMPRESA      IN T_MOVIMIENTOS.ID_EMPRESA%TYPE DEFAULT NULL,
+                                        I_CUIL_USUARIO IN T_USUARIOS_EMPRESAS.CUIL%TYPE,
+                                        O_CURSOR       OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT E.RAZON_SOCIAL,
+             COUNT(M.ID_MOVIMIENTO) CANTIDAD_RECTIFICACIONES,
+             A.CANT_BOLETOS_RECT
+        FROM T_MOVIMIENTOS M,
+             T_RECTIFICATIVAS R,
+             TRANSPORTE.T_EMPRESAS E,
+             T_LIQUIDACIONES L,
+             T_PERIODOS_LIQUIDACION P,
+             T_MOVIMIENTOS_LIQUIDACION MV,
+             T_USUARIOS_EMPRESAS U,
+             (SELECT E.ID_EMPRESA,
+                     P.ID_PERIODO,
+                     COUNT(M.ID_MOVIMIENTO) CANT_BOLETOS_RECT
+                FROM T_MOVIMIENTOS             M,
+                     T_RECTIFICATIVAS          R,
+                     TRANSPORTE.T_EMPRESAS     E,
+                     T_LIQUIDACIONES           L,
+                     T_PERIODOS_LIQUIDACION    P,
+                     T_MOVIMIENTOS_LIQUIDACION MV
+               WHERE M.ID_MOVIMIENTO = R.ID_SEQ_RECTIFICADO
+                 AND E.ID_EMPRESA = M.ID_EMPRESA
+                 AND MV.ID_LIQUIDACION = L.ID_LIQUIDACION
+                 AND MV.ID_MOVIMIENTO = M.ID_MOVIMIENTO
+                 AND P.ID_PERIODO = L.ID_PERIODO
+                 AND ID_SEQ_RECTIFICADO IN
+                     (SELECT ID_SEQ_RECTIFICADO
+                        FROM MAASP_TUNI_TPTE.T_RECTIFICATIVAS
+                      CONNECT BY PRIOR ID_SEQ_ORIGINAL = ID_SEQ_RECTIFICADO)
+                 AND M.NRO_VERSION = 2
+               GROUP BY E.ID_EMPRESA, P.ID_PERIODO) A
+       WHERE M.ID_MOVIMIENTO = R.ID_SEQ_RECTIFICADO
+         AND E.ID_EMPRESA = M.ID_EMPRESA
+         AND MV.ID_LIQUIDACION = L.ID_LIQUIDACION
+         AND MV.ID_MOVIMIENTO = M.ID_MOVIMIENTO
+         AND P.ID_PERIODO = L.ID_PERIODO
+         AND A.ID_PERIODO = P.ID_PERIODO
+         AND A.ID_EMPRESA = M.ID_EMPRESA
+         AND P.ID_PERIODO = NVL(I_PERIODO, P.ID_PERIODO)
+         AND ID_SEQ_RECTIFICADO IN
+             (SELECT ID_SEQ_RECTIFICADO
+                FROM MAASP_TUNI_TPTE.T_RECTIFICATIVAS
+              CONNECT BY PRIOR ID_SEQ_ORIGINAL = ID_SEQ_RECTIFICADO)
+         AND M.NRO_VERSION <> 1
+         AND M.ID_PROGRAMA = NVL(I_PROGRAMA, M.ID_PROGRAMA)
+         AND M.ID_EMPRESA = NVL(I_EMPRESA, M.ID_EMPRESA)
+         AND U.ID_EMPRESA = E.ID_EMPRESA
+         AND U.CUIL = I_CUIL_USUARIO
+       GROUP BY E.RAZON_SOCIAL, A.CANT_BOLETOS_RECT;
+  
+  END SP_LIST_CANT_RECTIFICATIVAS;
+  ---
+  PROCEDURE SP_CABECERA_PRELIQUIDACION(I_ID_PERIODO  IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                       I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                       O_CURSOR      OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT TRUNC(L.FEC_LIQUIDACION) FEC_LIQUIDACION,
+             L.USR_LIQUIDACION,
+             SUM(CANT_USOS) CANT_USOS,
+             SUM(NVL(L.MONTO_LIQUIDADO, 0)) MONTO_LIQUIDADO
+        FROM T_LIQUIDACIONES L
+       WHERE L.ID_PERIODO = I_ID_PERIODO
+         AND L.ID_PROGRAMA = I_ID_PROGRAMA
+         AND L.ID_TIPO_LIQUIDACION = 7
+       GROUP BY TRUNC(L.FEC_LIQUIDACION), L.USR_LIQUIDACION;
+  
+  END SP_CABECERA_PRELIQUIDACION;
+
+  PROCEDURE SP_BORRAR_PRELIQUIDACION(I_ID_PERIODO  IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                     I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE) IS
+  
+    V_FEC_DESDE T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE;
+    V_FEC_HASTA T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE;
+  
+    ---
+  
+  BEGIN
+  
+    SELECT P.FEC_DESDE, P.FEC_HASTA
+      INTO V_FEC_DESDE, V_FEC_HASTA
+      FROM T_PERIODOS_LIQUIDACION P
+     WHERE P.ID_PERIODO = I_ID_PERIODO;
+  
+    FOR REG IN (SELECT DISTINCT (ID_EMPRESA) ID_EMPRESA
+                  FROM T_LIQUIDACIONES L
+                 WHERE ID_PERIODO = I_ID_PERIODO
+                   AND ID_PROGRAMA = I_ID_PROGRAMA) LOOP
+    
+      FOR REG1 IN (SELECT L.ID_LIQUIDACION
+                     FROM T_LIQUIDACIONES L
+                    WHERE L.ID_PERIODO = I_ID_PERIODO
+                      AND L.ID_EMPRESA = REG.ID_EMPRESA
+                      AND L.ID_TIPO_LIQUIDACION IN (7, 8)) LOOP
+      
+        DELETE FROM T_MOVIMIENTOS_LIQUIDACION
+         WHERE ID_LIQUIDACION = REG1.ID_LIQUIDACION;
+      
+        UPDATE T_MOVIMIENTOS M
+           SET M.LIQUIDADO_SN = NULL
+         WHERE M.FEC_MOVIMIENTO BETWEEN TRUNC(V_FEC_DESDE) AND
+               TRUNC(V_FEC_HASTA + 1) - 1 / 24 / 60 / 60
+           AND M.ID_TIPO_MOVIMIENTO = 1
+           AND M.ID_ESTADO = 1
+           AND M.VALIDADO_SN = 'S' --VALIDADO
+           AND M.VALORIZAR_SN = 'S' -- TARIFICADO
+           AND M.ID_PROGRAMA = I_ID_PROGRAMA
+           AND ID_RESULTADO IN (1, 4)
+           AND LIQUIDADO_SN = 'S'
+           AND ID_EMPRESA = REG.ID_EMPRESA;
+      
+        DELETE FROM T_LIQUIDACIONES
+         WHERE ID_PERIODO = I_ID_PERIODO
+           AND ID_PROGRAMA = I_ID_PROGRAMA
+           AND ID_EMPRESA = REG.ID_EMPRESA
+           AND ID_LIQUIDACION = REG1.ID_LIQUIDACION;
+      END LOOP;
+    
+    END LOOP;
+    COMMIT;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al borrar la pre-liquidacion. ' ||
+                              SQLERRM);
+    
+  END SP_BORRAR_PRELIQUIDACION;
+
+  PROCEDURE SP_VERIFICAR_RECTIFICATIVAS(I_ID_PERIODO  IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                        I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                        O_MENSAJE     OUT VARCHAR2) IS
+  
+    V_FEC_DESDE      T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE;
+    V_FEC_HASTA      T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE;
+    V_RECTIFICATIVAS NUMBER;
+    V_MOVIMIENTOS    NUMBER;
+  
+  BEGIN
+  
+    O_MENSAJE := '';
+  
+    SELECT P.FEC_DESDE, P.FEC_HASTA
+      INTO V_FEC_DESDE, V_FEC_HASTA
+      FROM T_PERIODOS_LIQUIDACION P
+     WHERE P.ID_PERIODO = I_ID_PERIODO;
+  
+    SELECT COUNT(DECODE(M.NRO_VERSION, 1, NULL, 1))
+      INTO V_RECTIFICATIVAS
+      FROM MAASP_TUNI_TPTE.T_MOVIMIENTOS m
+     WHERE M.ID_TIPO_MOVIMIENTO = 1
+       AND M.ID_ESTADO = 1
+       AND M.LIQUIDADO_SN IS NULL --NO LIQUIDADO
+       AND M.VALIDADO_SN = 'S' --VALIDADO
+       AND M.VALORIZAR_SN = 'S' -- TARIFICADO
+       AND M.ID_PROGRAMA = I_ID_PROGRAMA
+       AND TRUNC(M.FEC_MOVIMIENTO) BETWEEN TRUNC(V_FEC_DESDE) AND
+           TRUNC(V_FEC_HASTA)
+       AND EXISTS (SELECT ID_MOVIMIENTO
+              FROM T_MOVIMIENTOS_LIQUIDACION
+             WHERE ID_MOVIMIENTO = M.ID_MOVIMIENTO);
+  
+    SELECT COUNT(1)
+      INTO V_MOVIMIENTOS
+      FROM MAASP_TUNI_TPTE.T_MOVIMIENTOS M
+     WHERE M.FEC_MOVIMIENTO BETWEEN TRUNC(V_FEC_DESDE) AND
+           TRUNC(V_FEC_HASTA) + 1 - 1 / 24 / 60 / 60
+       AND M.ID_TIPO_MOVIMIENTO = 1
+       AND M.ID_ESTADO = 1
+       AND M.VALIDADO_SN = 'S' --VALIDADO
+       AND M.VALORIZAR_SN = 'S' -- TARIFICADO
+       AND M.LIQUIDADO_SN IS NULL --NO DEBE ESTAR LIQUIDADO
+       AND M.ID_PROGRAMA = I_ID_PROGRAMA
+       AND M.ID_RESULTADO IN (1, 4)
+     ORDER BY M.ID_EMPRESA;
+  
+    IF V_RECTIFICATIVAS > 0 THEN
+      O_MENSAJE := O_MENSAJE || ' Existen ' || V_RECTIFICATIVAS ||
+                   ' rectificativas para este periodo. ';
+    
+    END IF;
+  
+    IF V_MOVIMIENTOS > 0 THEN
+      O_MENSAJE := O_MENSAJE || ' Existen ' || V_MOVIMIENTOS ||
+                   ' nuevos movimientos para liquidar en este periodo. ';
+    END IF;
+  
+  END SP_VERIFICAR_RECTIFICATIVAS;
+
+  PROCEDURE SP_LLAMA_LIQUIDADOR(I_ID_PERIODO     IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                                I_USUARIO        IN T_LIQUIDACIONES.USR_LIQUIDACION%TYPE,
+                                I_LISTA_EMPRESAS IN VARCHAR2 DEFAULT NULL,
+                                I_ID_PROGRAMA    IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                I_FECHA_DESDE    IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                                I_FECHA_HASTA    IN T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE) IS
+  
+    V_SQL                 VARCHAR2(10000);
+    V_SQLFILTROS          VARCHAR2(10000);
+    L_EMPRESA             TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE;
+    V_ID_TIPO_LIQUIDACION T_LIQUIDACIONES.ID_TIPO_LIQUIDACION%TYPE;
+    V_ID_LOTE_LIQUIDACION T_LIQUIDACIONES.ID_LOTE_LIQUIDACION%TYPE;
+    O_CURSOR              SYS_REFCURSOR;
+  
+  BEGIN
+  
+    IF I_FECHA_DESDE IS NULL OR I_FECHA_HASTA IS NULL THEN
+    
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Debe indicar obligatoriamente rango de fechas para consumir esta funcionalidad');
+    
+    END IF;
+  
+    IF I_LISTA_EMPRESAS IS NOT NULL THEN
+      V_SQLFILTROS := ' AND ID_EMPRESA IN(' || I_LISTA_EMPRESAS || ')';
+    END IF;
+  
+    -- determino el tipo de liquidacion
+    V_ID_TIPO_LIQUIDACION := 2; -- liquidacion
+    FOR R IN (SELECT 1
+                FROM T_LIQUIDACIONES L
+               WHERE L.ID_PERIODO = I_ID_PERIODO
+                 AND L.ID_PROGRAMA = I_ID_PROGRAMA) LOOP
+      -- si encuentra es un ajuste
+      V_ID_TIPO_LIQUIDACION := 3;
+      EXIT;
+    END LOOP;
+  
+    -- determino el lote de liquidacion
+    SELECT NVL(MAX(ID_LOTE_LIQUIDACION), 0) + 1
+      INTO V_ID_LOTE_LIQUIDACION
+      FROM T_LIQUIDACIONES;
+  
+    V_SQL := 'SELECT DISTINCT ID_EMPRESA
+              FROM T_MOVIMIENTOS
+       WHERE ID_TIPO_MOVIMIENTO = 1
+         AND ID_ESTADO = 1
+         AND ID_RESULTADO IN (1, 4)
+         AND VALORIZAR_SN = ''S''
+         AND LIQUIDADO_SN IS NULL
+         AND TRUNC(FEC_MOVIMIENTO) BETWEEN TRUNC(:FD) AND TRUNC(:FH +1) -1/24/60/60
+         AND ID_PROGRAMA =' || I_ID_PROGRAMA || V_SQLFILTROS;
+  
+    OPEN O_CURSOR FOR V_SQL
+      USING I_FECHA_DESDE, I_FECHA_HASTA;
+  
+    LOOP
+    
+      FETCH O_CURSOR
+        INTO L_EMPRESA;
+      EXIT WHEN O_CURSOR%NOTFOUND;
+      PKG_LIQUIDACIONES.SP_LIQUIDADOR(I_ID_PERIODO,
+                                      I_USUARIO,
+                                      L_EMPRESA,
+                                      I_ID_PROGRAMA,
+                                      I_TIPO_LIQUIDACION => V_ID_TIPO_LIQUIDACION,
+                                      I_LOTE             => V_ID_LOTE_LIQUIDACION);
+    END LOOP;
+    CLOSE O_CURSOR;
+  
+  END SP_LLAMA_LIQUIDADOR;
+
+  /* **************************************************************************
+  * Procedimiento principal de liquidacion                                    *
+  *                                                                           *
+  * Toma los boletos en condiciones de liquidar para un periodo, determina el *
+  * tipo de liquidacion y la genera. Tambien liquida tarjetas en caso de ser  *
+  * la primera liquidación de ese periodo.                                    *
+  ****************************************************************************/
+  PROCEDURE SP_LIQUIDADOR(I_ID_PERIODO       IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                          I_USUARIO          IN T_LIQUIDACIONES.USR_LIQUIDACION%TYPE,
+                          I_ID_EMPRESA       IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE DEFAULT NULL,
+                          I_ID_PROGRAMA      IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                          I_TIPO_LIQUIDACION IN T_LIQUIDACIONES.ID_TIPO_LIQUIDACION%TYPE,
+                          I_LOTE             IN T_LIQUIDACIONES.ID_LOTE_LIQUIDACION%TYPE) IS
+  
+    V_ID_LIQUIDACION      T_LIQUIDACIONES.ID_LIQUIDACION%TYPE;
+    V_ID_GRUPO            T_LIQUIDACIONES.ID_GRUPO%TYPE;
+    V_FEC_DESDE           T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE;
+    V_FEC_HASTA           T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE;
+    V_CANT_TARJETAS       NUMBER;
+  
+    CURSOR PRINCIPAL(I_DESDE T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE,
+                     I_HASTA T_MOVIMIENTOS.FEC_MOVIMIENTO%TYPE) IS
+      SELECT M.ID_EMPRESA,
+             NVL(SUM(CASE
+                       WHEN M.ID_RESULTADO IN (1, 4) THEN
+                        M.PRECIO
+                       ELSE
+                        0.0
+                     END),
+                 0) PRECIO_EMPRESA,
+             NVL(SUM(CASE
+                       WHEN M.ID_RESULTADO IN (1, 4) THEN
+                        M.PRECIO_GOBIERNO
+                       ELSE
+                        0.0
+                     END),
+                 0) PRECIO_GOBIERNO,
+             NVL(SUM(CASE
+                       WHEN M.ID_RESULTADO IN (1, 4) THEN
+                        (NVL(M.PRECIO_GOBIERNO, 0) + NVL(M.PRECIO_VALORIZADO, 0))
+                       ELSE
+                        0.0
+                     END),
+                 0) PRECIO_VALORIZADO,
+             COUNT(DECODE(M.ID_RESULTADO, 1, 1)) CANT_APROBADOS,
+             COUNT(DECODE(M.ID_RESULTADO, 4, 1)) CANT_OBSERVADOSAPROBADOS,
+             COUNT(DECODE(M.ID_RESULTADO, 2, 1)) CANT_OBSERVADOS,
+             COUNT(DECODE(M.ID_RESULTADO, 3, 1)) CANT_RECHAZADOS
+        FROM T_MOVIMIENTOS M
+       WHERE M.FEC_MOVIMIENTO BETWEEN TRUNC(I_DESDE) AND
+             TRUNC(I_HASTA + 1) - 1 / 24 / 60 / 60
+         AND M.ID_TIPO_MOVIMIENTO = 1
+         AND M.ID_ESTADO = 1
+         AND M.VALIDADO_SN = 'S' --VALIDADO
+         AND M.VALORIZAR_SN = 'S' -- TARIFICADO
+         AND M.LIQUIDADO_SN IS NULL --NO DEBE ESTAR LIQUIDADO
+         AND M.ID_EMPRESA = NVL(I_ID_EMPRESA, M.ID_EMPRESA)
+         AND M.ID_PROGRAMA = I_ID_PROGRAMA
+       GROUP BY M.ID_EMPRESA
+       ORDER BY M.ID_EMPRESA;
+  
+  BEGIN
+  
+    --seteo info de sesion
+    DBMS_APPLICATION_INFO.SET_MODULE(MODULE_NAME => 'LIQUIDADOR_BEG',
+                                     -- controlo que se informe el programa
+                                     ACTION_NAME => 'Determinando el Lote a Liquidar');
+  
+    IF I_ID_PROGRAMA IS NULL THEN
+      RAISE_APPLICATION_ERROR(-20098,
+                              'Debe indicarse el programa a liquidar');
+    END IF;
+  
+    -- determino fechas y si se puede liquidar el periodo indicado
+    SELECT P.FEC_DESDE, P.FEC_HASTA
+      INTO V_FEC_DESDE, V_FEC_HASTA
+      FROM T_PERIODOS_LIQUIDACION P
+     WHERE P.ID_PERIODO = I_ID_PERIODO;
+  
+    IF TRUNC(V_FEC_HASTA) >= TRUNC(SYSDATE) THEN
+      RAISE_APPLICATION_ERROR(-20099,
+                              'No se puede liquidar un período aún no cerrado. El período indicado cierra el ' ||
+                              TO_CHAR(V_FEC_HASTA, 'dd/mm/yyyy'));
+    END IF;
+  
+    FOR P IN PRINCIPAL(V_FEC_DESDE, V_FEC_HASTA) LOOP
+    
+      DBMS_APPLICATION_INFO.SET_ACTION('Liquidando Empresa: ' ||
+                                       P.ID_EMPRESA);
+    
+      -- si no hay boletos a pagar no genero liquidacion
+      IF P.CANT_APROBADOS + P.CANT_OBSERVADOSAPROBADOS = 0 THEN
+        CONTINUE;
+      END IF;
+    
+      V_ID_LIQUIDACION := SEQ_LIQUIDACIONES.NEXTVAL;
+    
+      SELECT ID_GRUPO
+        INTO V_ID_GRUPO
+        FROM TRANSPORTE.T_EMPRESAS_X_TIPO ET
+       WHERE ET.ID_EMPRESA = P.ID_EMPRESA;
+    
+      --inserto T_LIQUIDACIONES
+      INSERT INTO T_LIQUIDACIONES
+        (ID_LIQUIDACION,
+         MES,
+         ANIO,
+         FEC_DESDE,
+         FEC_HASTA,
+         FEC_LIQUIDACION,
+         USR_LIQUIDACION,
+         ID_EMPRESA,
+         CANT_USOS,
+         CANT_RECHAZOS,
+         CANT_OBSERVADOS,
+         CANT_OBS_APROB,
+         MONTO_LIQUIDADO,
+         MONTO_LIQUIDADO_GOB,
+         MONTO_INFORMADO,
+         ID_GRUPO,
+         ID_TIPO_LIQUIDACION,
+         ID_PERIODO,
+         ID_LOTE_LIQUIDACION,
+         ID_PROGRAMA)
+      VALUES
+        (V_ID_LIQUIDACION,
+         TO_NUMBER(TO_CHAR(V_FEC_HASTA, 'MM')),
+         TO_NUMBER(TO_CHAR(V_FEC_HASTA, 'YYYY')),
+         V_FEC_DESDE,
+         V_FEC_HASTA,
+         SYSDATE,
+         I_USUARIO,
+         P.ID_EMPRESA,
+         P.CANT_APROBADOS,
+         P.CANT_RECHAZADOS,
+         P.CANT_OBSERVADOS,
+         P.CANT_OBSERVADOSAPROBADOS,
+         P.PRECIO_VALORIZADO,
+         P.PRECIO_GOBIERNO,
+         P.PRECIO_EMPRESA,
+         V_ID_GRUPO,
+         I_TIPO_LIQUIDACION,
+         I_ID_PERIODO,
+         I_LOTE,
+         I_ID_PROGRAMA);
+    
+      DBMS_APPLICATION_INFO.SET_ACTION('Liquidando Empresa: ' ||
+                                       P.ID_EMPRESA ||
+                                       ' - Vinculando Boletos a  la liquidacion');
+    
+      INSERT INTO T_MOVIMIENTOS_LIQUIDACION
+        (ID_MOVIMIENTO, ID_LIQUIDACION, MONTO)
+        SELECT M.ID_MOVIMIENTO,
+               V_ID_LIQUIDACION,
+               NVL(M.PRECIO_GOBIERNO, 0) + NVL(M.PRECIO_VALORIZADO, 0)
+          FROM T_MOVIMIENTOS M
+         WHERE M.FEC_MOVIMIENTO BETWEEN TRUNC(V_FEC_DESDE) AND
+               TRUNC(V_FEC_HASTA + 1) - 1 / 24 / 60 / 60
+           AND ID_TIPO_MOVIMIENTO = 1
+           AND M.ID_ESTADO = 1
+           AND M.VALORIZAR_SN = 'S' -- tarificado
+           AND M.VALIDADO_SN = 'S' --VALIDADO
+           AND M.LIQUIDADO_SN IS NULL --NO DEBE ESTAR LIQUIDADO
+           AND M.ID_RESULTADO IN (1, 4)
+           AND M.ID_EMPRESA = P.ID_EMPRESA;
+    
+      UPDATE T_MOVIMIENTOS M
+         SET M.LIQUIDADO_SN = 'S', M.FEC_LIQUIDACION = SYSDATE
+       WHERE M.FEC_MOVIMIENTO BETWEEN TRUNC(V_FEC_DESDE) AND
+             TRUNC(V_FEC_HASTA + 1) - 1 / 24 / 60 / 60
+         AND ID_TIPO_MOVIMIENTO = 1
+         AND M.ID_ESTADO = 1
+         AND M.VALORIZAR_SN = 'S' -- tarificado
+         AND M.VALIDADO_SN = 'S' --VALIDADO
+         AND M.LIQUIDADO_SN IS NULL --NO DEBE ESTAR LIQUIDADO
+         AND M.ID_RESULTADO IN (1, 4)
+         AND M.ID_EMPRESA = P.ID_EMPRESA;
+    
+      -- liquido tarjetas si corresponde
+      -- ## refactorizar y extraer
+      IF I_TIPO_LIQUIDACION = 2 THEN
+      
+        DBMS_APPLICATION_INFO.SET_ACTION('Liquidando Empresa: ' ||
+                                         P.ID_EMPRESA ||
+                                         ' - Liquidando Tarjetas');
+      
+        V_ID_LIQUIDACION := SEQ_LIQUIDACIONES.NEXTVAL;
+      
+        SELECT COUNT(DISTINCT UIDS) Q_TARJETAS
+          INTO V_CANT_TARJETAS
+          FROM MAASP_TUNI_TPTE.T_TARJETAS              S,
+               MAASP_TUNI_TPTE.T_TARJETAS_AUTORIZACION TA,
+               MAASP_TUNI_TPTE.T_AUTORIZACIONES        A
+         WHERE S.ID_TARJETA = TA.ID_TARJETA
+           AND TA.ID_AUTORIZACION = A.ID_AUTORIZACION
+           AND A.ID_EMPRESA = P.ID_EMPRESA
+           AND S.COBRA_SN = 'N'
+           AND S.ANIO = 2019
+           AND TRUNC(TA.FEC_DESDE) BETWEEN V_FEC_DESDE AND V_FEC_HASTA;
+      
+        INSERT INTO T_LIQUIDACIONES
+          (ID_LIQUIDACION,
+           ID_PERIODO,
+           MES,
+           ANIO,
+           FEC_DESDE,
+           FEC_HASTA,
+           FEC_LIQUIDACION,
+           USR_LIQUIDACION,
+           ID_EMPRESA,
+           CANT_USOS,
+           CANT_RECHAZOS,
+           CANT_OBSERVADOS,
+           CANT_OBS_APROB,
+           MONTO_LIQUIDADO,
+           MONTO_LIQUIDADO_GOB,
+           MONTO_INFORMADO,
+           ID_GRUPO,
+           ID_TIPO_LIQUIDACION,
+           ID_LOTE_LIQUIDACION,
+           ID_PROGRAMA)
+        VALUES
+          (V_ID_LIQUIDACION,
+           I_ID_PERIODO,
+           TO_NUMBER(TO_CHAR(V_FEC_HASTA, 'MM')),
+           TO_NUMBER(TO_CHAR(V_FEC_HASTA, 'YYYY')),
+           V_FEC_DESDE,
+           V_FEC_HASTA,
+           SYSDATE,
+           I_USUARIO,
+           P.ID_EMPRESA,
+           V_CANT_TARJETAS,
+           0,
+           0,
+           0,
+           V_CANT_TARJETAS * 60,
+           0,
+           0,
+           V_ID_GRUPO,
+           4,
+           I_LOTE,
+           I_ID_PROGRAMA);
+      
+      END IF;
+    
+    END LOOP;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al realizar el proceso de liquidacion. ' ||
+                              SQLERRM);
+    
+  END SP_LIQUIDADOR;
+
+END PKG_LIQUIDACIONES;
+/
