@@ -58,6 +58,7 @@ CREATE OR REPLACE PACKAGE BODY "PKG_VALORIZAR" IS
   
     -- busco los datos necesarios
     SELECT M.FEC_MOVIMIENTO,
+           TO_CHAR(M.FEC_MOVIMIENTO, 'hh24:mi'),
            A.ID_EMPRESA,
            I.ID_TIPO_EMPRESA,
            A.ID_ORIGEN,
@@ -65,6 +66,7 @@ CREATE OR REPLACE PACKAGE BODY "PKG_VALORIZAR" IS
            A.ID_TIPO_SOLICITANTE,
            M.TIPO_LINEA -- ## VERIFICAR SI EL TIPO DE BOLETO ESTA EN ESTE CAMPO ##
       INTO V_FEC_MOVIMIENTO,
+           V_HORA,
            V_ID_EMPRESA,
            V_ID_TIPO_EMPRESA,
            V_ID_ORIGEN,
