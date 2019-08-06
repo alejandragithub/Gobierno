@@ -1,0 +1,1820 @@
+CREATE OR REPLACE PACKAGE PKG_ADMIN_MANTENEDORES IS
+
+  -- Author  : NMAZZEO_EXT
+  -- Created : 14/11/2018 15:28:45
+  -- Purpose : Administración de datos de Programas
+
+  -- lista los tipos de Pagos
+  PROCEDURE SP_LIST_TIPOS_PAGO(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- lista los Programas
+  PROCEDURE SP_LIST_PROGRAMAS(O_CURSOR OUT SYS_REFCURSOR,
+                              I_FECHA  IN DATE DEFAULT SYSDATE);
+
+  -- lista los Períodos
+  PROCEDURE SP_LIST_PERIODOS(O_CURSOR  OUT SYS_REFCURSOR,
+                             I_PERIODO IN T_PERIODOS_LIQUIDACION.ID_PROGRAMA%TYPE);
+
+  -- lista las tarifas
+  PROCEDURE SP_LIST_TARIFAS(O_CURSOR           OUT SYS_REFCURSOR,
+                            I_FECHA            IN DATE DEFAULT SYSDATE,
+                            I_EMPRESA          IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE DEFAULT 0,
+                            I_PROGRAMA         IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE DEFAULT 0,
+                            I_TIPO_SOLICITANTE IN T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE DEFAULT 0);
+
+  -- lista los niveles educativos                         
+  PROCEDURE SP_LIST_NIVELES_EDUCATIVOS(O_CURSOR OUT SYS_REFCURSOR);
+
+  -- alta los tipos de Pagos
+  PROCEDURE SP_ALTA_TIPOS_PAGO(I_TIPO_PAGO   IN T_TIPOS_PAGO.ID_TIPO_PAGO%TYPE,
+                               I_N_TIPO_PAGO IN T_TIPOS_PAGO.N_TIPO_PAGO%TYPE);
+
+  -- alta los programas
+  PROCEDURE SP_ALTA_PROGRAMAS(I_N_PROGRAMA   IN T_PROGRAMAS.N_PROGRAMA%TYPE,
+                              I_FEC_DESDE    IN T_PROGRAMAS.FEC_DESDE%TYPE,
+                              I_FEC_HASTA    IN T_PROGRAMAS.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                              I_ID_TIPO_PAGO IN T_PROGRAMAS.ID_TIPO_PAGO%TYPE);
+
+  -- alta periodos                           
+  PROCEDURE SP_ALTA_PERIODO(I_N_PERIODO     IN T_PERIODOS_LIQUIDACION.N_PERIODO%TYPE,
+                            I_FEC_DESDE     IN T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE DEFAULT SYSDATE,
+                            I_FEC_HASTA     IN T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE,
+                            I_ACTIVO        IN T_PERIODOS_LIQUIDACION.ACTIVO%TYPE DEFAULT 'S',
+                            I_DIAS_REAJUSTE IN T_PERIODOS_LIQUIDACION.DIAS_REAJUSTE%TYPE DEFAULT 30,
+                            I_PROGRAMA      IN T_PERIODOS_LIQUIDACION.ID_PROGRAMA%TYPE);
+
+  -- modificacion de programas                           
+  PROCEDURE SP_CAMBIO_PROGRAMAS(I_ID_PROGRAMA  IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                I_N_PROGRAMA   IN T_PROGRAMAS.N_PROGRAMA%TYPE DEFAULT NULL,
+                                I_ID_TIPO_PAGO IN T_PROGRAMAS.ID_TIPO_PAGO%TYPE DEFAULT NULL,
+                                I_FEC_HASTA    IN T_PROGRAMAS.FEC_HASTA%TYPE DEFAULT NULL);
+
+  -- modificacion de periodos                           
+  PROCEDURE SP_CAMBIO_PERIODOS(I_ID_PERIODO    IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                               I_N_PERIODO     IN T_PERIODOS_LIQUIDACION.N_PERIODO%TYPE DEFAULT NULL,
+                               I_FEC_DESDE     IN T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE DEFAULT SYSDATE,
+                               I_FEC_HASTA     IN T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                               I_ACTIVO        IN T_PERIODOS_LIQUIDACION.ACTIVO%TYPE DEFAULT NULL,
+                               I_DIAS_REAJUSTE IN T_PERIODOS_LIQUIDACION.DIAS_REAJUSTE%TYPE DEFAULT NULL);
+
+  -- alta tarifas                                  
+  PROCEDURE SP_ALTA_TARIFAS(I_ID_EMPRESA            IN T_TARIFAS_MUNICIPAL.ID_EMPRESA%TYPE,
+                            I_ID_TIPO_SOLICITANTE   IN T_TARIFAS_MUNICIPAL.ID_TIPO_SOLICITANTE%TYPE DEFAULT NULL,
+                            I_FECHA                 IN DATE,
+                            I_PRECIO                IN T_TARIFAS_MUNICIPAL.PRECIO%TYPE,
+                            I_NRO_ORDENANZA         IN T_TARIFAS_MUNICIPAL.NRO_ORDENANZA%TYPE,
+                            I_ID_TIPO_BOLETO_URBANO IN T_TARIFAS_MUNICIPAL.ID_TIPO_BOLETO_URBANO%TYPE DEFAULT NULL,
+                            I_PORC_A_PAGAR          IN T_TARIFAS_MUNICIPAL.PORC_A_PAGAR%TYPE);
+
+  PROCEDURE SP_LIST_PERIODOS_RECESO(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_ALTA_PERIODOS_RECESO(I_FEC_DESDE        IN T_PERIODOS_RECESO.FEC_DESDE%TYPE,
+                                    I_FEC_HASTA        IN T_PERIODOS_RECESO.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                                    I_NIVEL_EDUCATIVO  IN T_PERIODOS_RECESO.ID_NIVEL_EDUCATIVO%TYPE,
+                                    I_TIPO_SOLICITANTE IN T_PERIODOS_RECESO.ID_TIPO_SOLICITANTE%TYPE);
+
+  PROCEDURE SP_CAMBIO_PERIODOS_RECESO(I_ID_PERIODO       IN T_PERIODOS_RECESO.ID_PERIODO%TYPE,
+                                      I_FEC_DESDE        IN T_PERIODOS_RECESO.FEC_DESDE%TYPE,
+                                      I_FEC_HASTA        IN T_PERIODOS_RECESO.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                                      I_NIVEL_EDUCATIVO  IN T_PERIODOS_RECESO.ID_NIVEL_EDUCATIVO%TYPE,
+                                      I_TIPO_SOLICITANTE IN T_PERIODOS_RECESO.ID_TIPO_SOLICITANTE%TYPE);
+
+  PROCEDURE SP_LIST_COEFICIENTES(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_ALTA_COEFICIENTES(I_ID_TIPO_SOLICITANTE IN T_COEFICIENTES_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                 I_COEFICIENTE         IN T_COEFICIENTES_SOLICITANTE.COEFICIENTE%TYPE,
+                                 I_FECHA               IN T_COEFICIENTES_SOLICITANTE.FEC_DESDE%TYPE,
+                                 I_EMPRESA             IN T_COEFICIENTES_SOLICITANTE.ID_EMPRESA%TYPE DEFAULT NULL);
+
+  /*PROCEDURE SP_MODIF_COEFICIENTES(I_TIPO_SOLICITANTE IN T_COEFICIENTES_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                    I_COEFICIENTE      IN T_COEFICIENTES_SOLICITANTE.COEFICIENTE%TYPE,
+                                    I_PROGRAMA         IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE);
+  */
+  PROCEDURE SP_BAJA_COEFICIENTES(I_TIPO_SOLICITANTE IN T_COEFICIENTES_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                 I_EMPRESA          IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE);
+
+  PROCEDURE SP_LIST_TARJETAS(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_TARIFAS_URBANA(O_CURSOR OUT SYS_REFCURSOR,
+                                   I_FECHA  IN DATE DEFAULT SYSDATE);
+
+  PROCEDURE SP_ALTA_TARJETAS(I_UIDS            IN T_TARJETAS.UIDS%TYPE,
+                             I_ADMINISTRADORA  IN T_TARJETAS.ID_ADMINISTRADORA%TYPE,
+                             I_NRO_SERIE       IN T_TARJETAS.NRO_SERIE%TYPE,
+                             I_ANIO            IN T_TARJETAS.ANIO%TYPE DEFAULT NULL,
+                             O_TARJETA        OUT T_TARJETAS.ID_TARJETA%TYPE);
+
+  PROCEDURE SP_BAJA_TARJETAS(I_UIDS        IN T_TARJETAS.UIDS%TYPE,
+                             I_NRO_SERIE   IN T_TARJETAS.NRO_SERIE%TYPE,
+                             I_MOTIVO_BAJA IN T_TARJETAS.ID_MOTIVO_BAJA%TYPE);
+
+  PROCEDURE SP_ALTA_EMPRESAS(I_RAZON_SOCIAL         IN TRANSPORTE.T_EMPRESAS.RAZON_SOCIAL%TYPE,
+                             I_NOMBRE_FANTASIA      IN TRANSPORTE.T_EMPRESAS.NOMBRE_FANTASIA%TYPE DEFAULT NULL,
+                             I_CUIT                 IN TRANSPORTE.T_EMPRESAS.CUIT%TYPE,
+                             I_IBRUTOS              IN TRANSPORTE.T_EMPRESAS.IBRUTOS%TYPE,
+                             I_FECHA_INI_ACTIVIDAD  IN TRANSPORTE.T_EMPRESAS.FECHA_INI_ACTIVIDAD%TYPE,
+                             I_FECHA_BAJA_ACTIVIDAD IN TRANSPORTE.T_EMPRESAS.FECHA_BAJA_ACTIVIDAD%TYPE);
+
+  PROCEDURE SP_ALTA_GRUPOS(I_GRUPO       IN TRANSPORTE.T_GRUPOS.N_GRUPO%TYPE,
+                           I_DESCRIPCION IN TRANSPORTE.T_GRUPOS.DESCRIPCION%TYPE DEFAULT NULL);
+
+  PROCEDURE SP_LIST_GRUPOS(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_BAJA_EMPRESAS(I_EMPRESA IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE);
+
+  PROCEDURE SP_CAMBIO_EMPRESAS(I_EMPRESA              IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE,
+                               I_RAZON_SOCIAL         IN TRANSPORTE.T_EMPRESAS.RAZON_SOCIAL%TYPE,
+                               I_NOMBRE_FANTASIA      IN TRANSPORTE.T_EMPRESAS.NOMBRE_FANTASIA%TYPE DEFAULT NULL,
+                               I_CUIT                 IN TRANSPORTE.T_EMPRESAS.CUIT%TYPE,
+                               I_IBRUTOS              IN TRANSPORTE.T_EMPRESAS.IBRUTOS%TYPE,
+                               I_FECHA_INI_ACTIVIDAD  IN TRANSPORTE.T_EMPRESAS.FECHA_INI_ACTIVIDAD%TYPE,
+                               I_FECHA_BAJA_ACTIVIDAD IN TRANSPORTE.T_EMPRESAS.FECHA_BAJA_ACTIVIDAD%TYPE);
+
+  PROCEDURE SP_LIST_TIPOS_SOLICITANTES(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_ALTA_TIPO_BOLETO_URBANO(I_N_TIPO_BOLETO_URBANO IN T_TIPOS_BOLETO_URBANO.N_TIPO_BOLETO_URBANO%TYPE,
+                                       I_PORCENTAJE           IN T_TIPOS_BOLETO_URBANO.PORC_TARIFA%TYPE);
+
+  PROCEDURE SP_CAMBIO_TIPO_BOLETO_URBANO(I_ID_TIPO_BOLETO_URBANO IN T_TIPOS_BOLETO_URBANO.ID_TIPO_BOLETO_URBANO%TYPE,
+                                         I_N_TIPO_BOLETO_URBANO  IN T_TIPOS_BOLETO_URBANO.N_TIPO_BOLETO_URBANO%TYPE,
+                                         I_PORCENTAJE            IN T_TIPOS_BOLETO_URBANO.PORC_TARIFA%TYPE);
+
+  PROCEDURE SP_BAJA_TIPOS_BOLETO_URBANO(I_ID_TIPO_BOLETO_URBANO IN T_TIPOS_BOLETO_URBANO.ID_TIPO_BOLETO_URBANO%TYPE);
+
+  PROCEDURE SP_LIST_TIPOS_BOLETO_URBANO(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_ALTA_TIPOS_SOLICITANTES(I_N_TIPO_SOLICITANTE T_TIPOS_SOLICITANTE.N_TIPO_SOLICITANTE%TYPE,
+                                       I_PROGRAMA           T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE);
+
+  PROCEDURE SP_BAJA_TIPO_SOLICITANTE(I_TIPO_SOLICITANTE IN T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE);
+
+  PROCEDURE SP_CAMBIO_TIPO_SOLICITANTE(I_TIPO_SOLICITANTE   IN T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                       I_N_TIPO_SOLICITANTE IN T_TIPOS_SOLICITANTE.N_TIPO_SOLICITANTE%TYPE);
+
+  PROCEDURE SP_LIST_EMPRESAS_X_URBANO(O_CURSOR OUT SYS_REFCURSOR,
+                                      I_CUIL   IN T_USUARIOS_EMPRESAS.CUIL%TYPE);
+
+  PROCEDURE SP_LIST_SOLIC_X_PROGRAMA(I_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                     O_CURSOR   OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_EMP_X_INTERURBANO(O_CURSOR OUT SYS_REFCURSOR,
+                                      I_CUIL   IN T_USUARIOS_EMPRESAS.CUIL%TYPE);
+
+  PROCEDURE SP_LIST_BANDA_HORARIA(O_CURSOR OUT SYS_REFCURSOR);
+  
+  PROCEDURE SP_LIST_BANDA_HORARIA_COMBO(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_ALTA_BANDA_HORARIA(I_N_BANDA    IN T_BANDAS_HORARIA.N_BANDA_HORARIA%TYPE,
+                                  I_HORA_DESDE IN T_BANDAS_HORARIA.HORA_DESDE%TYPE,
+                                  I_HORA_HASTA IN T_BANDAS_HORARIA.HORA_HASTA%TYPE,
+                                  I_ID_BANDA IN T_BANDAS_HORARIA.ID_BANDA_HORARIA%TYPE);
+
+  PROCEDURE SP_CAMBIO_BANDA_HORARIA(I_ID_BANDA   IN T_BANDAS_HORARIA.ID_BANDA_HORARIA%TYPE,
+                                    I_HORA_DESDE IN T_BANDAS_HORARIA.HORA_DESDE%TYPE,
+                                    I_HORA_HASTA IN T_BANDAS_HORARIA.HORA_HASTA%TYPE);
+
+  PROCEDURE SP_BAJA_BANDA_HORARIA(I_ID_BANDA IN T_BANDAS_HORARIA.ID_BANDA_HORARIA%TYPE);
+
+  PROCEDURE SP_BAJA_VALIDACIONES(I_ID_VALIDACION_PROGRAMA IN T_VALIDACIONES_PROGRAMA.ID_VALIDACION_PROGRAMA%TYPE);
+
+  PROCEDURE SP_ALTA_VALIDACION(I_N_VALIDACION      IN T_VALIDACIONES.N_VALIDACION%TYPE,
+                               I_PROCEDIMIENTO     IN T_VALIDACIONES.PROCEDIMIENTO%TYPE,
+                               I_COD_RECHAZO       IN T_VALIDACIONES.COD_RECHAZO%TYPE,
+                               I_PRIORIDAD         IN T_VALIDACIONES_PROGRAMA.PRIORIDAD%TYPE,
+                               I_RECHAZA_SN        IN T_VALIDACIONES_PROGRAMA.RECHAZA_SN%TYPE,
+                               I_LISTA_ID_PROGRAMA IN VARCHAR2 DEFAULT NULL,
+                               I_VIGENCIA_DESDE    IN T_VALIDACIONES_PROGRAMA.VIGENCIA_DESDE%TYPE,
+                               I_VIGENCIA_HASTA    IN T_VALIDACIONES_PROGRAMA.VIGENCIA_HASTA%TYPE,
+                               O_MENSAJE           OUT VARCHAR2);
+
+   PROCEDURE SP_LIST_VALIDACIONES(O_CURSOR   OUT SYS_REFCURSOR,
+                                 I_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                 I_VALIDACION IN T_VALIDACIONES.N_VALIDACION%TYPE);
+
+  PROCEDURE SP_LIST_VALIDAC_COMBO(O_CURSOR   OUT SYS_REFCURSOR,
+                                  I_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE);
+                                  
+  PROCEDURE SP_LIST_GRUPOS_TARJETA(O_CURSOR OUT SYS_REFCURSOR,
+                                   I_ORIGEN IN VARCHAR2 DEFAULT NULL,
+                                   I_DESTINO VARCHAR2 DEFAULT NULL);
+  
+  PROCEDURE SP_LIST_TRAMOS_TARJETA(O_CURSOR OUT SYS_REFCURSOR,
+                                   I_PROGRAMA IN VARCHAR2 DEFAULT NULL,
+                                   I_EMPRESA IN VARCHAR2 DEFAULT NULL,--LISTA
+                                   I_TIPO_EMPRESA IN VARCHAR2 DEFAULT NULL,
+                                   I_ORIGEN IN VARCHAR2 DEFAULT NULL,--LISTA
+                                   I_DESTINO VARCHAR2 DEFAULT NULL,--LISTA
+                                   I_RESOLUCION IN VARCHAR2 DEFAULT NULL,
+                                   I_VIGENTES IN VARCHAR2 DEFAULT NULL ,--S/N/NULL
+                                   I_GRUPO_TARJETA IN VARCHAR2 DEFAULT NULL,
+                                   I_APLICA_TARJETA IN VARCHAR2 DEFAULT NULL);
+    
+ PROCEDURE SP_LIST_GRUPOS_TARJETA_UNICA(O_CURSOR OUT SYS_REFCURSOR,
+                                   I_PROGRAMA IN VARCHAR2 DEFAULT NULL,
+                                   I_ORIGEN IN VARCHAR2 DEFAULT NULL,
+                                   I_DESTINO VARCHAR2 DEFAULT NULL);
+                                                                 
+  PROCEDURE SP_CAMBIO_GRUPO_TARJETA( I_ID_EMPRESA IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                     I_ID_TIPO_EMPRESA IN T_PRECIOS_TRAMO.ID_TIPO_EMPRESA%TYPE,
+                                     I_ID_ORIGEN IN T_PRECIOS_TRAMO.ID_ORIGEN%TYPE,
+                                     I_ID_DESTINO IN T_PRECIOS_TRAMO.ID_DESTINO%TYPE,
+                                     I_DISTANCIA IN T_PRECIOS_TRAMO.DISTANCIA%TYPE,
+                                     I_FEC_DESDE IN T_PRECIOS_TRAMO.FEC_DESDE%TYPE,
+                                     I_TARJETA_UNICA IN T_PRECIOS_TRAMO.TARJETA_UNICA%TYPE,
+                                     I_ID_GRUPO_TARJ IN T_PRECIOS_TRAMO.ID_GRUPO_TARJETA_UNICA%TYPE);
+                                     
+  PROCEDURE SP_ALTA_GRUPOS_TARJETA(I_N_GRUPO    IN T_GRUPOS_TARJETA_UNICA.N_GRUPO_TARJETA_UNICA%TYPE,
+                                   I_ID_ORIGEN  IN T_GRUPOS_TARJETA_UNICA.ID_ORIGEN_EXT%TYPE DEFAULT NULL,
+                                   I_ID_DESTINO IN T_GRUPOS_TARJETA_UNICA.ID_DESTINO_EXT%TYPE DEFAULT NULL,
+                                   I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE);
+                                   
+  PROCEDURE SP_BAJA_GRUPOS_PROGRAMA(I_ID_PROGRAMA_GRUPO IN T_PROGRAMAS_X_GRUPO.ID_PROGRAMA_GRUPO%TYPE);
+
+END PKG_ADMIN_MANTENEDORES;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_ADMIN_MANTENEDORES IS
+
+  /***************************
+  * Lista los tipos de pagos *
+  ***************************/
+  PROCEDURE SP_LIST_TIPOS_PAGO(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT ID_TIPO_PAGO, N_TIPO_PAGO FROM T_TIPOS_PAGO;
+  END SP_LIST_TIPOS_PAGO;
+
+  /***************************
+  * Lista los programas      *
+  ***************************/
+  PROCEDURE SP_LIST_PROGRAMAS(O_CURSOR OUT SYS_REFCURSOR,
+                              I_FECHA  IN DATE DEFAULT SYSDATE) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT A.ID_PROGRAMA,
+             A.N_PROGRAMA,
+             A.FEC_DESDE,
+             A.FEC_HASTA,
+             A.ID_TIPO_PAGO,
+             NVL(B.N_TIPO_PAGO, '') N_TIPO_PAGO
+        FROM T_PROGRAMAS A, T_TIPOS_PAGO B
+       WHERE A.ID_TIPO_PAGO = B.ID_TIPO_PAGO(+)
+         AND (I_FECHA BETWEEN A.FEC_DESDE AND NVL(A.FEC_HASTA, I_FECHA) OR
+             I_FECHA IS NULL);
+  END SP_LIST_PROGRAMAS;
+
+  /***************************
+  * Lista los periodos       *
+  ***************************/
+  PROCEDURE SP_LIST_PERIODOS(O_CURSOR  OUT SYS_REFCURSOR,
+                             I_PERIODO IN T_PERIODOS_LIQUIDACION.ID_PROGRAMA%TYPE) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT PL.ID_PERIODO,
+             PL.N_PERIODO,
+             PL.FEC_DESDE,
+             PL.FEC_HASTA,
+             PL.ACTIVO,
+             PL.DIAS_REAJUSTE
+        FROM T_PERIODOS_LIQUIDACION PL
+       WHERE PL.ID_PROGRAMA = I_PERIODO
+       ORDER BY 1;
+  END SP_LIST_PERIODOS;
+
+  /********************************
+  * Lista las tarifas             *
+  *********************************/
+  PROCEDURE SP_LIST_TARIFAS(O_CURSOR           OUT SYS_REFCURSOR,
+                            I_FECHA            IN DATE DEFAULT SYSDATE,
+                            I_EMPRESA          IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE DEFAULT 0,
+                            I_PROGRAMA         IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE DEFAULT 0,
+                            I_TIPO_SOLICITANTE IN T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE DEFAULT 0) IS
+  
+    V_SQL        VARCHAR2(10000);
+    V_SQLFILTROS VARCHAR2(10000);
+  
+  BEGIN
+       
+    V_SQLFILTROS := V_SQLFILTROS || 'AND (TF.FEC_DESDE >= TRUNC(TO_DATE('''||I_FECHA||''',''DD/MM/YYYY'')) OR TO_DATE('''||I_FECHA||''',''DD/MM/YYYY'') IS NULL)';
+                              
+    IF I_PROGRAMA <> 0 THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND TS.ID_PROGRAMA = ' ||
+                      I_PROGRAMA;
+    END IF;
+  
+    IF I_EMPRESA <> 0 THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND E.ID_EMPRESA = ' || I_EMPRESA;
+    END IF;
+  
+    IF I_TIPO_SOLICITANTE <> 0 THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND TS.ID_TIPO_SOLICITANTE = ' ||
+                      I_TIPO_SOLICITANTE;
+    END IF;
+  
+    V_SQL := 'SELECT TF.ID_EMPRESA,
+             E.RAZON_SOCIAL,
+             TF.ID_TIPO_SOLICITANTE,
+             TS.N_TIPO_SOLICITANTE,
+             TF.FEC_DESDE,
+             TF.FEC_HASTA,
+             TF.PRECIO,
+             TF.NRO_ORDENANZA,
+             TF.ID_TARIFA,
+             TB.N_TIPO_BOLETO_URBANO,
+             TF.PORC_A_PAGAR,
+             TS.ID_PROGRAMA,
+             P.N_PROGRAMA
+        FROM T_TARIFAS_MUNICIPAL   TF,
+             TRANSPORTE.T_EMPRESAS E,
+             T_TIPOS_SOLICITANTE   TS,
+             T_TIPOS_BOLETO_URBANO TB,
+             T_PROGRAMAS           P
+       WHERE TF.ID_EMPRESA = E.ID_EMPRESA
+         AND P.ID_PROGRAMA=TS.ID_PROGRAMA
+         AND TF.ID_TIPO_SOLICITANTE = TS.ID_TIPO_SOLICITANTE
+         AND TB.ID_TIPO_BOLETO_URBANO(+) = TF.ID_TIPO_BOLETO_URBANO
+         AND TF.ID_TIPO_BOLETO_URBANO IS NULL ' || V_SQLFILTROS ||
+             ' ORDER BY 2, 4';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  END SP_LIST_TARIFAS;
+
+  /********************************
+  * Lista las tarifas capital     *
+  *********************************/
+  PROCEDURE SP_LIST_TARIFAS_URBANA(O_CURSOR OUT SYS_REFCURSOR,
+                                   I_FECHA  IN DATE DEFAULT SYSDATE) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT TF.ID_EMPRESA,
+             E.RAZON_SOCIAL,
+             TF.ID_TIPO_SOLICITANTE,
+             TS.N_TIPO_SOLICITANTE,
+             TF.FEC_DESDE,
+             TF.FEC_HASTA,
+             TF.PRECIO,
+             TF.NRO_ORDENANZA,
+             TF.ID_TARIFA,
+             TB.N_TIPO_BOLETO_URBANO,
+             TF.PORC_A_PAGAR
+        FROM T_TARIFAS_MUNICIPAL   TF,
+             TRANSPORTE.T_EMPRESAS E,
+             T_TIPOS_SOLICITANTE   TS,
+             T_TIPOS_BOLETO_URBANO TB
+       WHERE TF.ID_EMPRESA = E.ID_EMPRESA
+         AND TF.ID_TIPO_SOLICITANTE = TS.ID_TIPO_SOLICITANTE
+         AND TB.ID_TIPO_BOLETO_URBANO(+) = TF.ID_TIPO_BOLETO_URBANO
+         AND (TF.FEC_DESDE >= TRUNC(I_FECHA) OR I_FECHA IS NULL)
+         AND TF.ID_TIPO_BOLETO_URBANO IS NOT NULL
+       ORDER BY 2, 4;
+  END SP_LIST_TARIFAS_URBANA;
+
+  /************************************
+  * Lista los niveles educativos      *
+  ************************************/
+  PROCEDURE SP_LIST_NIVELES_EDUCATIVOS(O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT E.ID_NIVEL_EDUCATIVO, E.N_NIVEL_EDUCATIVO
+        FROM VT_NIVELES_EDUCATIVO E;
+  END SP_LIST_NIVELES_EDUCATIVOS;
+
+  /******************************************************
+  * Alta de un nuevo programa                           *
+  ******************************************************/
+  PROCEDURE SP_ALTA_PROGRAMAS(I_N_PROGRAMA   IN T_PROGRAMAS.N_PROGRAMA%TYPE,
+                              I_FEC_DESDE    IN T_PROGRAMAS.FEC_DESDE%TYPE,
+                              I_FEC_HASTA    IN T_PROGRAMAS.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                              I_ID_TIPO_PAGO IN T_PROGRAMAS.ID_TIPO_PAGO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_PROGRAMA T_PROGRAMAS.ID_PROGRAMA%TYPE;
+  
+  BEGIN
+  
+    SELECT MAX(ID_PROGRAMA) + 1 INTO V_PROGRAMA FROM T_PROGRAMAS;
+  
+    INSERT INTO T_PROGRAMAS
+      (ID_PROGRAMA, N_PROGRAMA, FEC_DESDE, FEC_HASTA, ID_TIPO_PAGO)
+    VALUES
+      (V_PROGRAMA, I_N_PROGRAMA, I_FEC_DESDE, I_FEC_HASTA, I_ID_TIPO_PAGO);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el programa - ' ||
+                              SQLERRM);
+  END SP_ALTA_PROGRAMAS;
+
+  /*****************************************************
+  * Alta de un nuevo tipo de pago                      *
+  ******************************************************/
+  PROCEDURE SP_ALTA_TIPOS_PAGO(I_TIPO_PAGO   IN T_TIPOS_PAGO.ID_TIPO_PAGO%TYPE,
+                               I_N_TIPO_PAGO IN T_TIPOS_PAGO.N_TIPO_PAGO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    INSERT INTO T_TIPOS_PAGO
+      (ID_TIPO_PAGO, N_TIPO_PAGO)
+    VALUES
+      (I_TIPO_PAGO, I_N_TIPO_PAGO);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al dar de alta el tipo de pago - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_TIPOS_PAGO;
+
+  /******************************************************
+  * Alta de un nuevo periodo                            *
+  ******************************************************/
+  PROCEDURE SP_ALTA_PERIODO(I_N_PERIODO     IN T_PERIODOS_LIQUIDACION.N_PERIODO%TYPE,
+                            I_FEC_DESDE     IN T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE DEFAULT SYSDATE,
+                            I_FEC_HASTA     IN T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE,
+                            I_ACTIVO        IN T_PERIODOS_LIQUIDACION.ACTIVO%TYPE DEFAULT 'S',
+                            I_DIAS_REAJUSTE IN T_PERIODOS_LIQUIDACION.DIAS_REAJUSTE%TYPE DEFAULT 30,
+                            I_PROGRAMA      IN T_PERIODOS_LIQUIDACION.ID_PROGRAMA%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_PERIODO T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE;
+  
+  BEGIN
+  
+    SELECT NVL(MAX(ID_PERIODO), 0) + 1
+      INTO V_ID_PERIODO
+      FROM T_PERIODOS_LIQUIDACION;
+  
+    INSERT INTO T_PERIODOS_LIQUIDACION
+      (ID_PERIODO,
+       N_PERIODO,
+       FEC_DESDE,
+       FEC_HASTA,
+       ACTIVO,
+       DIAS_REAJUSTE,
+       ID_PROGRAMA)
+    VALUES
+      (V_ID_PERIODO,
+       I_N_PERIODO,
+       I_FEC_DESDE,
+       I_FEC_HASTA,
+       I_ACTIVO,
+       I_DIAS_REAJUSTE,
+       I_PROGRAMA);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el periodo - ' ||
+                              SQLERRM);
+  END SP_ALTA_PERIODO;
+
+  /******************************************************
+  * Alta de tarifas                                     *
+  ******************************************************/
+  PROCEDURE SP_ALTA_TARIFAS(I_ID_EMPRESA            IN T_TARIFAS_MUNICIPAL.ID_EMPRESA%TYPE,
+                            I_ID_TIPO_SOLICITANTE   IN T_TARIFAS_MUNICIPAL.ID_TIPO_SOLICITANTE%TYPE DEFAULT NULL,
+                            I_FECHA                 IN DATE,
+                            I_PRECIO                IN T_TARIFAS_MUNICIPAL.PRECIO%TYPE,
+                            I_NRO_ORDENANZA         IN T_TARIFAS_MUNICIPAL.NRO_ORDENANZA%TYPE,
+                            I_ID_TIPO_BOLETO_URBANO IN T_TARIFAS_MUNICIPAL.ID_TIPO_BOLETO_URBANO%TYPE DEFAULT NULL,
+                            I_PORC_A_PAGAR          IN T_TARIFAS_MUNICIPAL.PORC_A_PAGAR%TYPE) IS
+  
+    V_ID_TARIFA         T_TARIFAS_MUNICIPAL.ID_TARIFA%TYPE;
+    V_VIGENCIA_ANTERIOR T_TARIFAS_MUNICIPAL.FEC_DESDE%TYPE;
+  
+  BEGIN
+  
+    SELECT MAX(M.FEC_DESDE)
+      INTO V_VIGENCIA_ANTERIOR
+      FROM T_TARIFAS_MUNICIPAL M
+     WHERE M.ID_EMPRESA = I_ID_EMPRESA
+       AND M.ID_TIPO_SOLICITANTE =
+           NVL(I_ID_TIPO_SOLICITANTE, M.ID_TIPO_SOLICITANTE);
+  
+    -- controlo que no pise la vigencia anterior
+    IF V_VIGENCIA_ANTERIOR >= I_FECHA THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'No puede indicar una fecha de vigencia con inicio anterior a la vigencia actual');
+    END IF;
+  
+    IF I_ID_TIPO_SOLICITANTE IS NULL THEN
+      FOR REC IN (SELECT ID_TIPO_SOLICITANTE FROM T_TIPOS_SOLICITANTE) LOOP
+      
+        SELECT NVL(MAX(ID_TARIFA), 0) + 1
+          INTO V_ID_TARIFA
+          FROM T_TARIFAS_MUNICIPAL;
+      
+        UPDATE T_TARIFAS_MUNICIPAL
+           SET FEC_HASTA = I_FECHA - 1 / 24 / 60 / 60
+         WHERE ID_EMPRESA = I_ID_EMPRESA
+           AND ID_TIPO_SOLICITANTE = REC.ID_TIPO_SOLICITANTE;
+      
+        INSERT INTO T_TARIFAS_MUNICIPAL
+          (ID_EMPRESA,
+           ID_TIPO_SOLICITANTE,
+           FEC_DESDE,
+           FEC_HASTA,
+           PRECIO,
+           ID_TARIFA,
+           NRO_ORDENANZA,
+           ID_TIPO_BOLETO_URBANO,
+           PORC_A_PAGAR)
+        VALUES
+          (I_ID_EMPRESA,
+           REC.ID_TIPO_SOLICITANTE,
+           I_FECHA,
+           TO_DATE('01/01/2050', 'DD/MM/YYYY HH24:MI:SS'),
+           I_PRECIO,
+           V_ID_TARIFA,
+           I_NRO_ORDENANZA,
+           I_ID_TIPO_BOLETO_URBANO,
+           I_PORC_A_PAGAR);
+      
+      END LOOP;
+    ELSE
+    
+      SELECT NVL(MAX(ID_TARIFA), 0) + 1
+        INTO V_ID_TARIFA
+        FROM T_TARIFAS_MUNICIPAL;
+    
+      UPDATE T_TARIFAS_MUNICIPAL
+         SET FEC_HASTA = I_FECHA - 1 / 24 / 60 / 60
+       WHERE ID_TIPO_SOLICITANTE = I_ID_TIPO_SOLICITANTE
+         AND ID_EMPRESA = I_ID_EMPRESA;
+    
+      INSERT INTO T_TARIFAS_MUNICIPAL
+        (ID_EMPRESA,
+         ID_TIPO_SOLICITANTE,
+         FEC_DESDE,
+         FEC_HASTA,
+         PRECIO,
+         ID_TARIFA,
+         NRO_ORDENANZA,
+         ID_TIPO_BOLETO_URBANO,
+         PORC_A_PAGAR)
+      VALUES
+        (I_ID_EMPRESA,
+         I_ID_TIPO_SOLICITANTE,
+         I_FECHA,
+         TO_DATE('01/01/2050', 'DD/MM/YYYY HH24:MI:SS'),
+         I_PRECIO,
+         V_ID_TARIFA,
+         I_NRO_ORDENANZA,
+         I_ID_TIPO_BOLETO_URBANO,
+         I_PORC_A_PAGAR);
+    END IF;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta la tarifa - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_TARIFAS;
+  /******************************************************
+  * Modificacion de un programa                         *
+  ******************************************************/
+  PROCEDURE SP_CAMBIO_PROGRAMAS(I_ID_PROGRAMA  IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                I_N_PROGRAMA   IN T_PROGRAMAS.N_PROGRAMA%TYPE DEFAULT NULL,
+                                I_ID_TIPO_PAGO IN T_PROGRAMAS.ID_TIPO_PAGO%TYPE DEFAULT NULL,
+                                I_FEC_HASTA    IN T_PROGRAMAS.FEC_HASTA%TYPE DEFAULT NULL) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_PROGRAMAS P
+       SET P.N_PROGRAMA   = NVL(I_N_PROGRAMA, P.N_PROGRAMA),
+           P.ID_TIPO_PAGO = NVL(I_ID_TIPO_PAGO, P.ID_TIPO_PAGO),
+           P.FEC_HASTA    = NVL(I_FEC_HASTA, P.FEC_HASTA)
+     WHERE P.ID_PROGRAMA = I_ID_PROGRAMA;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el programa - ' ||
+                              SQLERRM);
+  END SP_CAMBIO_PROGRAMAS;
+
+  /******************************************************
+  * Modificacion de un periodo                         *
+  ******************************************************/
+  PROCEDURE SP_CAMBIO_PERIODOS(I_ID_PERIODO    IN T_PERIODOS_LIQUIDACION.ID_PERIODO%TYPE,
+                               I_N_PERIODO     IN T_PERIODOS_LIQUIDACION.N_PERIODO%TYPE DEFAULT NULL,
+                               I_FEC_DESDE     IN T_PERIODOS_LIQUIDACION.FEC_DESDE%TYPE DEFAULT SYSDATE,
+                               I_FEC_HASTA     IN T_PERIODOS_LIQUIDACION.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                               I_ACTIVO        IN T_PERIODOS_LIQUIDACION.ACTIVO%TYPE DEFAULT NULL,
+                               I_DIAS_REAJUSTE IN T_PERIODOS_LIQUIDACION.DIAS_REAJUSTE%TYPE DEFAULT NULL) IS
+  
+  BEGIN
+  
+    UPDATE T_PERIODOS_LIQUIDACION PL
+       SET PL.N_PERIODO     = NVL(I_N_PERIODO, PL.N_PERIODO),
+           PL.FEC_DESDE     = NVL(I_FEC_DESDE, PL.FEC_DESDE),
+           PL.FEC_HASTA     = NVL(I_FEC_HASTA, PL.FEC_HASTA),
+           PL.ACTIVO        = NVL(I_ACTIVO, PL.ACTIVO),
+           PL.DIAS_REAJUSTE = NVL(I_DIAS_REAJUSTE, PL.DIAS_REAJUSTE)
+     WHERE PL.ID_PERIODO = I_ID_PERIODO;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el periodo - ' || SQLERRM);
+    
+  END SP_CAMBIO_PERIODOS;
+
+  /******************************************************
+  * Lista periodos de receso                            *
+  ******************************************************/
+
+  PROCEDURE SP_LIST_PERIODOS_RECESO(O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT PR.ID_PERIODO,
+             P.N_PROGRAMA,
+             PR.FEC_DESDE,
+             PR.FEC_HASTA,
+             PR.ID_NIVEL_EDUCATIVO,
+             V.N_NIVEL_EDUCATIVO,
+             PR.ID_TIPO_SOLICITANTE,
+             TS.N_TIPO_SOLICITANTE
+        FROM T_PERIODOS_RECESO    PR,
+             T_PROGRAMAS          P,
+             T_TIPOS_SOLICITANTE  TS,
+             VT_NIVELES_EDUCATIVO V
+       WHERE PR.ID_TIPO_SOLICITANTE = TS.ID_TIPO_SOLICITANTE
+         AND TS.ID_PROGRAMA = P.ID_PROGRAMA
+         AND V.ID_NIVEL_EDUCATIVO = PR.ID_NIVEL_EDUCATIVO
+         AND PR.ID_NIVEL_EDUCATIVO = V.ID_NIVEL_EDUCATIVO;
+  
+  END SP_LIST_PERIODOS_RECESO;
+
+  /******************************************************
+  * Alta periodos de receso                            *
+  ******************************************************/
+
+  PROCEDURE SP_ALTA_PERIODOS_RECESO(I_FEC_DESDE        IN T_PERIODOS_RECESO.FEC_DESDE%TYPE,
+                                    I_FEC_HASTA        IN T_PERIODOS_RECESO.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                                    I_NIVEL_EDUCATIVO  IN T_PERIODOS_RECESO.ID_NIVEL_EDUCATIVO%TYPE,
+                                    I_TIPO_SOLICITANTE IN T_PERIODOS_RECESO.ID_TIPO_SOLICITANTE%TYPE) IS
+  
+    V_PERIODO T_PERIODOS_RECESO.ID_PERIODO%TYPE;
+  
+  BEGIN
+  
+    SELECT MAX(ID_PERIODO) + 1 INTO V_PERIODO FROM T_PERIODOS_RECESO;
+  
+    INSERT INTO T_PERIODOS_RECESO
+      (ID_PERIODO,
+       FEC_DESDE,
+       FEC_HASTA,
+       ID_NIVEL_EDUCATIVO,
+       ID_TIPO_SOLICITANTE)
+    VALUES
+      (V_PERIODO,
+       I_FEC_DESDE,
+       I_FEC_HASTA,
+       I_NIVEL_EDUCATIVO,
+       I_TIPO_SOLICITANTE);
+  
+    COMMIT;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el periodo de receso - ' ||
+                              SQLERRM);
+  END SP_ALTA_PERIODOS_RECESO;
+
+  PROCEDURE SP_CAMBIO_PERIODOS_RECESO(I_ID_PERIODO       IN T_PERIODOS_RECESO.ID_PERIODO%TYPE,
+                                      I_FEC_DESDE        IN T_PERIODOS_RECESO.FEC_DESDE%TYPE,
+                                      I_FEC_HASTA        IN T_PERIODOS_RECESO.FEC_HASTA%TYPE DEFAULT SYSDATE,
+                                      I_NIVEL_EDUCATIVO  IN T_PERIODOS_RECESO.ID_NIVEL_EDUCATIVO%TYPE,
+                                      I_TIPO_SOLICITANTE IN T_PERIODOS_RECESO.ID_TIPO_SOLICITANTE%TYPE) IS
+  
+  BEGIN
+  
+    UPDATE T_PERIODOS_RECESO
+       SET FEC_DESDE           = NVL(I_FEC_DESDE, FEC_DESDE),
+           FEC_HASTA           = NVL(I_FEC_HASTA, FEC_HASTA),
+           ID_NIVEL_EDUCATIVO  = NVL(I_NIVEL_EDUCATIVO, ID_NIVEL_EDUCATIVO),
+           ID_TIPO_SOLICITANTE = NVL(I_TIPO_SOLICITANTE, ID_TIPO_SOLICITANTE)
+     WHERE ID_PERIODO = I_ID_PERIODO;
+  
+    COMMIT;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el periodo de receso - ' ||
+                              SQLERRM);
+  END SP_CAMBIO_PERIODOS_RECESO;
+
+  PROCEDURE SP_LIST_COEFICIENTES(O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT CS.ID_TIPO_SOLICITANTE,
+             TS.N_TIPO_SOLICITANTE,
+             CS.COEFICIENTE,
+             CS.FEC_DESDE,
+             CS.FEC_HASTA,
+             TS.ID_PROGRAMA,
+             P.N_PROGRAMA,
+             E.ID_EMPRESA,
+             E.RAZON_SOCIAL
+        FROM T_COEFICIENTES_SOLICITANTE CS,
+             T_TIPOS_SOLICITANTE        TS,
+             T_PROGRAMAS                P,
+             TRANSPORTE.T_EMPRESAS      E
+       WHERE CS.ID_TIPO_SOLICITANTE = TS.ID_TIPO_SOLICITANTE
+         AND P.ID_PROGRAMA = TS.ID_PROGRAMA
+         AND SYSDATE BETWEEN NVL(TRUNC(CS.FEC_DESDE), SYSDATE) AND
+             NVL(TRUNC(CS.FEC_HASTA), SYSDATE)
+         AND CS.ID_EMPRESA = E.ID_EMPRESA(+)
+      /* UNION
+      SELECT TS.ID_TIPO_SOLICITANTE,
+             TS.N_TIPO_SOLICITANTE,
+             NULL,
+             NULL,
+             NULL,
+             P.ID_PROGRAMA,
+             P.N_PROGRAMA,
+             NULL,
+             NULL
+        FROM T_TIPOS_SOLICITANTE TS, T_PROGRAMAS P
+       WHERE P.ID_PROGRAMA = TS.ID_PROGRAMA
+         AND TS.ID_TIPO_SOLICITANTE NOT IN
+             (SELECT CS.ID_TIPO_SOLICITANTE
+                FROM T_COEFICIENTES_SOLICITANTE CS, T_TIPOS_SOLICITANTE TS
+               WHERE CS.ID_TIPO_SOLICITANTE = TS.ID_TIPO_SOLICITANTE
+                 AND TRUNC(CS.FEC_HASTA) IS NULL)*/
+      ;
+  
+  END SP_LIST_COEFICIENTES;
+
+  PROCEDURE SP_ALTA_COEFICIENTES(I_ID_TIPO_SOLICITANTE IN T_COEFICIENTES_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                 I_COEFICIENTE         IN T_COEFICIENTES_SOLICITANTE.COEFICIENTE%TYPE,
+                                 I_FECHA               IN T_COEFICIENTES_SOLICITANTE.FEC_DESDE%TYPE,
+                                 I_EMPRESA             IN T_COEFICIENTES_SOLICITANTE.ID_EMPRESA%TYPE DEFAULT NULL) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    -- CIERRO SI TENIA VIGENTE
+  
+    UPDATE T_COEFICIENTES_SOLICITANTE C
+       SET C.FEC_HASTA = I_FECHA - 1 / 24 / 60 / 60
+     WHERE C.ID_TIPO_SOLICITANTE = I_ID_TIPO_SOLICITANTE
+       AND NVL(C.ID_EMPRESA, -1) = NVL(I_EMPRESA, -1)
+       AND C.FEC_HASTA IS NULL;
+  
+    -- INSERTO EL NUEVO
+    INSERT INTO T_COEFICIENTES_SOLICITANTE
+      (ID_TIPO_SOLICITANTE, COEFICIENTE, FEC_DESDE, ID_EMPRESA)
+    VALUES
+      (I_ID_TIPO_SOLICITANTE, i_COEFICIENTE, I_FECHA, I_EMPRESA);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el coeficiente - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_COEFICIENTES;
+
+  /*PROCEDURE SP_MODIF_COEFICIENTES(I_TIPO_SOLICITANTE IN T_COEFICIENTES_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                  I_COEFICIENTE      IN T_COEFICIENTES_SOLICITANTE.COEFICIENTE%TYPE,
+                                  I_PROGRAMA         IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE) IS
+  
+  BEGIN
+  
+    UPDATE T_COEFICIENTES_SOLICITANTE
+       SET FEC_HASTA = SYSDATE
+     WHERE ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE;
+  
+    INSERT INTO T_COEFICIENTES_SOLICITANTE
+      (ID_TIPO_SOLICITANTE, COEFICIENTE, FEC_DESDE)
+    VALUES
+      (I_TIPO_SOLICITANTE, I_COEFICIENTE, SYSDATE);
+  
+    COMMIT;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el coeficiente - ' ||
+                              SQLERRM);
+    
+  END SP_MODIF_COEFICIENTES;*/
+
+  PROCEDURE SP_BAJA_COEFICIENTES(I_TIPO_SOLICITANTE IN T_COEFICIENTES_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                 I_EMPRESA          IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE) IS
+  
+  BEGIN
+  
+    UPDATE T_COEFICIENTES_SOLICITANTE
+       SET FEC_HASTA = SYSDATE
+     WHERE ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+       AND ID_EMPRESA = I_EMPRESA;
+  
+    /*  UPDATE T_TIPOS_SOLICITANTE
+         SET FEC_HASTA = SYSDATE
+       WHERE ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE;
+    */
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de baja el coeficiente - ' ||
+                              SQLERRM);
+    
+  END SP_BAJA_COEFICIENTES;
+
+  /**********************************************
+  * Lista de tarjetas                           *
+  **********************************************/
+  PROCEDURE SP_LIST_TARJETAS(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT T.ID_TARJETA,
+             T.UIDS,
+             T.ID_ADMINISTRADORA,
+             T.FEC_GRABACION,
+             T.COBRA_SN,
+             T.NRO_SERIE,
+             T.FEC_VENCIMIENTO,
+             T.CUIL,
+             T.ANIO
+        FROM T_TARJETAS T;
+  END SP_LIST_TARJETAS;
+
+  /*********************************************
+  * Alta de tarjetas                           *
+  *********************************************/
+  PROCEDURE SP_ALTA_TARJETAS(I_UIDS            IN T_TARJETAS.UIDS%TYPE,
+                             I_ADMINISTRADORA  IN T_TARJETAS.ID_ADMINISTRADORA%TYPE,
+                             I_NRO_SERIE       IN T_TARJETAS.NRO_SERIE%TYPE,
+                             I_ANIO            IN T_TARJETAS.ANIO%TYPE DEFAULT NULL,
+                             O_TARJETA out T_TARJETAS.ID_TARJETA%TYPE
+                            ) IS
+  
+  BEGIN
+  
+    SELECT MAX(NVL(ID_TARJETA,0)) + 1 INTO O_TARJETA FROM T_TARJETAS;
+  
+    INSERT INTO T_TARJETAS
+      (ID_TARJETA,
+       UIDS,
+       ID_ADMINISTRADORA,
+       NRO_SERIE,
+       ANIO)
+    VALUES
+      (O_TARJETA,
+       I_UIDS,
+       I_ADMINISTRADORA,
+       I_NRO_SERIE,
+       I_ANIO);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta la tarjeta - ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_TARJETAS;
+
+  /*********************************************
+  * Baja de tarjetas                           *
+  *********************************************/
+  PROCEDURE SP_BAJA_TARJETAS(I_UIDS        IN T_TARJETAS.UIDS%TYPE,
+                             I_NRO_SERIE   IN T_TARJETAS.NRO_SERIE%TYPE,
+                             I_MOTIVO_BAJA IN T_TARJETAS.ID_MOTIVO_BAJA%TYPE) IS
+  
+  BEGIN
+    UPDATE T_TARJETAS
+       SET ID_MOTIVO_BAJA = I_MOTIVO_BAJA,
+           USR_BAJA       = USER,
+           FEC_BAJA       = SYSDATE
+     WHERE UIDS = NVL(I_UIDS, UIDS)
+       AND NRO_SERIE = NVL(I_NRO_SERIE, NRO_SERIE);
+  
+    COMMIT;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de baja la empresa - ' ||
+                              SQLERRM);
+  END SP_BAJA_TARJETAS;
+
+  /***************************************
+  * Alta de empresas                     *
+  ****************************************/
+  PROCEDURE SP_ALTA_EMPRESAS(I_RAZON_SOCIAL         IN TRANSPORTE.T_EMPRESAS.RAZON_SOCIAL%TYPE,
+                             I_NOMBRE_FANTASIA      IN TRANSPORTE.T_EMPRESAS.NOMBRE_FANTASIA%TYPE DEFAULT NULL,
+                             I_CUIT                 IN TRANSPORTE.T_EMPRESAS.CUIT%TYPE,
+                             I_IBRUTOS              IN TRANSPORTE.T_EMPRESAS.IBRUTOS%TYPE,
+                             I_FECHA_INI_ACTIVIDAD  IN TRANSPORTE.T_EMPRESAS.FECHA_INI_ACTIVIDAD%TYPE,
+                             I_FECHA_BAJA_ACTIVIDAD IN TRANSPORTE.T_EMPRESAS.FECHA_BAJA_ACTIVIDAD%TYPE) IS
+  
+    V_EMPRESA TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE;
+  
+  BEGIN
+    SELECT MAX(ID_EMPRESA) + 1 INTO V_EMPRESA FROM TRANSPORTE.T_EMPRESAS;
+  
+    INSERT INTO TRANSPORTE.T_EMPRESAS
+      (ID_EMPRESA,
+       RAZON_SOCIAL,
+       NOMBRE_FANTASIA,
+       CUIT,
+       IBRUTOS,
+       FECHA_INI_ACTIVIDAD,
+       FECHA_BAJA_ACTIVIDAD)
+    VALUES
+      (V_EMPRESA,
+       I_RAZON_SOCIAL,
+       I_NOMBRE_FANTASIA,
+       I_CUIT,
+       I_IBRUTOS,
+       I_FECHA_INI_ACTIVIDAD,
+       I_FECHA_BAJA_ACTIVIDAD);
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta la empresa - ' ||
+                              SQLERRM);
+  END SP_ALTA_EMPRESAS;
+
+  /***************************************
+  * Baja de empresas                     *
+  ****************************************/
+  PROCEDURE SP_BAJA_EMPRESAS(I_EMPRESA IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE) IS
+  BEGIN
+    UPDATE TRANSPORTE.T_EMPRESAS E
+       SET E.FECHA_BAJA = SYSDATE, E.USUARIO_BAJA = USER
+     WHERE E.ID_EMPRESA = I_EMPRESA;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al actualizar la empresa - ' ||
+                              SQLERRM);
+  END SP_BAJA_EMPRESAS;
+
+  /***************************************
+  * Modificacion de empresas             *
+  ****************************************/
+  PROCEDURE SP_CAMBIO_EMPRESAS(I_EMPRESA              IN TRANSPORTE.T_EMPRESAS.ID_EMPRESA%TYPE,
+                               I_RAZON_SOCIAL         IN TRANSPORTE.T_EMPRESAS.RAZON_SOCIAL%TYPE,
+                               I_NOMBRE_FANTASIA      IN TRANSPORTE.T_EMPRESAS.NOMBRE_FANTASIA%TYPE DEFAULT NULL,
+                               I_CUIT                 IN TRANSPORTE.T_EMPRESAS.CUIT%TYPE,
+                               I_IBRUTOS              IN TRANSPORTE.T_EMPRESAS.IBRUTOS%TYPE,
+                               I_FECHA_INI_ACTIVIDAD  IN TRANSPORTE.T_EMPRESAS.FECHA_INI_ACTIVIDAD%TYPE,
+                               I_FECHA_BAJA_ACTIVIDAD IN TRANSPORTE.T_EMPRESAS.FECHA_BAJA_ACTIVIDAD%TYPE) IS
+  
+  BEGIN
+  
+    UPDATE TRANSPORTE.T_EMPRESAS E
+       SET E.RAZON_SOCIAL         = NVL(I_RAZON_SOCIAL, E.RAZON_SOCIAL),
+           E.NOMBRE_FANTASIA      = NVL(I_NOMBRE_FANTASIA, E.NOMBRE_FANTASIA),
+           E.CUIT                 = NVL(I_CUIT, E.CUIT),
+           E.IBRUTOS              = NVL(I_IBRUTOS, E.IBRUTOS),
+           E.FECHA_INI_ACTIVIDAD  = NVL(I_FECHA_INI_ACTIVIDAD,
+                                        FECHA_INI_ACTIVIDAD),
+           E.FECHA_BAJA_ACTIVIDAD = NVL(I_FECHA_BAJA_ACTIVIDAD,
+                                        E.FECHA_BAJA_ACTIVIDAD),
+           E.FECHA_BAJA           = SYSDATE,
+           E.USUARIO_BAJA         = USER
+     WHERE E.ID_EMPRESA = I_EMPRESA;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar la empresa - ' || SQLERRM);
+    
+  END SP_CAMBIO_EMPRESAS;
+
+  /******************************************
+  * Alta de grupos                          *
+  *******************************************/
+  PROCEDURE SP_ALTA_GRUPOS(I_GRUPO       IN TRANSPORTE.T_GRUPOS.N_GRUPO%TYPE,
+                           I_DESCRIPCION IN TRANSPORTE.T_GRUPOS.DESCRIPCION%TYPE DEFAULT NULL) IS
+  
+    V_GRUPO TRANSPORTE.T_GRUPOS.ID_GRUPO%TYPE;
+  
+  BEGIN
+    SELECT MAX(ID_GRUPO) + 1 INTO V_GRUPO FROM TRANSPORTE.T_GRUPOS;
+  
+    INSERT INTO TRANSPORTE.T_GRUPOS
+      (ID_GRUPO, N_GRUPO, DESCRIPCION)
+    VALUES
+      (V_GRUPO, I_GRUPO, I_DESCRIPCION);
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el grupo - ' || SQLERRM);
+  END SP_ALTA_GRUPOS;
+
+  /*******************************************
+  * Lista de grupos                          *
+  *******************************************/
+  PROCEDURE SP_LIST_GRUPOS(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT G.ID_GRUPO, G.N_GRUPO, G.DESCRIPCION
+        FROM TRANSPORTE.T_GRUPOS G;
+  END SP_LIST_GRUPOS;
+
+  /*********************************
+  * LISTA DE TIPOS DE SOLICITANTES *
+  *********************************/
+  PROCEDURE SP_LIST_TIPOS_SOLICITANTES(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT P.ID_PROGRAMA,
+             P.N_PROGRAMA,
+             S.ID_TIPO_SOLICITANTE,
+             S.N_TIPO_SOLICITANTE
+        FROM T_TIPOS_SOLICITANTE S, T_PROGRAMAS P
+       WHERE P.ID_PROGRAMA = S.ID_PROGRAMA
+         AND SYSDATE BETWEEN NVL(S.FEC_DESDE, SYSDATE) AND
+             NVL(S.FEC_HASTA, SYSDATE)
+       ORDER BY P.ID_PROGRAMA, S.ID_TIPO_SOLICITANTE;
+  
+  END SP_LIST_TIPOS_SOLICITANTES;
+
+  /*********************************
+  * ALTA TIPOS DE SOLICITANTES     *
+  *********************************/
+  PROCEDURE SP_ALTA_TIPOS_SOLICITANTES(I_N_TIPO_SOLICITANTE T_TIPOS_SOLICITANTE.N_TIPO_SOLICITANTE%TYPE,
+                                       I_PROGRAMA           T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE) IS
+  
+    V_TIPO_SOLICITANTE T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE;
+  
+  BEGIN
+  
+    SELECT MAX(ID_TIPO_SOLICITANTE) + 1
+      INTO V_TIPO_SOLICITANTE
+      FROM T_TIPOS_SOLICITANTE;
+  
+    INSERT INTO T_TIPOS_SOLICITANTE
+      (ID_TIPO_SOLICITANTE, N_TIPO_SOLICITANTE, ID_PROGRAMA, FEC_DESDE)
+    VALUES
+      (V_TIPO_SOLICITANTE, I_N_TIPO_SOLICITANTE, I_PROGRAMA, SYSDATE);
+  
+  END SP_ALTA_TIPOS_SOLICITANTES;
+
+  /***********************************
+  * ALTA DE UN TIPO DE BOLETO URBANO *
+  ***********************************/
+  PROCEDURE SP_ALTA_TIPO_BOLETO_URBANO(I_N_TIPO_BOLETO_URBANO IN T_TIPOS_BOLETO_URBANO.N_TIPO_BOLETO_URBANO%TYPE,
+                                       I_PORCENTAJE           IN T_TIPOS_BOLETO_URBANO.PORC_TARIFA%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_TIPO_BOLETO_URBANO T_TIPOS_BOLETO_URBANO.ID_TIPO_BOLETO_URBANO%TYPE;
+  
+  BEGIN
+  
+    SELECT MAX(NVL(ID_TIPO_BOLETO_URBANO, 0)) + 1
+      INTO V_TIPO_BOLETO_URBANO
+      FROM T_TIPOS_BOLETO_URBANO;
+  
+    INSERT INTO T_TIPOS_BOLETO_URBANO
+      (ID_TIPO_BOLETO_URBANO, N_TIPO_BOLETO_URBANO, PORC_TARIFA)
+    VALUES
+      (V_TIPO_BOLETO_URBANO, I_N_TIPO_BOLETO_URBANO, I_PORCENTAJE);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE;
+  END SP_ALTA_TIPO_BOLETO_URBANO;
+
+  /****************************************
+  * MODIFICACION TIPOS DE BOLETOS URBANOS *
+  ****************************************/
+  PROCEDURE SP_CAMBIO_TIPO_BOLETO_URBANO(I_ID_TIPO_BOLETO_URBANO IN T_TIPOS_BOLETO_URBANO.ID_TIPO_BOLETO_URBANO%TYPE,
+                                         I_N_TIPO_BOLETO_URBANO  IN T_TIPOS_BOLETO_URBANO.N_TIPO_BOLETO_URBANO%TYPE,
+                                         I_PORCENTAJE            IN T_TIPOS_BOLETO_URBANO.PORC_TARIFA%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_TIPOS_BOLETO_URBANO
+       SET N_TIPO_BOLETO_URBANO = I_N_TIPO_BOLETO_URBANO,
+           PORC_TARIFA          = NVL(I_PORCENTAJE, PORC_TARIFA)
+     WHERE ID_TIPO_BOLETO_URBANO = I_ID_TIPO_BOLETO_URBANO;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE;
+  END SP_CAMBIO_TIPO_BOLETO_URBANO;
+
+  /***********************************
+  * BAJA DE TIPOS DE BOLETOS URBANOS *
+  ***********************************/
+  PROCEDURE SP_BAJA_TIPOS_BOLETO_URBANO(I_ID_TIPO_BOLETO_URBANO IN T_TIPOS_BOLETO_URBANO.ID_TIPO_BOLETO_URBANO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    DELETE FROM T_TIPOS_BOLETO_URBANO
+     WHERE ID_TIPO_BOLETO_URBANO = I_ID_TIPO_BOLETO_URBANO;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE;
+  END SP_BAJA_TIPOS_BOLETO_URBANO;
+
+  /************************************
+  * Lista de tipos de boletos urbanos *
+  ************************************/
+  PROCEDURE SP_LIST_TIPOS_BOLETO_URBANO(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT ID_TIPO_BOLETO_URBANO, N_TIPO_BOLETO_URBANO, PORC_TARIFA
+        FROM T_TIPOS_BOLETO_URBANO;
+  
+  END SP_LIST_TIPOS_BOLETO_URBANO;
+
+  /************************************
+  * Baja tipo de solicitante          *
+  ************************************/
+  PROCEDURE SP_BAJA_TIPO_SOLICITANTE(I_TIPO_SOLICITANTE IN T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE) IS
+  
+  BEGIN
+  
+    UPDATE T_TIPOS_SOLICITANTE
+       SET FEC_HASTA = SYSDATE
+     WHERE ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de baja el tipo de solicitante - ' ||
+                              SQLERRM);
+    
+  END SP_BAJA_TIPO_SOLICITANTE;
+
+  /************************************
+  * Modificacion tipo de solicitante  *
+  ************************************/
+  PROCEDURE SP_CAMBIO_TIPO_SOLICITANTE(I_TIPO_SOLICITANTE   IN T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                       I_N_TIPO_SOLICITANTE IN T_TIPOS_SOLICITANTE.N_TIPO_SOLICITANTE%TYPE) IS
+  
+  BEGIN
+  
+    UPDATE T_TIPOS_SOLICITANTE S
+       SET S.N_TIPO_SOLICITANTE = I_N_TIPO_SOLICITANTE
+     WHERE ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al modificar el tipo de solicitante - ' ||
+                              SQLERRM);
+    
+  END SP_CAMBIO_TIPO_SOLICITANTE;
+
+  /*******************************************
+  * Lista las empresas por tipo de servicio  *
+  ********************************************/
+  PROCEDURE SP_LIST_EMPRESAS_X_URBANO(O_CURSOR OUT SYS_REFCURSOR,
+                                      I_CUIL   IN T_USUARIOS_EMPRESAS.CUIL%TYPE) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT E.RAZON_SOCIAL, E.ID_EMPRESA
+        FROM TRANSPORTE.T_EMPRESAS        E,
+             TRANSPORTE.T_EMPRESAS_X_TIPO ET,
+             T_USUARIOS_EMPRESAS          U
+       WHERE E.ID_EMPRESA = ET.ID_EMPRESA
+         AND U.ID_EMPRESA = E.ID_EMPRESA
+         AND ET.ID_TIPO_EMPRESA = 4
+         AND U.CUIL = I_CUIL;
+  
+  END SP_LIST_EMPRESAS_X_URBANO;
+
+  /*******************************************
+  * Lista los coeficientes por programa      *
+  ********************************************/
+  PROCEDURE SP_LIST_SOLIC_X_PROGRAMA(I_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                     O_CURSOR   OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT TS.ID_TIPO_SOLICITANTE,
+             TS.N_TIPO_SOLICITANTE,
+             P.ID_PROGRAMA,
+             P.N_PROGRAMA
+        FROM T_TIPOS_SOLICITANTE TS, T_PROGRAMAS P
+       WHERE TS.ID_PROGRAMA = P.ID_PROGRAMA
+         AND P.ID_PROGRAMA = I_PROGRAMA
+         AND SYSDATE BETWEEN NVL(TS.FEC_DESDE, SYSDATE) AND
+             NVL(TS.FEC_HASTA, SYSDATE);
+  
+  END SP_LIST_SOLIC_X_PROGRAMA;
+
+  /*******************************************
+  * Lista las empresas por tipo interurbano  *
+  ********************************************/
+  PROCEDURE SP_LIST_EMP_X_INTERURBANO(O_CURSOR OUT SYS_REFCURSOR,
+                                      I_CUIL   IN T_USUARIOS_EMPRESAS.CUIL%TYPE) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT E.ID_EMPRESA, E.RAZON_SOCIAL
+        FROM TRANSPORTE.T_EMPRESAS        E,
+             TRANSPORTE.T_EMPRESAS_X_TIPO ET,
+             T_USUARIOS_EMPRESAS          U
+       WHERE E.ID_EMPRESA = ET.ID_EMPRESA
+         AND U.ID_EMPRESA = E.ID_EMPRESA
+         AND ET.ID_TIPO_EMPRESA = 2
+         AND U.CUIL = I_CUIL;
+  
+  END SP_LIST_EMP_X_INTERURBANO;
+
+  /*******************************************
+  * Lista de bandas horarias                 *
+  ********************************************/
+
+  PROCEDURE SP_LIST_BANDA_HORARIA(O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT B.N_BANDA_HORARIA,
+             B.HORA_DESDE,
+             B.HORA_HASTA,
+             B.ID_BANDA_HORARIA
+        FROM T_BANDAS_HORARIA B
+       WHERE B.FEC_HASTA IS NULL;
+  
+  END SP_LIST_BANDA_HORARIA;
+  
+  /*******************************************
+  * Lista de bandas horarias combo           *
+  ********************************************/
+
+  PROCEDURE SP_LIST_BANDA_HORARIA_COMBO(O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT ROWNUM as ID_BANDA_HORARIA,
+       N_BANDA_HORARIA       
+       FROM
+       (SELECT distinct B.N_BANDA_HORARIA
+        FROM T_BANDAS_HORARIA B
+       WHERE B.FEC_HASTA IS NULL
+       ORDER BY B.N_BANDA_HORARIA);
+  
+  END SP_LIST_BANDA_HORARIA_COMBO;
+
+  /*******************************************
+  * Alta de bandas horarias                   *
+  ********************************************/
+  PROCEDURE SP_ALTA_BANDA_HORARIA(I_N_BANDA    IN T_BANDAS_HORARIA.N_BANDA_HORARIA%TYPE,
+                                  I_HORA_DESDE IN T_BANDAS_HORARIA.HORA_DESDE%TYPE,
+                                  I_HORA_HASTA IN T_BANDAS_HORARIA.HORA_HASTA%TYPE,
+                                  I_ID_BANDA IN T_BANDAS_HORARIA.ID_BANDA_HORARIA%TYPE) IS
+  
+    V_BANDA T_BANDAS_HORARIA.ID_BANDA_HORARIA%TYPE;
+  
+  BEGIN
+    SP_BAJA_BANDA_HORARIA(I_ID_BANDA);
+    
+    SELECT NVL(MAX(ID_BANDA_HORARIA), 0) + 1
+      INTO V_BANDA
+      FROM T_BANDAS_HORARIA;
+  
+    INSERT INTO T_BANDAS_HORARIA
+      (ID_BANDA_HORARIA,
+       N_BANDA_HORARIA,
+       HORA_DESDE,
+       HORA_HASTA,
+       FEC_DESDE)
+    VALUES
+      (V_BANDA, I_N_BANDA, I_HORA_DESDE, I_HORA_HASTA, SYSDATE);
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta la banda horaria - ' ||
+                              SQLERRM);
+  END SP_ALTA_BANDA_HORARIA;
+
+  /*******************************************
+  * Cambio bandas horarias                   *
+  ********************************************/
+  PROCEDURE SP_CAMBIO_BANDA_HORARIA(I_ID_BANDA   IN T_BANDAS_HORARIA.ID_BANDA_HORARIA%TYPE,
+                                    I_HORA_DESDE IN T_BANDAS_HORARIA.HORA_DESDE%TYPE,
+                                    I_HORA_HASTA IN T_BANDAS_HORARIA.HORA_HASTA%TYPE) IS
+  
+  BEGIN
+    UPDATE T_BANDAS_HORARIA
+       SET HORA_DESDE = NVL(I_HORA_DESDE, HORA_DESDE),
+           HORA_HASTA = NVL(I_HORA_HASTA, HORA_HASTA)
+     WHERE ID_BANDA_HORARIA = I_ID_BANDA;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al actualizar la banda horaria - ' ||
+                              SQLERRM);
+  END SP_CAMBIO_BANDA_HORARIA;
+
+  /*******************************************
+  * Baja bandas horarias                   *
+  ********************************************/
+  PROCEDURE SP_BAJA_BANDA_HORARIA(I_ID_BANDA IN T_BANDAS_HORARIA.ID_BANDA_HORARIA%TYPE) IS
+  
+  BEGIN
+    UPDATE T_BANDAS_HORARIA
+       SET FEC_HASTA = SYSDATE
+     WHERE ID_BANDA_HORARIA = I_ID_BANDA;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al da de baja la banda horaria - ' ||
+                              SQLERRM);
+  END SP_BAJA_BANDA_HORARIA;
+
+  /**********************************************************************
+  * Eliminar validaciones                                               *
+  * Se usa para modificar en las pantallas de gestion de validaciones   *
+  ***********************************************************************/
+
+  PROCEDURE SP_BAJA_VALIDACIONES(I_ID_VALIDACION_PROGRAMA IN T_VALIDACIONES_PROGRAMA.ID_VALIDACION_PROGRAMA%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_VALIDACIONES_PROGRAMA T
+       SET T.VIGENCIA_HASTA = SYSDATE
+     WHERE T.ID_VALIDACION_PROGRAMA = I_ID_VALIDACION_PROGRAMA;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'ERROR AL DAR DE BAJA LA VALIDACION' ||
+                              SQLERRM);
+  END SP_BAJA_VALIDACIONES;
+
+  PROCEDURE SP_ALTA_VALIDACION(I_N_VALIDACION      IN T_VALIDACIONES.N_VALIDACION%TYPE,
+                               I_PROCEDIMIENTO     IN T_VALIDACIONES.PROCEDIMIENTO%TYPE,
+                               I_COD_RECHAZO       IN T_VALIDACIONES.COD_RECHAZO%TYPE,
+                               I_PRIORIDAD         IN T_VALIDACIONES_PROGRAMA.PRIORIDAD%TYPE,
+                               I_RECHAZA_SN        IN T_VALIDACIONES_PROGRAMA.RECHAZA_SN%TYPE,
+                               I_LISTA_ID_PROGRAMA IN VARCHAR2 DEFAULT NULL,
+                               I_VIGENCIA_DESDE    IN T_VALIDACIONES_PROGRAMA.VIGENCIA_DESDE%TYPE,
+                               I_VIGENCIA_HASTA    IN T_VALIDACIONES_PROGRAMA.VIGENCIA_HASTA%TYPE,
+                               O_MENSAJE           OUT VARCHAR2) IS
+  
+    V_SQL VARCHAR2(10000);
+  
+  BEGIN
+  
+    V_SQL := '
+    DECLARE 
+      V_ID_VALIDACION T_VALIDACIONES.ID_VALIDACION%TYPE;
+      V_ID_VALIDACION_PROGRAMA T_VALIDACIONES_PROGRAMA.ID_VALIDACION_PROGRAMA%TYPE;
+    BEGIN 
+     SELECT MAX(ID_VALIDACION)+1
+     INTO V_ID_VALIDACION
+     FROM T_VALIDACIONES;
+     
+  
+      
+    INSERT INTO T_VALIDACIONES(ID_VALIDACION, N_VALIDACION,COD_RECHAZO,PROCEDIMIENTO)
+            VALUES(V_ID_VALIDACION, ''' || I_N_VALIDACION ||
+             ''',' || I_COD_RECHAZO || ',''' || I_PROCEDIMIENTO ||
+             ''');
+    
+    FOR REG IN (SELECT ID_PROGRAMA
+               FROM T_PROGRAMAS
+               WHERE ID_PROGRAMA IN (' || I_LISTA_ID_PROGRAMA ||
+             ')) LOOP 
+               
+     SELECT MAX(ID_VALIDACION_PROGRAMA)+1
+     INTO V_ID_VALIDACION_PROGRAMA
+     FROM T_VALIDACIONES_PROGRAMA;
+    
+    INSERT INTO T_VALIDACIONES_PROGRAMA(ID_VALIDACION_PROGRAMA, ID_VALIDACION,ID_PROGRAMA,PRIORIDAD,RECHAZA_SN,VIGENCIA_DESDE)
+    VALUES(V_ID_VALIDACION_PROGRAMA,V_ID_VALIDACION,REG.ID_PROGRAMA,' ||
+             I_PRIORIDAD || ',''' || I_RECHAZA_SN || ''',SYSDATE);
+    
+    END LOOP;
+    
+    COMMIT;
+    
+    END;';
+  
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    EXECUTE IMMEDIATE V_SQL;
+    O_MENSAJE := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      O_MENSAJE := 'ERROR AL INSERTAR LA VALIDACION. RECHAZO ' ||
+                   I_COD_RECHAZO || ' EXISTENTE.';
+  END SP_ALTA_VALIDACION;
+
+  /***************************************************************
+  * Devuelve la lista de validaciones con sus codigos de rechazo *
+  * Se usa para armar los filtros en las pantallas de consulta   *
+  ***************************************************************/
+  PROCEDURE SP_LIST_VALIDACIONES(O_CURSOR   OUT SYS_REFCURSOR,
+                                 I_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE,
+                                 I_VALIDACION IN T_VALIDACIONES.N_VALIDACION%TYPE) IS
+                                 
+   V_SQL        VARCHAR2(10000);
+   V_SQLFILTROS VARCHAR2(10000);
+  
+  BEGIN                                
+   
+  IF I_PROGRAMA IS NOT NULL THEN
+    V_SQLFILTROS:=V_SQLFILTROS || ' AND VP.ID_PROGRAMA = '||I_PROGRAMA;
+  END IF; 
+  
+  IF I_VALIDACION IS NOT NULL THEN
+    V_SQLFILTROS:=V_SQLFILTROS || ' AND V.N_VALIDACION LIKE ''%'||I_VALIDACION||'%''';
+  END IF;
+                     
+
+      V_SQL:=' SELECT V.ID_VALIDACION,
+               V.N_VALIDACION,
+               V.COD_RECHAZO,
+               V.PROCEDIMIENTO,
+               VP.PRIORIDAD,
+               VP.RECHAZA_SN,
+               VP.VIGENCIA_DESDE,
+               VP.VIGENCIA_HASTA,
+               P.N_PROGRAMA,
+               P.ID_PROGRAMA,
+               VP.ID_VALIDACION_PROGRAMA
+          FROM T_VALIDACIONES V, T_VALIDACIONES_PROGRAMA VP, T_PROGRAMAS P
+         WHERE V.ID_VALIDACION = VP.ID_VALIDACION
+         AND VP.ID_PROGRAMA = P.ID_PROGRAMA'
+         ||V_SQLFILTROS;
+         
+          DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+         
+  END SP_LIST_VALIDACIONES;
+
+  PROCEDURE SP_LIST_VALIDAC_COMBO(O_CURSOR   OUT SYS_REFCURSOR,
+                                  I_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE) IS
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT DISTINCT V.ID_VALIDACION,
+                      V.N_VALIDACION,
+                      V.COD_RECHAZO,
+                      VP.PRIORIDAD,
+                      P.N_PROGRAMA,
+                      P.ID_PROGRAMA
+        FROM T_VALIDACIONES V, T_VALIDACIONES_PROGRAMA VP, T_PROGRAMAS P
+       WHERE V.ID_VALIDACION = VP.ID_VALIDACION
+         AND VP.ID_PROGRAMA = P.ID_PROGRAMA
+         AND VP.ID_PROGRAMA = NVL(I_PROGRAMA, VP.ID_PROGRAMA);
+  END SP_LIST_VALIDAC_COMBO;
+  
+  PROCEDURE SP_LIST_GRUPOS_TARJETA(O_CURSOR OUT SYS_REFCURSOR,
+                                   I_ORIGEN IN VARCHAR2 DEFAULT NULL,
+                                   I_DESTINO VARCHAR2 DEFAULT NULL) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT G.ID_GRUPO_TARJETA_UNICA, 
+             G.N_GRUPO_TARJETA_UNICA
+        FROM T_GRUPOS_TARJETA_UNICA G
+       WHERE G.ID_ORIGEN_EXT = NVL(I_ORIGEN,G.ID_ORIGEN_EXT)
+         AND G.ID_DESTINO_EXT = NVL(I_DESTINO,G.ID_DESTINO_EXT)
+      ;
+  
+  END SP_LIST_GRUPOS_TARJETA;
+  
+ PROCEDURE SP_LIST_GRUPOS_TARJETA_UNICA(O_CURSOR OUT SYS_REFCURSOR,
+                                   I_PROGRAMA IN VARCHAR2 DEFAULT NULL,
+                                   I_ORIGEN IN VARCHAR2 DEFAULT NULL,
+                                   I_DESTINO VARCHAR2 DEFAULT NULL
+    ) IS
+
+  V_SQL        VARCHAR2(10000);
+  V_SQLFILTROS VARCHAR2(10000);
+
+  BEGIN
+
+    IF I_PROGRAMA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || '  AND P.ID_PROGRAMA = '||
+                      I_PROGRAMA;
+    END IF;
+    
+    IF I_ORIGEN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND O.ID_PUNTO in( ' ||
+                      I_ORIGEN || ' )';
+    END IF;
+    
+     IF I_DESTINO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND D.ID_PUNTO in( ' ||
+                      I_DESTINO || ' )';
+    END IF;
+    
+
+    V_SQL := '
+      SELECT P.N_PROGRAMA,PG.ID_GRUPO_TARJETA_UNICA,GT.N_GRUPO_TARJETA_UNICA, O.N_PUNTO ORIGEN, 
+             D.N_PUNTO DESTINO, PG.ID_PROGRAMA_GRUPO
+          FROM T_PROGRAMAS_X_GRUPO PG
+           , T_PROGRAMAS P
+           , VT_PUNTOS O
+           , VT_PUNTOS D
+           , T_GRUPOS_TARJETA_UNICA GT
+       WHERE P.ID_PROGRAMA = PG.ID_PROGRAMA
+         AND O.ID_PUNTO = GT.ID_ORIGEN_EXT
+         AND D.ID_PUNTO = GT.Id_Destino_Ext
+         AND PG.FEC_HASTA IS NULL
+         AND GT.ID_GRUPO_TARJETA_UNICA = PG.ID_GRUPO_TARJETA_UNICA'
+         || V_SQLFILTROS ;
+
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+
+    OPEN O_CURSOR FOR V_SQL;
+
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al recuperar el listado de grupos tarjeta unica. ' ||
+                              SQLERRM);
+  END SP_LIST_GRUPOS_TARJETA_UNICA;
+
+  
+  PROCEDURE SP_LIST_TRAMOS_TARJETA(O_CURSOR OUT SYS_REFCURSOR,
+                                   I_PROGRAMA IN VARCHAR2 DEFAULT NULL,
+                                   I_EMPRESA IN VARCHAR2 DEFAULT NULL,--LISTA
+                                   I_TIPO_EMPRESA IN VARCHAR2 DEFAULT NULL,
+                                   I_ORIGEN IN VARCHAR2 DEFAULT NULL,--LISTA
+                                   I_DESTINO VARCHAR2 DEFAULT NULL,--LISTA
+                                   I_RESOLUCION IN VARCHAR2 DEFAULT NULL,
+                                   I_VIGENTES IN VARCHAR2 DEFAULT NULL ,--S/N/NULL
+                                   I_GRUPO_TARJETA IN VARCHAR2 DEFAULT NULL,
+                                   I_APLICA_TARJETA IN VARCHAR2 DEFAULT NULL
+    ) IS
+  
+  V_SQL        VARCHAR2(10000);
+  V_SQLFILTROS VARCHAR2(10000);
+    
+  BEGIN
+    
+    IF I_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND E.ID_EMPRESA in( ' ||
+                      I_EMPRESA || ' )';
+    END IF;
+    
+    IF I_TIPO_EMPRESA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND PT.ID_TIPO_EMPRESA in( ' ||
+                      I_TIPO_EMPRESA || ' )';
+    END IF;
+    
+    IF I_ORIGEN IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND O.ID_PUNTO in( ' ||
+                      I_ORIGEN || ' )';
+    END IF;
+    
+    IF I_DESTINO IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND D.ID_PUNTO in( ' ||
+                      I_DESTINO || ' )';
+    END IF;
+    
+    IF I_VIGENTES IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND (( ''' || I_VIGENTES || ''' = ''S'' AND PT.FEC_HASTA IS NULL) 
+           OR ( '''|| I_VIGENTES || ''' = ''N'' AND PT.FEC_HASTA IS NOT NULL)'
+                      || ' )';
+    END IF;
+    
+    IF I_RESOLUCION IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || ' AND INSTR(UPPER(PT.RESOLUCION),UPPER('''||I_RESOLUCION||''')) = 1 ';
+    END IF;
+    
+    IF I_PROGRAMA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || '  AND P.ID_PROGRAMA = '||
+                      I_PROGRAMA;
+    END IF;
+    
+    IF I_GRUPO_TARJETA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || '  AND PT.ID_GRUPO_TARJETA_UNICA = '||
+                      I_GRUPO_TARJETA;
+    END IF;
+    
+    IF I_APLICA_TARJETA IS NOT NULL THEN
+      V_SQLFILTROS := V_SQLFILTROS || '  AND NVL(PT.TARJETA_UNICA, '||'''N'''||') = '''|| I_APLICA_TARJETA || '''';
+    END IF;
+
+    V_SQL := '
+      SELECT PG.ID_PROGRAMA, P.N_PROGRAMA, PT.ID_EMPRESA, E.RAZON_SOCIAL, PT.ID_TIPO_EMPRESA, S.N_TIPO_EMPRESA, PT.ID_ORIGEN, O.N_PUNTO ORIGEN, PT.ID_DESTINO, D.N_PUNTO DESTINO,
+           PT.DISTANCIA, PT.RESOLUCION, PT.IMPORTE, PT.FEC_DESDE, PT.FEC_HASTA, PG.ID_GRUPO_TARJETA_UNICA, 
+           GT.N_GRUPO_TARJETA_UNICA, PT.TARJETA_UNICA
+        FROM T_PROGRAMAS_X_GRUPO PG
+           , T_PROGRAMAS P
+           , T_PRECIOS_TRAMO PT
+           , TRANSPORTE.T_EMPRESAS E
+           , TRANSPORTE.T_TIPOS_EMPRESA S
+           , VT_PUNTOS O
+           , VT_PUNTOS D
+           , T_GRUPOS_TARJETA_UNICA GT
+       WHERE P.ID_PROGRAMA = PG.ID_PROGRAMA
+         AND PT.ID_GRUPO_TARJETA_UNICA = PG.ID_GRUPO_TARJETA_UNICA
+         AND E.ID_EMPRESA = PT.ID_EMPRESA
+         AND O.ID_PUNTO = PT.ID_ORIGEN
+         AND D.ID_PUNTO = PT.ID_DESTINO
+         AND PT.ID_TIPO_EMPRESA = S.ID_TIPO_EMPRESA
+         AND GT.ID_GRUPO_TARJETA_UNICA = PG.ID_GRUPO_TARJETA_UNICA'
+         || V_SQLFILTROS
+       ;
+       
+    DBMS_OUTPUT.PUT_LINE(V_SQL);
+  
+    OPEN O_CURSOR FOR V_SQL;
+  
+  END SP_LIST_TRAMOS_TARJETA;
+  
+  PROCEDURE SP_CAMBIO_GRUPO_TARJETA( I_ID_EMPRESA IN T_PRECIOS_TRAMO.ID_EMPRESA%TYPE,
+                                     I_ID_TIPO_EMPRESA IN T_PRECIOS_TRAMO.ID_TIPO_EMPRESA%TYPE,
+                                     I_ID_ORIGEN IN T_PRECIOS_TRAMO.ID_ORIGEN%TYPE,
+                                     I_ID_DESTINO IN T_PRECIOS_TRAMO.ID_DESTINO%TYPE,
+                                     I_DISTANCIA IN T_PRECIOS_TRAMO.DISTANCIA%TYPE,
+                                     I_FEC_DESDE IN T_PRECIOS_TRAMO.FEC_DESDE%TYPE,
+                                     I_TARJETA_UNICA IN T_PRECIOS_TRAMO.TARJETA_UNICA%TYPE,
+                                     I_ID_GRUPO_TARJ IN T_PRECIOS_TRAMO.ID_GRUPO_TARJETA_UNICA%TYPE) IS
+  
+  BEGIN
+    
+    UPDATE T_PRECIOS_TRAMO T
+       SET TARJETA_UNICA = NVL(I_TARJETA_UNICA, TARJETA_UNICA),
+           ID_GRUPO_TARJETA_UNICA = NVL(I_ID_GRUPO_TARJ, ID_GRUPO_TARJETA_UNICA)
+     WHERE ID_EMPRESA = I_ID_EMPRESA
+       AND ID_TIPO_EMPRESA = I_ID_TIPO_EMPRESA
+       AND ID_ORIGEN = I_ID_ORIGEN
+       AND ID_DESTINO = I_ID_DESTINO
+       AND DISTANCIA = I_DISTANCIA
+       AND FEC_DESDE = I_FEC_DESDE;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al actualizar el grupo de tarjeta única - ' ||
+                              SQLERRM);
+                              
+  END SP_CAMBIO_GRUPO_TARJETA;
+  
+  /******************************************
+  * Alta de grupos Tarjeta Única            *
+  *******************************************/
+  PROCEDURE SP_ALTA_GRUPOS_TARJETA(I_N_GRUPO    IN T_GRUPOS_TARJETA_UNICA.N_GRUPO_TARJETA_UNICA%TYPE,
+                                   I_ID_ORIGEN  IN T_GRUPOS_TARJETA_UNICA.ID_ORIGEN_EXT%TYPE DEFAULT NULL,
+                                   I_ID_DESTINO IN T_GRUPOS_TARJETA_UNICA.ID_DESTINO_EXT%TYPE DEFAULT NULL,
+                                   I_ID_PROGRAMA IN T_PROGRAMAS.ID_PROGRAMA%TYPE) IS
+
+  V_ID_GRUPO_TARJETA T_GRUPOS_TARJETA_UNICA.ID_GRUPO_TARJETA_UNICA%TYPE;
+  V_ID_PROG_GRUPO T_PROGRAMAS_X_GRUPO.ID_PROGRAMA_GRUPO%TYPE;
+  V_N_ORIGEN VT_PUNTOS.N_PUNTO%TYPE;
+  V_N_DESTINO VT_PUNTOS.N_PUNTO%TYPE;
+
+  BEGIN
+
+    SELECT NVL(MAX(P.ID_GRUPO_TARJETA_UNICA),0)+1 INTO V_ID_GRUPO_TARJETA FROM T_GRUPOS_TARJETA_UNICA P;
+    
+    SELECT NVL(MAX(PG.ID_PROGRAMA_GRUPO),0)+1 INTO V_ID_PROG_GRUPO FROM T_PROGRAMAS_X_GRUPO PG;
+    
+    SELECT O.N_PUNTO INTO V_N_ORIGEN FROM VT_PUNTOS O WHERE O.ID_PUNTO = I_ID_ORIGEN;
+    
+    SELECT D.N_PUNTO INTO V_N_DESTINO FROM VT_PUNTOS D WHERE D.ID_PUNTO = I_ID_DESTINO;
+    
+    INSERT INTO T_GRUPOS_TARJETA_UNICA(ID_GRUPO_TARJETA_UNICA,
+                                   N_GRUPO_TARJETA_UNICA,
+                                   ID_ORIGEN_EXT,
+                                   ID_DESTINO_EXT)
+    VALUES (V_ID_GRUPO_TARJETA,
+            SUBSTR(I_N_GRUPO || ' - ' || V_N_ORIGEN || ' - ' || V_N_DESTINO,1,100),
+            I_ID_ORIGEN,
+            I_ID_DESTINO);
+    
+    INSERT INTO T_PROGRAMAS_X_GRUPO(ID_PROGRAMA_GRUPO,
+                                    ID_PROGRAMA,
+                                    ID_GRUPO_TARJETA_UNICA)
+    VALUES(V_ID_PROG_GRUPO,
+           I_ID_PROGRAMA,
+           V_ID_GRUPO_TARJETA);
+    
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de alta el grupo tarjeta única - ' || SQLERRM);
+  END SP_ALTA_GRUPOS_TARJETA;
+  
+  /*********************************************
+  * Baja de Grupos por Programa                *
+  *********************************************/
+  PROCEDURE SP_BAJA_GRUPOS_PROGRAMA(I_ID_PROGRAMA_GRUPO IN T_PROGRAMAS_X_GRUPO.ID_PROGRAMA_GRUPO%TYPE) IS
+  
+  BEGIN
+    UPDATE T_PROGRAMAS_X_GRUPO
+       SET FEC_HASTA = SYSDATE
+     WHERE ID_PROGRAMA_GRUPO = I_ID_PROGRAMA_GRUPO;
+  
+    COMMIT;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error al dar de baja el grupo - ' ||
+                              SQLERRM);
+  END SP_BAJA_GRUPOS_PROGRAMA;
+  
+END PKG_ADMIN_MANTENEDORES;
+/
