@@ -1,0 +1,2745 @@
+CREATE OR REPLACE PACKAGE PKG_PADRON IS
+
+  -- Author  : NMAZZEO_EXT
+  -- Created : 22/01/2019 11:35:32
+  -- Purpose : Administración de datos de padron
+
+  PROCEDURE SP_ALTA_EMPADRONADO(I_CUIL           IN T_EMPADRONADOS.CUIL%TYPE,
+                                I_ORIGEN         IN T_EMPADRONADOS.ID_ORIGEN%TYPE,
+                                I_ID_SEXO        IN T_EMPADRONADOS.ID_SEXO%TYPE DEFAULT NULL,
+                                I_NRO_DOCUMENTO  IN T_EMPADRONADOS.NRO_DOCUMENTO%TYPE DEFAULT NULL,
+                                I_PAI_COD_PAIS   IN T_EMPADRONADOS.PAI_COD_PAIS%TYPE DEFAULT NULL,
+                                I_ID_NUMERO      IN T_EMPADRONADOS.ID_NUMERO%TYPE DEFAULT NULL,
+                                O_ID_EMPADRONADO OUT T_EMPADRONADOS.ID_EMPADRONADO%TYPE);
+
+  FUNCTION FU_GET_EMPADRONADO(I_CUIL IN T_EMPADRONADOS.CUIL%TYPE)
+    RETURN T_EMPADRONADOS.ID_EMPADRONADO%TYPE;
+
+  PROCEDURE SP_ALTA_EDUCACION_ACTUAL(I_ID_EMPADRONADO         IN T_EDUCACION_ACTUAL.ID_EMPADRONADO%TYPE,
+                                     I_ID_ESTABLECIMIENTO_EXT IN T_EDUCACION_ACTUAL.ID_ESTABLECIMIENTO_EXT%TYPE,
+                                     I_ID_FACULTAD_EXT        IN T_EDUCACION_ACTUAL.ID_FACULTAD_EXT%TYPE DEFAULT NULL,
+                                     I_ID_CARRERA_EXT         IN T_EDUCACION_ACTUAL.ID_CARRERA_EXT%TYPE DEFAULT NULL,
+                                     I_CONDICION              IN T_EDUCACION_ACTUAL.CONDICION%TYPE DEFAULT NULL,
+                                     I_DIAS_SEMANALES         IN T_EDUCACION_ACTUAL.DIAS_SEMANALES%TYPE DEFAULT NULL,
+                                     I_ID_NIVEL               IN T_EDUCACION_ACTUAL.ID_NIVEL%TYPE DEFAULT NULL,
+                                     I_CURSO                  IN T_EDUCACION_ACTUAL.CURSO%TYPE DEFAULT NULL,
+                                     I_CICLO                  IN T_EDUCACION_ACTUAL.CICLO%TYPE DEFAULT NULL,
+                                     I_ID_TIPO_SOLICITANTE    IN T_EDUCACION_ACTUAL.ID_TIPO_SOLICITANTE%TYPE,
+                                     I_ID_ORIGEN              IN T_EDUCACION_ACTUAL.ID_ORIGEN%TYPE);
+
+  PROCEDURE SP_BAJA_EDUCACION_ACTUAL(I_ID_EDUCACION_ACTUAL IN T_EDUCACION_ACTUAL.ID_EDUCACION_ACTUAL%TYPE);
+
+  PROCEDURE SP_MODIF_EDUCACION_ACTUAL(I_ID_EDUCACION_ACTUAL    IN T_EDUCACION_ACTUAL.ID_EDUCACION_ACTUAL%TYPE,
+                                      I_ID_ESTABLECIMIENTO_EXT IN T_EDUCACION_ACTUAL.ID_ESTABLECIMIENTO_EXT%TYPE DEFAULT NULL,
+                                      I_ID_FACULTAD_EXT        IN T_EDUCACION_ACTUAL.ID_FACULTAD_EXT%TYPE DEFAULT NULL,
+                                      I_ID_CARRERA_EXT         IN T_EDUCACION_ACTUAL.ID_CARRERA_EXT%TYPE DEFAULT NULL,
+                                      I_CONDICION              IN T_EDUCACION_ACTUAL.CONDICION%TYPE DEFAULT NULL,
+                                      I_DIAS_SEMANALES         IN T_EDUCACION_ACTUAL.DIAS_SEMANALES%TYPE DEFAULT NULL,
+                                      I_ID_NIVEL               IN T_EDUCACION_ACTUAL.ID_NIVEL%TYPE DEFAULT NULL,
+                                      I_CURSO                  IN T_EDUCACION_ACTUAL.CURSO%TYPE DEFAULT NULL,
+                                      I_CICLO                  IN T_EDUCACION_ACTUAL.CICLO%TYPE DEFAULT NULL,
+                                      I_ID_TIPO_SOLICITANTE    IN T_EDUCACION_ACTUAL.ID_TIPO_SOLICITANTE%TYPE DEFAULT NULL,
+                                      I_ID_ORIGEN              IN T_EDUCACION_ACTUAL.ID_ORIGEN%TYPE);
+
+  PROCEDURE SP_LIST_EDUCACION_ACTUAL(I_ID_EMPADRONADO IN T_EMPADRONADOS.ID_EMPADRONADO%TYPE,
+                                     O_CURSOR         OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_ALTA_AGENDA_EDUCATIVA(I_EDUCACION_ACTUAL IN T_AGENDA_EDUCATIVA.ID_EDUCACION_ACTUAL%TYPE,
+                                     I_ID_DIA           IN T_AGENDA_EDUCATIVA.ID_DIA%TYPE,
+                                     I_HORA_DESDE       IN T_AGENDA_EDUCATIVA.HORA_DESDE%TYPE,
+                                     I_HORA_HASTA       IN T_AGENDA_EDUCATIVA.HORA_HASTA%TYPE,
+                                     I_ORIGEN           IN T_AGENDA_EDUCATIVA.ID_ORIGEN%TYPE);
+
+  PROCEDURE SP_BAJA_AGENDA_EDUCATIVA(I_ID_AGENDA_EDUCATIVA IN T_AGENDA_EDUCATIVA.ID_AGENDA_EDUCATIVA%TYPE);
+
+  PROCEDURE SP_MODIF_AGENDA_EDUCATIVA(I_ID_AGENDA_EDUCATIVA IN T_AGENDA_EDUCATIVA.ID_AGENDA_EDUCATIVA%TYPE,
+                                      I_ID_DIA              IN T_AGENDA_EDUCATIVA.ID_DIA%TYPE DEFAULT NULL,
+                                      I_HORA_DESDE          IN T_AGENDA_EDUCATIVA.HORA_DESDE%TYPE DEFAULT NULL,
+                                      I_HORA_HASTA          IN T_AGENDA_EDUCATIVA.HORA_HASTA%TYPE DEFAULT NULL,
+                                      I_ORIGEN              IN T_AGENDA_EDUCATIVA.ID_ORIGEN%TYPE);
+
+  PROCEDURE SP_LIST_AGENDA_EDUCATIVA(I_ID_EDUCACION_ACTUAL IN T_AGENDA_EDUCATIVA.ID_EDUCACION_ACTUAL%TYPE,
+                                     O_CURSOR              OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_ESTABLECIMIENTOS_EXT(O_CURSOR OUT SYS_REFCURSOR,
+                                         I_NOMBRE IN T_ESTABLECIMIENTOS_EXT.N_ESTABLECIMIENTO_EXT%TYPE);
+
+  PROCEDURE SP_LIST_FACULTADES_EXT(I_ID_ESTABLECIMIENTO_EXT IN T_FACULTADES_EXT.ID_ESTABLECIMIENTO_EXT%TYPE DEFAULT NULL,
+                                   I_NOMBRE                 IN T_FACULTADES_EXT.N_FACULTAD_EXT%TYPE,
+                                   O_CURSOR                 OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_CARRERAS_EXT(I_ID_FACULTAD_EXT IN T_CARRERAS_EXT.ID_FACULTAD_EXT%TYPE DEFAULT NULL,
+                                 I_NOMBRE          IN T_CARRERAS_EXT.N_CARRERA_EXT%TYPE,
+                                 O_CURSOR          OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_DIAS_SEMANA(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_NIVELES_EDUCATIVOS_CM(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_TIPOS_SOLICITANTE(I_ID_PROGRAMA IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                      O_CURSOR      OUT SYS_REFCURSOR);
+
+  --##  
+  PROCEDURE SP_LIST_BAM(I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE DEFAULT NULL,
+                        I_FECHA  IN DATE DEFAULT SYSDATE,
+                        I_ORIGEN IN T_EMPLEOS_FORMAL.ID_ORIGEN%TYPE,
+                        O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_EMPLEOS_FORMALES(I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE DEFAULT NULL,
+                                     I_FECHA  IN DATE DEFAULT SYSDATE,
+                                     I_ORIGEN IN T_EMPLEOS_FORMAL.ID_ORIGEN%TYPE,
+                                     O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_EMPLEOS_PRESUNTOS(I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE DEFAULT NULL,
+                                      I_FECHA  IN DATE DEFAULT SYSDATE,
+                                      I_ORIGEN IN T_EMPLEOS_PRESUNTO.ID_ORIGEN%TYPE,
+                                      O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_LIST_DESEMPLEOS(I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE DEFAULT NULL,
+                               I_FECHA  IN DATE,
+                               I_ORIGEN IN T_DESEMPLEOS.ID_ORIGEN%TYPE,
+                               O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_ALTA_EMPLEOS_FORMALES(I_CUIL              IN T_EMPADRONADOS.CUIL%TYPE,
+                                     I_CUIT              IN T_EMPLEOS_FORMAL.CUIT_EMPLEADOR%TYPE,
+                                     I_DENOMINACION      IN T_EMPLEOS_FORMAL.DENOMINACION%TYPE,
+                                     I_SITUACION_LABORAL IN T_EMPLEOS_FORMAL.SITUACION_LABORAL%TYPE,
+                                     I_ACTIV_TRABAJADOR  IN T_EMPLEOS_FORMAL.ACTIV_TRABAJADOR%TYPE,
+                                     I_PROVINCIA         IN T_EMPLEOS_FORMAL.PROVINCIA%TYPE,
+                                     I_MONTO             IN T_EMPLEOS_FORMAL.MONTO_BRUTO%TYPE,
+                                     I_ORIGEN            IN T_EMPLEOS_FORMAL.ID_ORIGEN%TYPE);
+
+  PROCEDURE SP_ALTA_EMPLEOS_PRESUNTOS(I_CUIL             IN T_EMPADRONADOS.CUIL%TYPE,
+                                      I_CATEGORIA        IN T_EMPLEOS_PRESUNTO.CATEGORIA%TYPE,
+                                      I_ORIGEN           IN T_EMPLEOS_PRESUNTO.ID_ORIGEN%TYPE,
+                                      I_INICIO_ACTIVIDAD IN T_EMPLEOS_PRESUNTO.FEC_INICIO_ACTIVIDAD%TYPE);
+
+  PROCEDURE SP_ALTA_DESEMPLEOS(I_CUIL                   IN T_EMPADRONADOS.CUIL%TYPE,
+                               I_CANT_CUOTAS            IN T_DESEMPLEOS.CANT_CUOTAS%TYPE,
+                               I_CANT_CUOTAS_LIQUIDADAS IN T_DESEMPLEOS.CANT_CUOTAS_LIQUIDADAS%TYPE,
+                               I_FEC_LIQUIDACION        IN T_DESEMPLEOS.FEC_LIQUIDACION%TYPE,
+                               I_ORIGEN                 IN T_DESEMPLEOS.ID_ORIGEN%TYPE);
+
+  PROCEDURE SP_LIST_ORIGENES(O_CURSOR OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_ALTA_ORIGENES(I_N_ORIGEN  IN T_ORIGENES_DATOS.N_ORIGEN%TYPE,
+                             I_PRIORIDAD IN T_ORIGENES_DATOS.PRIORIDAD%TYPE);
+
+  PROCEDURE SP_BAJA_EMPLEO_FORMAL(I_ORIGEN IN T_EMPLEOS_FORMAL.ID_ORIGEN%TYPE,
+                                  I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE);
+
+  PROCEDURE SP_BAJA_EMPLEO_PRESUNTO(I_ORIGEN IN T_EMPLEOS_PRESUNTO.ID_ORIGEN%TYPE,
+                                    I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE);
+
+  PROCEDURE SP_BAJA_DESEMPLEOS(I_ORIGEN IN T_DESEMPLEOS.ID_ORIGEN%TYPE,
+                               I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE);
+
+  PROCEDURE SP_ALTA_EMPLEO_FORMAL_MANUAL(I_ID_EMPADRONADO    IN T_EMPLEOS_FORMAL.ID_EMPADRONADO%TYPE,
+                                         I_CUIT_EMPLEADOR    IN T_EMPLEOS_FORMAL.CUIT_EMPLEADOR%TYPE,
+                                         I_DENOMINACION      IN T_EMPLEOS_FORMAL.DENOMINACION%TYPE,
+                                         I_SITUACION_LABORAL IN T_EMPLEOS_FORMAL.SITUACION_LABORAL%TYPE DEFAULT NULL,
+                                         I_ACTIV_TRABAJADOR  IN T_EMPLEOS_FORMAL.ACTIV_TRABAJADOR%TYPE,
+                                         I_PROVINCIA         IN T_EMPLEOS_FORMAL.PROVINCIA%TYPE,
+                                         I_MONTO_BRUTO       IN T_EMPLEOS_FORMAL.MONTO_BRUTO%TYPE,
+                                         I_FEC_HASTA         IN T_EMPLEOS_FORMAL.FEC_HASTA%TYPE DEFAULT NULL,
+                                         I_ORIGEN_DATOS      IN T_EMPLEOS_FORMAL.ID_ORIGEN%TYPE);
+
+  PROCEDURE SP_BAJA_EMPLEO_FORMAL_MANUAL(I_ID_EMPLEO_FORMAL IN T_EMPLEOS_FORMAL.ID_EMPLEO_FORMAL%TYPE);
+
+  PROCEDURE SP_MODIF_EMPLEO_FORMAL_MANUAL(I_ID_EMPLEO_FORMAL  IN T_EMPLEOS_FORMAL.ID_EMPLEO_FORMAL%TYPE,
+                                          I_CUIT_EMPLEADOR    IN T_EMPLEOS_FORMAL.CUIT_EMPLEADOR%TYPE,
+                                          I_DENOMINACION      IN T_EMPLEOS_FORMAL.DENOMINACION%TYPE,
+                                          I_SITUACION_LABORAL IN T_EMPLEOS_FORMAL.SITUACION_LABORAL%TYPE DEFAULT NULL,
+                                          I_ACTIV_TRABAJADOR  IN T_EMPLEOS_FORMAL.ACTIV_TRABAJADOR%TYPE,
+                                          I_PROVINCIA         IN T_EMPLEOS_FORMAL.PROVINCIA%TYPE,
+                                          I_MONTO_BRUTO       IN T_EMPLEOS_FORMAL.MONTO_BRUTO%TYPE,
+                                          I_ORIGEN_DATOS      IN T_EMPLEOS_FORMAL.ID_ORIGEN%TYPE);
+
+  PROCEDURE SP_ALTA_EMPLEO_PRESUNTO_MANUAL(I_ID_EMPADRONADO       IN T_EMPLEOS_PRESUNTO.ID_EMPADRONADO%TYPE,
+                                           I_CATEGORIA            IN T_EMPLEOS_PRESUNTO.CATEGORIA%TYPE DEFAULT NULL,
+                                           I_FEC_INICIO_ACTIVIDAD IN T_EMPLEOS_PRESUNTO.FEC_INICIO_ACTIVIDAD%TYPE,
+                                           I_FEC_HASTA            IN T_EMPLEOS_PRESUNTO.FEC_HASTA%TYPE DEFAULT NULL,
+                                           I_ORIGEN_DATOS         IN T_EMPLEOS_PRESUNTO.ID_ORIGEN%TYPE);
+
+  PROCEDURE SP_BAJA_EMPLEO_PRESUNTO_MANUAL(I_ID_EMPLEO_PRESUNTO IN T_EMPLEOS_PRESUNTO.ID_EMPLEO_PRESUNTO%TYPE);
+
+  PROCEDURE SP_MODIF_EMPLEO_PRES_MANUAL(I_ID_EMPLEO_PRESUNTO   IN T_EMPLEOS_PRESUNTO.ID_EMPLEO_PRESUNTO%TYPE,
+                                        I_CATEGORIA            IN T_EMPLEOS_PRESUNTO.CATEGORIA%TYPE DEFAULT NULL,
+                                        I_FEC_INICIO_ACTIVIDAD IN T_EMPLEOS_PRESUNTO.FEC_INICIO_ACTIVIDAD%TYPE,
+                                        I_ORIGEN_DATOS         IN T_EMPLEOS_PRESUNTO.ID_ORIGEN%TYPE);
+
+  PROCEDURE SP_ALTA_DESEMPLEO_MANUAL(I_ID_EMPADRONADO         IN T_DESEMPLEOS.ID_EMPADRONADO%TYPE,
+                                     I_CANT_CUOTAS            IN T_DESEMPLEOS.CANT_CUOTAS%TYPE DEFAULT NULL,
+                                     I_CANT_CUOTAS_LIQUIDADAS IN T_DESEMPLEOS.CANT_CUOTAS_LIQUIDADAS%TYPE,
+                                     I_FEC_LIQUIDACION        IN T_DESEMPLEOS.FEC_LIQUIDACION%TYPE,
+                                     I_FEC_HASTA              IN T_EMPLEOS_PRESUNTO.FEC_HASTA%TYPE DEFAULT NULL,
+                                     I_ORIGEN_DATOS           IN T_DESEMPLEOS.ID_ORIGEN%TYPE);
+
+  PROCEDURE SP_BAJA_DESEMPLEO_MANUAL(I_ID_DESEMPLEO IN T_DESEMPLEOS.ID_DESEMPLEO%TYPE);
+
+  PROCEDURE SP_MODIF_DESEMPLEO_MANUAL(I_ID_DESEMPLEO           IN T_DESEMPLEOS.ID_DESEMPLEO%TYPE,
+                                      I_CANT_CUOTAS            IN T_DESEMPLEOS.CANT_CUOTAS%TYPE DEFAULT NULL,
+                                      I_CANT_CUOTAS_LIQUIDADAS IN T_DESEMPLEOS.CANT_CUOTAS_LIQUIDADAS%TYPE,
+                                      I_FEC_LIQUIDACION        IN T_DESEMPLEOS.FEC_LIQUIDACION%TYPE,
+                                      I_ORIGEN_DATOS           IN T_DESEMPLEOS.ID_ORIGEN%TYPE);
+                                      
+  PROCEDURE SP_ALTA_BAM(I_ID_EMPADRONADO         IN T_OTROS_BENEFICIARIO.ID_EMPADRONADO%TYPE,
+                        I_JUBILADO               IN T_OTROS_BENEFICIARIO.JUBILADO_SN%TYPE,                             
+                        I_PENSIONADO             IN T_OTROS_BENEFICIARIO.PENSIONADO_SN%TYPE,
+                        I_PROGRAMA               IN T_OTROS_BENEFICIARIO.ID_PROGRAMA%TYPE,
+                        I_MONTO                  IN T_OTROS_BENEFICIARIO.MONTO_ULTIMO%TYPE,
+                        I_ORIGEN_DATOS           IN T_DESEMPLEOS.ID_ORIGEN%TYPE);
+                        
+  PROCEDURE SP_BAJA_BAM(I_ID_OTROS_BENEFICIARIO IN T_OTROS_BENEFICIARIO.ID_OTROS_BENEFICIARIO%TYPE);                                                                                                    
+
+  PROCEDURE SP_ALTA_FACULTADES_EXT(I_ESTABLECIMIENTO_EXT IN T_FACULTADES_EXT.ID_ESTABLECIMIENTO_EXT%TYPE,
+                                   I_N_FACULTAD_EXT      IN T_FACULTADES_EXT.N_FACULTAD_EXT%TYPE);
+
+  PROCEDURE SP_ALTA_CARRERAS_EXT(I_FACULTAD_EXT  IN T_CARRERAS_EXT.ID_FACULTAD_EXT%TYPE,
+                                 I_N_CARRERA_EXT IN T_CARRERAS_EXT.N_CARRERA_EXT%TYPE);
+
+  PROCEDURE SP_ALTA_ESTABLECIMIENTOS_EXT(I_N_ESTABLECIMIENTO IN T_ESTABLECIMIENTOS_EXT.N_ESTABLECIMIENTO_EXT%TYPE);
+  /*EMERGENCIA*/
+  PROCEDURE SP_LIST_NIVEL_EDUCATIVOS(I_ID_TIPO_SOLICITANTE NUMBER,
+                                     O_RESULTADO           OUT VARCHAR,
+                                     O_CURSOR              OUT SYS_REFCURSOR);
+  PROCEDURE SP_LIST_TIPO_SOLICITANTE(O_RESULTADO OUT VARCHAR,
+                                     O_CURSOR    OUT SYS_REFCURSOR);
+
+  PROCEDURE SP_ERROR_CONS_BENF(I_CUIL        IN NUMBER,
+                               O_N_ERROR_ORA VARCHAR2,
+                               O_ORIGEN      VARCHAR2);
+
+  PROCEDURE SP_LIST_MENSAJES_CONSULTA(I_INSTITUCION        VARCHAR2,
+                                      I_CUIL               VARCHAR2,
+                                      I_TIPO_SOLICITANTE   NUMBER,
+                                      I_ID_NIVEL_EDUCATIVO NUMBER,
+                                      O_MENSAJE            OUT VARCHAR2,
+                                      O_RESULTADO          OUT VARCHAR);
+
+  PROCEDURE SP_BUSCAR_PADRON_BEGT(I_CUIL             IN T_EMPADRONADOS.CUIL%TYPE,
+                                  I_NIVEL_EDUCATIVO  IN ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS.ID_NIVEL_EDUCATIVO%TYPE,
+                                  I_TIPO_SOLICITANTE IN T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                  O_CURSOR           OUT SYS_REFCURSOR,
+                                  O_RESULTADO        OUT VARCHAR);
+
+  PROCEDURE SP_BUSCAR_PADRON_BEGT2(I_CUIL             IN T_EMPADRONADOS.CUIL%TYPE,
+                                   I_NIVEL_EDUCATIVO  IN ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS.ID_NIVEL_EDUCATIVO%TYPE,
+                                   I_TIPO_SOLICITANTE IN T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                   I_INSTITUCION      IN VARCHAR2,
+                                   O_CURSOR           OUT SYS_REFCURSOR,
+                                   O_MENSAJE          OUT VARCHAR,
+                                   O_RESULTADO        OUT VARCHAR,
+                                   O_APISN            OUT VARCHAR);
+                                   
+                                   
+     
+                                      
+                                      
+ PROCEDURE SP_BUSCAR_PADRON_BOS(I_CUIL             IN T_EMPADRONADOS.CUIL%TYPE,
+                                   I_TIPO_SOLICITANTE IN T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                   O_CURSOR           OUT SYS_REFCURSOR,
+                                   O_MENSAJE          OUT VARCHAR,
+                                   O_RESULTADO        OUT VARCHAR);                                                                  
+
+
+PROCEDURE SP_LIST_MENSAJES_CONSULTA_BOS(I_CUIL             VARCHAR2,
+                                        I_TIPO_SOLICITANTE NUMBER,
+                                        O_MENSAJE          OUT VARCHAR2,
+                                        O_RESULTADO        OUT VARCHAR,
+                                        O_COLOR           OUT VARCHAR);
+                                        
+PROCEDURE SP_BUSCAR_SUELDO_BOS( O_RESULTADO        OUT VARCHAR);        
+
+
+PROCEDURE SP_EMPADRONAR_BOS(I_ID_TIPO_SOLICITANTE NUMBER,
+                            I_CUIL           IN T_EMPADRONADOS.CUIL%TYPE,
+                            I_ORIGEN         IN T_EMPADRONADOS.ID_ORIGEN%TYPE,
+                            I_ID_SEXO        IN T_EMPADRONADOS.ID_SEXO%TYPE DEFAULT NULL,
+                            I_NRO_DOCUMENTO  IN T_EMPADRONADOS.NRO_DOCUMENTO%TYPE DEFAULT NULL,
+                            I_PAI_COD_PAIS   IN T_EMPADRONADOS.PAI_COD_PAIS%TYPE DEFAULT NULL,
+                            I_ID_NUMERO      IN T_EMPADRONADOS.ID_NUMERO%TYPE DEFAULT NULL,
+                            -- DESEMPLEO
+                            D_CANT_CUOTAS            IN T_DESEMPLEOS.CANT_CUOTAS%TYPE,
+                            D_CANT_CUOTAS_LIQUIDADAS IN T_DESEMPLEOS.CANT_CUOTAS_LIQUIDADAS%TYPE,
+                            D_FEC_LIQUIDACION        IN T_DESEMPLEOS.FEC_LIQUIDACION%TYPE,
+                            ----FORMAL
+                            F_CUIT              IN T_EMPLEOS_FORMAL.CUIT_EMPLEADOR%TYPE,
+                            F_DENOMINACION      IN T_EMPLEOS_FORMAL.DENOMINACION%TYPE,
+                            F_SITUACION_LABORAL IN T_EMPLEOS_FORMAL.SITUACION_LABORAL%TYPE,
+                            F_ACTIV_TRABAJADOR  IN T_EMPLEOS_FORMAL.ACTIV_TRABAJADOR%TYPE,
+                            F_PROVINCIA         IN T_EMPLEOS_FORMAL.PROVINCIA%TYPE,
+                            F_MONTO             IN T_EMPLEOS_FORMAL.MONTO_BRUTO%TYPE,
+                            --- PRESUNTO
+                            P_CATEGORIA        IN T_EMPLEOS_PRESUNTO.CATEGORIA%TYPE,
+                            P_INICIO_ACTIVIDAD IN T_EMPLEOS_PRESUNTO.FEC_INICIO_ACTIVIDAD%TYPE
+                                     
+                               );
+
+                                  
+END PKG_PADRON;
+/
+CREATE OR REPLACE PACKAGE BODY PKG_PADRON IS
+
+  PROCEDURE SP_ALTA_EMPADRONADO(I_CUIL           IN T_EMPADRONADOS.CUIL%TYPE,
+                                I_ORIGEN         IN T_EMPADRONADOS.ID_ORIGEN%TYPE,
+                                I_ID_SEXO        IN T_EMPADRONADOS.ID_SEXO%TYPE DEFAULT NULL,
+                                I_NRO_DOCUMENTO  IN T_EMPADRONADOS.NRO_DOCUMENTO%TYPE DEFAULT NULL,
+                                I_PAI_COD_PAIS   IN T_EMPADRONADOS.PAI_COD_PAIS%TYPE DEFAULT NULL,
+                                I_ID_NUMERO      IN T_EMPADRONADOS.ID_NUMERO%TYPE DEFAULT NULL,
+                                O_ID_EMPADRONADO OUT T_EMPADRONADOS.ID_EMPADRONADO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_EMPADRONADO T_EMPADRONADOS.ID_EMPADRONADO%TYPE := SEQ_PADRON.NEXTVAL;
+  
+  BEGIN
+  
+    INSERT INTO T_EMPADRONADOS
+      (ID_EMPADRONADO,
+       CUIL,
+       FEC_CONSULTA,
+       ID_ORIGEN,
+       ID_SEXO,
+       NRO_DOCUMENTO,
+       PAI_COD_PAIS,
+       ID_NUMERO)
+    VALUES
+      (V_ID_EMPADRONADO,
+       I_CUIL,
+       SYSDATE,
+       I_ORIGEN,
+       I_ID_SEXO,
+       I_NRO_DOCUMENTO,
+       I_PAI_COD_PAIS,
+       I_ID_NUMERO);
+  
+    O_ID_EMPADRONADO := V_ID_EMPADRONADO;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al insertar empadronado ' || SQLERRM);
+    
+  END SP_ALTA_EMPADRONADO;
+
+  -- apto para uso en SQL
+  FUNCTION FU_GET_EMPADRONADO(I_CUIL IN T_EMPADRONADOS.CUIL%TYPE)
+    RETURN T_EMPADRONADOS.ID_EMPADRONADO%TYPE IS
+  
+    V_ID_EMPADRONADO T_EMPADRONADOS.ID_EMPADRONADO%TYPE;
+  
+  BEGIN
+  
+    SELECT E.ID_EMPADRONADO
+      INTO V_ID_EMPADRONADO
+      FROM T_EMPADRONADOS E
+     WHERE E.CUIL = I_CUIL;
+  
+    RETURN V_ID_EMPADRONADO;
+  
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      RETURN NULL;
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20001,
+                              'Error inesperado al obtener el empadronado: ' ||
+                              SQLERRM);
+  END FU_GET_EMPADRONADO;
+
+  PROCEDURE SP_ALTA_EDUCACION_ACTUAL(I_ID_EMPADRONADO         IN T_EDUCACION_ACTUAL.ID_EMPADRONADO%TYPE,
+                                     I_ID_ESTABLECIMIENTO_EXT IN T_EDUCACION_ACTUAL.ID_ESTABLECIMIENTO_EXT%TYPE,
+                                     I_ID_FACULTAD_EXT        IN T_EDUCACION_ACTUAL.ID_FACULTAD_EXT%TYPE DEFAULT NULL,
+                                     I_ID_CARRERA_EXT         IN T_EDUCACION_ACTUAL.ID_CARRERA_EXT%TYPE DEFAULT NULL,
+                                     I_CONDICION              IN T_EDUCACION_ACTUAL.CONDICION%TYPE DEFAULT NULL,
+                                     I_DIAS_SEMANALES         IN T_EDUCACION_ACTUAL.DIAS_SEMANALES%TYPE DEFAULT NULL,
+                                     I_ID_NIVEL               IN T_EDUCACION_ACTUAL.ID_NIVEL%TYPE DEFAULT NULL,
+                                     I_CURSO                  IN T_EDUCACION_ACTUAL.CURSO%TYPE DEFAULT NULL,
+                                     I_CICLO                  IN T_EDUCACION_ACTUAL.CICLO%TYPE DEFAULT NULL,
+                                     I_ID_TIPO_SOLICITANTE    IN T_EDUCACION_ACTUAL.ID_TIPO_SOLICITANTE%TYPE,
+                                     I_ID_ORIGEN              IN T_EDUCACION_ACTUAL.ID_ORIGEN%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_EDUCACION_ACTUAL T_EDUCACION_ACTUAL.ID_EDUCACION_ACTUAL%TYPE := SEQ_PADRON.NEXTVAL;
+  
+  BEGIN
+  
+    INSERT INTO T_EDUCACION_ACTUAL
+      (ID_EDUCACION_ACTUAL,
+       ID_EMPADRONADO,
+       FEC_DESDE,
+       ID_ORIGEN,
+       ID_ESTABLECIMIENTO_EXT,
+       ID_FACULTAD_EXT,
+       ID_CARRERA_EXT,
+       CONDICION,
+       DIAS_SEMANALES,
+       ID_NIVEL,
+       CURSO,
+       CICLO,
+       ID_TIPO_SOLICITANTE)
+    VALUES
+      (V_ID_EDUCACION_ACTUAL,
+       I_ID_EMPADRONADO,
+       SYSDATE,
+       I_ID_ORIGEN,
+       I_ID_ESTABLECIMIENTO_EXT,
+       I_ID_FACULTAD_EXT,
+       I_ID_CARRERA_EXT,
+       I_CONDICION,
+       I_DIAS_SEMANALES,
+       I_ID_NIVEL,
+       I_CURSO,
+       I_CICLO,
+       I_ID_TIPO_SOLICITANTE);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al insertar la educacion actual ' ||
+                              SQLERRM);
+  END SP_ALTA_EDUCACION_ACTUAL;
+
+  PROCEDURE SP_BAJA_EDUCACION_ACTUAL(I_ID_EDUCACION_ACTUAL IN T_EDUCACION_ACTUAL.ID_EDUCACION_ACTUAL%TYPE) IS
+  
+  BEGIN
+  
+    UPDATE T_EDUCACION_ACTUAL E
+       SET E.FEC_HASTA = SYSDATE - 1 / 24 / 60 / 60
+     WHERE E.ID_EDUCACION_ACTUAL = I_ID_EDUCACION_ACTUAL;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error en la baja de la educacion actual ' ||
+                              SQLERRM);
+    
+  END SP_BAJA_EDUCACION_ACTUAL;
+
+  PROCEDURE SP_MODIF_EDUCACION_ACTUAL(I_ID_EDUCACION_ACTUAL    IN T_EDUCACION_ACTUAL.ID_EDUCACION_ACTUAL%TYPE,
+                                      I_ID_ESTABLECIMIENTO_EXT IN T_EDUCACION_ACTUAL.ID_ESTABLECIMIENTO_EXT%TYPE DEFAULT NULL,
+                                      I_ID_FACULTAD_EXT        IN T_EDUCACION_ACTUAL.ID_FACULTAD_EXT%TYPE DEFAULT NULL,
+                                      I_ID_CARRERA_EXT         IN T_EDUCACION_ACTUAL.ID_CARRERA_EXT%TYPE DEFAULT NULL,
+                                      I_CONDICION              IN T_EDUCACION_ACTUAL.CONDICION%TYPE DEFAULT NULL,
+                                      I_DIAS_SEMANALES         IN T_EDUCACION_ACTUAL.DIAS_SEMANALES%TYPE DEFAULT NULL,
+                                      I_ID_NIVEL               IN T_EDUCACION_ACTUAL.ID_NIVEL%TYPE DEFAULT NULL,
+                                      I_CURSO                  IN T_EDUCACION_ACTUAL.CURSO%TYPE DEFAULT NULL,
+                                      I_CICLO                  IN T_EDUCACION_ACTUAL.CICLO%TYPE DEFAULT NULL,
+                                      I_ID_TIPO_SOLICITANTE    IN T_EDUCACION_ACTUAL.ID_TIPO_SOLICITANTE%TYPE DEFAULT NULL,
+                                      I_ID_ORIGEN              IN T_EDUCACION_ACTUAL.ID_ORIGEN%TYPE) IS
+  
+    R_EDU T_EDUCACION_ACTUAL%ROWTYPE;
+  
+  BEGIN
+  
+    SELECT *
+      INTO R_EDU
+      FROM T_EDUCACION_ACTUAL E
+     WHERE E.ID_EDUCACION_ACTUAL = I_ID_EDUCACION_ACTUAL;
+  
+    SP_BAJA_EDUCACION_ACTUAL(I_ID_EDUCACION_ACTUAL => I_ID_EDUCACION_ACTUAL);
+  
+    SP_ALTA_EDUCACION_ACTUAL(I_ID_EMPADRONADO         => R_EDU.ID_EMPADRONADO,
+                             I_ID_ESTABLECIMIENTO_EXT => NVL(I_ID_ESTABLECIMIENTO_EXT,
+                                                             R_EDU.ID_ESTABLECIMIENTO_EXT),
+                             I_ID_FACULTAD_EXT        => NVL(I_ID_FACULTAD_EXT,
+                                                             R_EDU.ID_FACULTAD_EXT),
+                             I_ID_CARRERA_EXT         => NVL(I_ID_CARRERA_EXT,
+                                                             R_EDU.ID_CARRERA_EXT),
+                             I_CONDICION              => NVL(I_CONDICION,
+                                                             R_EDU.CONDICION),
+                             I_DIAS_SEMANALES         => NVL(I_DIAS_SEMANALES,
+                                                             R_EDU.DIAS_SEMANALES),
+                             I_ID_NIVEL               => NVL(I_ID_NIVEL,
+                                                             R_EDU.ID_NIVEL),
+                             I_CURSO                  => NVL(I_CURSO,
+                                                             R_EDU.CURSO),
+                             I_CICLO                  => NVL(I_CICLO,
+                                                             R_EDU.CICLO),
+                             I_ID_TIPO_SOLICITANTE    => NVL(I_ID_TIPO_SOLICITANTE,
+                                                             R_EDU.ID_TIPO_SOLICITANTE),
+                             I_ID_ORIGEN              => I_ID_ORIGEN);
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al modificar la educacion actual ' ||
+                              SQLERRM);
+  END SP_MODIF_EDUCACION_ACTUAL;
+
+  PROCEDURE SP_LIST_EDUCACION_ACTUAL(I_ID_EMPADRONADO IN T_EMPADRONADOS.ID_EMPADRONADO%TYPE,
+                                     O_CURSOR         OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT EDU.ID_EDUCACION_ACTUAL,
+             EDU.ID_ESTABLECIMIENTO_EXT,
+             EXT.N_ESTABLECIMIENTO_EXT,
+             EDU.ID_FACULTAD_EXT,
+             FXT.N_FACULTAD_EXT,
+             EDU.ID_CARRERA_EXT,
+             CXT.N_CARRERA_EXT,
+             EDU.CONDICION,
+             EDU.DIAS_SEMANALES,
+             EDU.ID_NIVEL,
+             NIV.N_NIVEL_EDUCATIVO,
+             EDU.CURSO,
+             EDU.CICLO,
+             EDU.ID_TIPO_SOLICITANTE,
+             TPS.N_TIPO_SOLICITANTE
+        FROM T_EDUCACION_ACTUAL                     EDU,
+             T_ESTABLECIMIENTOS_EXT                 EXT,
+             T_FACULTADES_EXT                       FXT,
+             T_CARRERAS_EXT                         CXT,
+             ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS NIV,
+             T_TIPOS_SOLICITANTE                    TPS
+       WHERE EDU.ID_EMPADRONADO = I_ID_EMPADRONADO
+         AND EDU.ID_ESTABLECIMIENTO_EXT = EXT.ID_ESTABLECIMIENTO_EXT(+)
+         AND EDU.ID_FACULTAD_EXT = FXT.ID_FACULTAD_EXT(+)
+         AND EDU.ID_CARRERA_EXT = CXT.ID_CARRERA_EXT(+)
+         AND EDU.ID_NIVEL = NIV.ID_NIVEL_EDUCATIVO
+         AND EDU.ID_TIPO_SOLICITANTE = TPS.ID_TIPO_SOLICITANTE
+         AND SYSDATE BETWEEN EDU.FEC_DESDE AND NVL(EDU.FEC_HASTA, SYSDATE);
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar la educacion actual ' ||
+                              SQLERRM);
+    
+  END SP_LIST_EDUCACION_ACTUAL;
+
+  PROCEDURE SP_ALTA_AGENDA_EDUCATIVA(I_EDUCACION_ACTUAL IN T_AGENDA_EDUCATIVA.ID_EDUCACION_ACTUAL%TYPE,
+                                     I_ID_DIA           IN T_AGENDA_EDUCATIVA.ID_DIA%TYPE,
+                                     I_HORA_DESDE       IN T_AGENDA_EDUCATIVA.HORA_DESDE%TYPE,
+                                     I_HORA_HASTA       IN T_AGENDA_EDUCATIVA.HORA_HASTA%TYPE,
+                                     I_ORIGEN           IN T_AGENDA_EDUCATIVA.ID_ORIGEN%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_AGENDA_EDUCATIVA T_AGENDA_EDUCATIVA.ID_AGENDA_EDUCATIVA%TYPE := SEQ_PADRON.NEXTVAL;
+  
+  BEGIN
+  
+    INSERT INTO T_AGENDA_EDUCATIVA
+      (ID_AGENDA_EDUCATIVA,
+       ID_EDUCACION_ACTUAL,
+       ID_DIA,
+       HORA_DESDE,
+       HORA_HASTA,
+       FEC_DESDE,
+       ID_ORIGEN)
+    VALUES
+      (V_AGENDA_EDUCATIVA,
+       I_EDUCACION_ACTUAL,
+       I_ID_DIA,
+       I_HORA_DESDE,
+       I_HORA_HASTA,
+       SYSDATE,
+       I_ORIGEN);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al insertar la agenda educativa ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_AGENDA_EDUCATIVA;
+
+  PROCEDURE SP_BAJA_AGENDA_EDUCATIVA(I_ID_AGENDA_EDUCATIVA IN T_AGENDA_EDUCATIVA.ID_AGENDA_EDUCATIVA%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_AGENDA_EDUCATIVA A
+       SET A.FEC_HASTA = SYSDATE - 1 / 24 / 60 / 60
+     WHERE A.ID_AGENDA_EDUCATIVA = I_ID_AGENDA_EDUCATIVA;
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al dar de baja la agenda educativa ' ||
+                              SQLERRM);
+  END SP_BAJA_AGENDA_EDUCATIVA;
+
+  PROCEDURE SP_MODIF_AGENDA_EDUCATIVA(I_ID_AGENDA_EDUCATIVA IN T_AGENDA_EDUCATIVA.ID_AGENDA_EDUCATIVA%TYPE,
+                                      I_ID_DIA              IN T_AGENDA_EDUCATIVA.ID_DIA%TYPE DEFAULT NULL,
+                                      I_HORA_DESDE          IN T_AGENDA_EDUCATIVA.HORA_DESDE%TYPE DEFAULT NULL,
+                                      I_HORA_HASTA          IN T_AGENDA_EDUCATIVA.HORA_HASTA%TYPE DEFAULT NULL,
+                                      I_ORIGEN              IN T_AGENDA_EDUCATIVA.ID_ORIGEN%TYPE) IS
+  
+    R_AGE T_AGENDA_EDUCATIVA%ROWTYPE;
+  
+  BEGIN
+  
+    SELECT E.*
+      INTO R_AGE
+      FROM T_AGENDA_EDUCATIVA E
+     WHERE E.ID_AGENDA_EDUCATIVA = I_ID_AGENDA_EDUCATIVA;
+  
+    SP_BAJA_AGENDA_EDUCATIVA(I_ID_AGENDA_EDUCATIVA => I_ID_AGENDA_EDUCATIVA);
+  
+    SP_ALTA_AGENDA_EDUCATIVA(I_EDUCACION_ACTUAL => R_AGE.ID_EDUCACION_ACTUAL,
+                             I_ID_DIA           => NVL(I_ID_DIA,
+                                                       R_AGE.ID_DIA),
+                             I_HORA_DESDE       => NVL(I_HORA_DESDE,
+                                                       R_AGE.HORA_DESDE),
+                             I_HORA_HASTA       => NVL(I_HORA_HASTA,
+                                                       R_AGE.HORA_HASTA),
+                             I_ORIGEN           => I_ORIGEN);
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al modificar la agenda educativa ' ||
+                              SQLERRM);
+  END SP_MODIF_AGENDA_EDUCATIVA;
+
+  PROCEDURE SP_LIST_AGENDA_EDUCATIVA(I_ID_EDUCACION_ACTUAL IN T_AGENDA_EDUCATIVA.ID_EDUCACION_ACTUAL%TYPE,
+                                     O_CURSOR              OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT A.ID_AGENDA_EDUCATIVA,
+             A.ID_DIA,
+             D.N_DIA,
+             A.HORA_DESDE,
+             A.HORA_HASTA
+        FROM T_AGENDA_EDUCATIVA A, T_COMUNES.T_DIAS_SEMANA D
+       WHERE A.ID_EDUCACION_ACTUAL = I_ID_EDUCACION_ACTUAL
+         AND A.ID_DIA = D.ID_DIA
+         AND SYSDATE BETWEEN A.FEC_DESDE AND NVL(A.FEC_HASTA, SYSDATE);
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar la agenda educativa ' ||
+                              SQLERRM);
+    
+  END SP_LIST_AGENDA_EDUCATIVA;
+
+  PROCEDURE SP_LIST_ESTABLECIMIENTOS_EXT(O_CURSOR OUT SYS_REFCURSOR,
+                                         I_NOMBRE IN T_ESTABLECIMIENTOS_EXT.N_ESTABLECIMIENTO_EXT%TYPE) IS
+  
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT E.ID_ESTABLECIMIENTO_EXT, E.N_ESTABLECIMIENTO_EXT
+        FROM T_ESTABLECIMIENTOS_EXT E
+       WHERE UPPER(E.N_ESTABLECIMIENTO_EXT) LIKE '%' || I_NOMBRE || '%';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar los establecimientos externos ' ||
+                              SQLERRM);
+    
+  END SP_LIST_ESTABLECIMIENTOS_EXT;
+
+  PROCEDURE SP_LIST_FACULTADES_EXT(I_ID_ESTABLECIMIENTO_EXT IN T_FACULTADES_EXT.ID_ESTABLECIMIENTO_EXT%TYPE DEFAULT NULL,
+                                   I_NOMBRE                 IN T_FACULTADES_EXT.N_FACULTAD_EXT%TYPE,
+                                   O_CURSOR                 OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT FXT.ID_ESTABLECIMIENTO_EXT,
+             EXT.N_ESTABLECIMIENTO_EXT,
+             FXT.ID_FACULTAD_EXT,
+             FXT.N_FACULTAD_EXT
+        FROM T_FACULTADES_EXT FXT, T_ESTABLECIMIENTOS_EXT EXT
+       WHERE FXT.ID_ESTABLECIMIENTO_EXT = EXT.ID_ESTABLECIMIENTO_EXT
+         AND FXT.ID_ESTABLECIMIENTO_EXT =
+             NVL(I_ID_ESTABLECIMIENTO_EXT, FXT.ID_ESTABLECIMIENTO_EXT)
+         AND UPPER(FXT.N_FACULTAD_EXT) LIKE '%' || I_NOMBRE || '%';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar las facultades externas ' ||
+                              SQLERRM);
+    
+  END SP_LIST_FACULTADES_EXT;
+
+  PROCEDURE SP_LIST_CARRERAS_EXT(I_ID_FACULTAD_EXT IN T_CARRERAS_EXT.ID_FACULTAD_EXT%TYPE DEFAULT NULL,
+                                 I_NOMBRE          IN T_CARRERAS_EXT.N_CARRERA_EXT%TYPE,
+                                 O_CURSOR          OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT CXT.ID_FACULTAD_EXT,
+             FXT.N_FACULTAD_EXT,
+             CXT.ID_CARRERA_EXT,
+             CXT.N_CARRERA_EXT
+        FROM T_CARRERAS_EXT CXT, T_FACULTADES_EXT FXT
+       WHERE CXT.ID_FACULTAD_EXT = FXT.ID_FACULTAD_EXT
+         AND CXT.ID_FACULTAD_EXT =
+             NVL(I_ID_FACULTAD_EXT, CXT.ID_FACULTAD_EXT)
+         AND UPPER(CXT.N_CARRERA_EXT) LIKE '%' || I_NOMBRE || '%';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar las carreras externas ' ||
+                              SQLERRM);
+  END SP_LIST_CARRERAS_EXT;
+
+  PROCEDURE SP_LIST_DIAS_SEMANA(O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT ID_DIA, N_DIA FROM T_COMUNES.T_DIAS_SEMANA;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar los dias de la semana ' ||
+                              SQLERRM);
+  END SP_LIST_DIAS_SEMANA;
+
+  PROCEDURE SP_LIST_NIVELES_EDUCATIVOS_CM(O_CURSOR OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT N.ID_NIVEL_EDUCATIVO, N.N_NIVEL_EDUCATIVO
+        FROM ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS N;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar los niveles educativos ' ||
+                              SQLERRM);
+  END SP_LIST_NIVELES_EDUCATIVOS_CM;
+
+  PROCEDURE SP_LIST_TIPOS_SOLICITANTE(I_ID_PROGRAMA IN T_TIPOS_SOLICITANTE.ID_PROGRAMA%TYPE DEFAULT NULL,
+                                      O_CURSOR      OUT SYS_REFCURSOR) IS
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT S.ID_TIPO_SOLICITANTE,
+             S.N_TIPO_SOLICITANTE,
+             S.ID_PROGRAMA,
+             P.N_PROGRAMA
+        FROM T_TIPOS_SOLICITANTE S, T_PROGRAMAS P
+       WHERE P.ID_PROGRAMA = S.ID_PROGRAMA
+         AND S.ID_PROGRAMA = NVL(I_ID_PROGRAMA, S.ID_PROGRAMA);
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar los tipos de solicitante ' ||
+                              SQLERRM);
+  END SP_LIST_TIPOS_SOLICITANTE;
+
+  --## 
+  PROCEDURE SP_LIST_BAM(I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE DEFAULT NULL,
+                        I_FECHA  IN DATE DEFAULT SYSDATE,
+                        I_ORIGEN IN T_EMPLEOS_FORMAL.ID_ORIGEN%TYPE,
+                        O_CURSOR OUT SYS_REFCURSOR) IS
+                                     
+   BEGIN
+    OPEN O_CURSOR FOR
+      SELECT E.CUIL,
+             E.ID_EMPADRONADO,
+             O.JUBILADO_SN,
+             O.PENSIONADO_SN,
+             O.ID_OTROS_BENEFICIARIO,
+             O.MONTO_ULTIMO
+        FROM T_EMPADRONADOS E, T_OTROS_BENEFICIARIO O
+       WHERE E.ID_EMPADRONADO = O.ID_EMPADRONADO
+         AND E.CUIL = NVL(I_CUIL, E.CUIL)
+         AND E.ID_ORIGEN = NVL(I_ORIGEN, E.ID_ORIGEN)
+         AND (I_FECHA BETWEEN O.FEC_DESDE AND NVL(O.FEC_HASTA, I_FECHA) OR
+             I_FECHA IS NULL)
+         AND (O.FEC_HASTA IS NULL OR O.FEC_HASTA > SYSDATE);     
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar padron BAM ' ||
+                              SQLERRM);
+    
+  END SP_LIST_BAM;                                    
+  
+
+  PROCEDURE SP_LIST_EMPLEOS_FORMALES(I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE DEFAULT NULL,
+                                     I_FECHA  IN DATE DEFAULT SYSDATE,
+                                     I_ORIGEN IN T_EMPLEOS_FORMAL.ID_ORIGEN%TYPE,
+                                     O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT EF.ID_EMPLEO_FORMAL,
+             EF.CUIT_EMPLEADOR,
+             EF.DENOMINACION,
+             EF.SITUACION_LABORAL,
+             EF.ACTIV_TRABAJADOR,
+             EF.PROVINCIA,
+             EF.MONTO_BRUTO,
+             E.CUIL,
+             EF.FEC_DESDE,
+             EF.FEC_HASTA
+        FROM T_EMPADRONADOS E, T_EMPLEOS_FORMAL EF
+       WHERE E.ID_EMPADRONADO = EF.ID_EMPADRONADO
+         AND E.CUIL = NVL(I_CUIL, E.CUIL)
+         AND EF.ID_ORIGEN = NVL(I_ORIGEN, EF.ID_ORIGEN)
+         AND (I_FECHA BETWEEN EF.FEC_DESDE AND NVL(EF.FEC_HASTA, I_FECHA) OR
+             I_FECHA IS NULL)
+         AND (EF.FEC_HASTA IS NULL OR EF.FEC_HASTA > SYSDATE);     
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar los empleos formales ' ||
+                              SQLERRM);
+    
+  END SP_LIST_EMPLEOS_FORMALES;
+
+  PROCEDURE SP_ALTA_EMPLEOS_FORMALES(I_CUIL              IN T_EMPADRONADOS.CUIL%TYPE,
+                                     I_CUIT              IN T_EMPLEOS_FORMAL.CUIT_EMPLEADOR%TYPE,
+                                     I_DENOMINACION      IN T_EMPLEOS_FORMAL.DENOMINACION%TYPE,
+                                     I_SITUACION_LABORAL IN T_EMPLEOS_FORMAL.SITUACION_LABORAL%TYPE,
+                                     I_ACTIV_TRABAJADOR  IN T_EMPLEOS_FORMAL.ACTIV_TRABAJADOR%TYPE,
+                                     I_PROVINCIA         IN T_EMPLEOS_FORMAL.PROVINCIA%TYPE,
+                                     I_MONTO             IN T_EMPLEOS_FORMAL.MONTO_BRUTO%TYPE,
+                                     I_ORIGEN            IN T_EMPLEOS_FORMAL.ID_ORIGEN%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_EMPLEO_FORMAL T_EMPLEOS_FORMAL.ID_EMPLEO_FORMAL%TYPE := SEQ_PADRON.NEXTVAL;
+    V_EMPADRONADO      T_EMPADRONADOS.ID_EMPADRONADO%TYPE;
+  BEGIN
+  
+    SELECT ID_EMPADRONADO
+      INTO V_EMPADRONADO
+      FROM T_EMPADRONADOS
+     WHERE CUIL = I_CUIL;
+  
+    INSERT INTO T_EMPLEOS_FORMAL
+      (ID_EMPLEO_FORMAL,
+       ID_EMPADRONADO,
+       CUIT_EMPLEADOR,
+       DENOMINACION,
+       SITUACION_LABORAL,
+       ACTIV_TRABAJADOR,
+       PROVINCIA,
+       MONTO_BRUTO,
+       FEC_DESDE,
+       FEC_HASTA,
+       ID_ORIGEN,
+       FEC_CONSULTA)
+    VALUES
+      (V_ID_EMPLEO_FORMAL,
+       V_EMPADRONADO,
+       I_CUIT,
+       I_DENOMINACION,
+       I_SITUACION_LABORAL,
+       I_ACTIV_TRABAJADOR,
+       I_PROVINCIA,
+       I_MONTO,
+       SYSDATE,
+       NULL,
+       I_ORIGEN,
+       SYSDATE);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al insertar el empleo formal ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_EMPLEOS_FORMALES;
+
+  PROCEDURE SP_LIST_EMPLEOS_PRESUNTOS(I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE DEFAULT NULL,
+                                      I_FECHA  IN DATE DEFAULT SYSDATE,
+                                      I_ORIGEN IN T_EMPLEOS_PRESUNTO.ID_ORIGEN%TYPE,
+                                      O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT EP.ID_EMPLEO_PRESUNTO,EP.CATEGORIA, E.CUIL, EP.FEC_DESDE, EP.FEC_HASTA, EP.FEC_INICIO_ACTIVIDAD
+        FROM T_EMPADRONADOS E, T_EMPLEOS_PRESUNTO EP
+       WHERE E.ID_EMPADRONADO = EP.ID_EMPADRONADO
+         AND E.CUIL = NVL(I_CUIL, E.CUIL)
+         AND EP.ID_ORIGEN = NVL(I_ORIGEN, EP.ID_ORIGEN)
+         AND (I_FECHA BETWEEN EP.FEC_DESDE AND NVL(EP.FEC_HASTA, I_FECHA) OR
+             I_FECHA IS NULL)
+         AND (EP.FEC_HASTA IS NULL OR EP.FEC_HASTA > SYSDATE);
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar los empleos presuntos ' ||
+                              SQLERRM);
+    
+  END SP_LIST_EMPLEOS_PRESUNTOS;
+
+  PROCEDURE SP_ALTA_ESTABLECIMIENTOS_EXT(I_N_ESTABLECIMIENTO IN T_ESTABLECIMIENTOS_EXT.N_ESTABLECIMIENTO_EXT%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_ESTABLECIMIENTO_EXT T_ESTABLECIMIENTOS_EXT.ID_ESTABLECIMIENTO_EXT%TYPE := SEQ_PADRON.NEXTVAL;
+  
+  BEGIN
+  
+    INSERT INTO T_ESTABLECIMIENTOS_EXT
+      (ID_ESTABLECIMIENTO_EXT, N_ESTABLECIMIENTO_EXT)
+    VALUES
+      (V_ID_ESTABLECIMIENTO_EXT, I_N_ESTABLECIMIENTO);
+    COMMIT;
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al insertar el establecimiento externo ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_ESTABLECIMIENTOS_EXT;
+
+  PROCEDURE SP_ALTA_FACULTADES_EXT(I_ESTABLECIMIENTO_EXT IN T_FACULTADES_EXT.ID_ESTABLECIMIENTO_EXT%TYPE,
+                                   I_N_FACULTAD_EXT      IN T_FACULTADES_EXT.N_FACULTAD_EXT%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_FACULTAD_EXT T_FACULTADES_EXT.ID_FACULTAD_EXT%TYPE := SEQ_PADRON.NEXTVAL;
+  
+  BEGIN
+  
+    INSERT INTO T_FACULTADES_EXT
+      (ID_FACULTAD_EXT, ID_ESTABLECIMIENTO_EXT, N_FACULTAD_EXT)
+    VALUES
+      (V_ID_FACULTAD_EXT, I_ESTABLECIMIENTO_EXT, I_N_FACULTAD_EXT);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al insertar la facultad externa ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_FACULTADES_EXT;
+
+  PROCEDURE SP_ALTA_CARRERAS_EXT(I_FACULTAD_EXT  IN T_CARRERAS_EXT.ID_FACULTAD_EXT%TYPE,
+                                 I_N_CARRERA_EXT IN T_CARRERAS_EXT.N_CARRERA_EXT%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_CARRERA_EXT T_CARRERAS_EXT.ID_CARRERA_EXT%TYPE := SEQ_PADRON.NEXTVAL;
+  
+  BEGIN
+  
+    INSERT INTO T_CARRERAS_EXT
+      (ID_CARRERA_EXT, ID_FACULTAD_EXT, N_CARRERA_EXT)
+    VALUES
+      (V_ID_CARRERA_EXT, I_FACULTAD_EXT, I_N_CARRERA_EXT);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al insertar la carrera externa ' ||
+                              SQLERRM);
+  END SP_ALTA_CARRERAS_EXT;
+
+  PROCEDURE SP_ALTA_EMPLEOS_PRESUNTOS(I_CUIL             IN T_EMPADRONADOS.CUIL%TYPE,
+                                      I_CATEGORIA        IN T_EMPLEOS_PRESUNTO.CATEGORIA%TYPE,
+                                      I_ORIGEN           IN T_EMPLEOS_PRESUNTO.ID_ORIGEN%TYPE,
+                                      I_INICIO_ACTIVIDAD IN T_EMPLEOS_PRESUNTO.FEC_INICIO_ACTIVIDAD%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_EMPLEO_PRESUNTO T_EMPLEOS_PRESUNTO.ID_EMPLEO_PRESUNTO%TYPE := SEQ_PADRON.NEXTVAL;
+    V_EMPADRONADO        T_EMPADRONADOS.ID_EMPADRONADO%TYPE;
+  BEGIN
+  
+    SELECT ID_EMPADRONADO
+      INTO V_EMPADRONADO
+      FROM T_EMPADRONADOS
+     WHERE CUIL = I_CUIL;
+  
+    INSERT INTO T_EMPLEOS_PRESUNTO
+      (ID_EMPLEO_PRESUNTO,
+       ID_EMPADRONADO,
+       CATEGORIA,
+       FEC_DESDE,
+       FEC_HASTA,
+       ID_ORIGEN,
+       FEC_INICIO_ACTIVIDAD,
+       FEC_CONSULTA)
+    VALUES
+      (V_ID_EMPLEO_PRESUNTO,
+       V_EMPADRONADO,
+       I_CATEGORIA,
+       SYSDATE,
+       NULL,
+       I_ORIGEN,
+       I_INICIO_ACTIVIDAD,
+       SYSDATE);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al insertar el empleo presunto ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_EMPLEOS_PRESUNTOS;
+
+  PROCEDURE SP_LIST_DESEMPLEOS(I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE DEFAULT NULL,
+                               I_FECHA  IN DATE,
+                               I_ORIGEN IN T_DESEMPLEOS.ID_ORIGEN%TYPE,
+                               O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT D.ID_DESEMPLEO,
+             D.CANT_CUOTAS,
+             D.CANT_CUOTAS_LIQUIDADAS,
+             D.FEC_LIQUIDACION,
+             E.CUIL,
+             D.FEC_DESDE,
+             D.FEC_HASTA
+        FROM T_EMPADRONADOS E, T_DESEMPLEOS D
+       WHERE E.ID_EMPADRONADO = D.ID_EMPADRONADO
+         AND E.CUIL = NVL(I_CUIL, E.CUIL)
+         AND D.ID_ORIGEN = NVL(I_ORIGEN, D.ID_ORIGEN)
+         AND (I_FECHA BETWEEN D.FEC_DESDE AND NVL(D.FEC_HASTA, I_FECHA) OR
+             I_FECHA IS NULL)
+         AND (D.FEC_HASTA IS NULL OR D.FEC_HASTA > SYSDATE);
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar los desempleos ' ||
+                              SQLERRM);
+    
+  END SP_LIST_DESEMPLEOS;
+
+  PROCEDURE SP_ALTA_DESEMPLEOS(I_CUIL                   IN T_EMPADRONADOS.CUIL%TYPE,
+                               I_CANT_CUOTAS            IN T_DESEMPLEOS.CANT_CUOTAS%TYPE,
+                               I_CANT_CUOTAS_LIQUIDADAS IN T_DESEMPLEOS.CANT_CUOTAS_LIQUIDADAS%TYPE,
+                               I_FEC_LIQUIDACION        IN T_DESEMPLEOS.FEC_LIQUIDACION%TYPE,
+                               I_ORIGEN                 IN T_DESEMPLEOS.ID_ORIGEN%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_DESEMPLEO T_DESEMPLEOS.ID_DESEMPLEO%TYPE := SEQ_PADRON.NEXTVAL;
+    V_EMPADRONADO  T_EMPADRONADOS.ID_EMPADRONADO%TYPE;
+  
+  BEGIN
+  
+    SELECT ID_EMPADRONADO
+      INTO V_EMPADRONADO
+      FROM T_EMPADRONADOS
+     WHERE CUIL = I_CUIL;
+  
+    INSERT INTO T_DESEMPLEOS
+      (ID_DESEMPLEO,
+       ID_EMPADRONADO,
+       CANT_CUOTAS,
+       CANT_CUOTAS_LIQUIDADAS,
+       FEC_LIQUIDACION,
+       ID_ORIGEN,
+       FEC_DESDE,
+       FEC_HASTA,
+       FEC_CONSULTA)
+    VALUES
+      (V_ID_DESEMPLEO,
+       V_EMPADRONADO,
+       I_CANT_CUOTAS,
+       I_CANT_CUOTAS_LIQUIDADAS,
+       I_FEC_LIQUIDACION,
+       I_ORIGEN,
+       SYSDATE,
+       NULL,
+       SYSDATE);
+  
+    COMMIT;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al insertar el desempleo ' || SQLERRM);
+    
+  END SP_ALTA_DESEMPLEOS;
+
+  PROCEDURE SP_LIST_ORIGENES(O_CURSOR OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    OPEN O_CURSOR FOR
+      SELECT ID_ORIGEN, N_ORIGEN, PRIORIDAD FROM T_ORIGENES_DATOS;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al consultar los origenes ' || SQLERRM);
+    
+  END SP_LIST_ORIGENES;
+
+  PROCEDURE SP_ALTA_ORIGENES(I_N_ORIGEN  IN T_ORIGENES_DATOS.N_ORIGEN%TYPE,
+                             I_PRIORIDAD IN T_ORIGENES_DATOS.PRIORIDAD%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    V_ID_ORIGEN T_ORIGENES_DATOS.ID_ORIGEN%TYPE := SEQ_PADRON.NEXTVAL;
+  
+  BEGIN
+  
+    INSERT INTO T_ORIGENES_DATOS
+      (ID_ORIGEN, N_ORIGEN, PRIORIDAD)
+    VALUES
+      (V_ID_ORIGEN, I_N_ORIGEN, I_PRIORIDAD);
+  
+    COMMIT;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al insertar el origen de datos ' ||
+                              SQLERRM);
+    
+  END SP_ALTA_ORIGENES;
+
+  PROCEDURE SP_BAJA_EMPLEO_FORMAL(I_ORIGEN IN T_EMPLEOS_FORMAL.ID_ORIGEN%TYPE,
+                                  I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE) IS
+  
+    V_EMPADRONADO T_EMPADRONADOS.ID_EMPADRONADO%TYPE;
+  
+  BEGIN
+  
+    BEGIN
+      SELECT ID_EMPADRONADO
+        INTO V_EMPADRONADO
+        FROM T_EMPADRONADOS E
+       WHERE CUIL = I_CUIL;
+    EXCEPTION
+      WHEN OTHERS THEN
+        NULL;
+    END;
+  
+    UPDATE T_EMPLEOS_FORMAL
+       SET FEC_HASTA = SYSDATE - 1 / 24 / 60 / 60
+     WHERE ID_EMPADRONADO = V_EMPADRONADO
+       AND ID_ORIGEN = I_ORIGEN
+       AND FEC_HASTA IS NULL;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error en la baja del empleo formal ' ||
+                              SQLERRM);
+    
+  END SP_BAJA_EMPLEO_FORMAL;
+
+  PROCEDURE SP_BAJA_EMPLEO_PRESUNTO(I_ORIGEN IN T_EMPLEOS_PRESUNTO.ID_ORIGEN%TYPE,
+                                    I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE) IS
+  
+    V_EMPADRONADO T_EMPADRONADOS.ID_EMPADRONADO%TYPE;
+  
+  BEGIN
+  
+    BEGIN
+      SELECT ID_EMPADRONADO
+        INTO V_EMPADRONADO
+        FROM T_EMPADRONADOS E
+       WHERE CUIL = I_CUIL;
+    EXCEPTION
+      WHEN OTHERS THEN
+        NULL;
+    END;
+  
+    UPDATE T_EMPLEOS_PRESUNTO
+       SET FEC_HASTA = SYSDATE - 1 / 24 / 60 / 60
+     WHERE ID_EMPADRONADO = V_EMPADRONADO
+       AND ID_ORIGEN = I_ORIGEN
+       AND FEC_HASTA IS NULL;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error en la baja del empleo presunto ' ||
+                              SQLERRM);
+    
+  END SP_BAJA_EMPLEO_PRESUNTO;
+
+  PROCEDURE SP_BAJA_DESEMPLEOS(I_ORIGEN IN T_DESEMPLEOS.ID_ORIGEN%TYPE,
+                               I_CUIL   IN T_EMPADRONADOS.CUIL%TYPE) IS
+  
+    V_EMPADRONADO T_EMPADRONADOS.ID_EMPADRONADO%TYPE;
+  
+  BEGIN
+  
+    BEGIN
+      SELECT ID_EMPADRONADO
+        INTO V_EMPADRONADO
+        FROM T_EMPADRONADOS E
+       WHERE CUIL = I_CUIL;
+    EXCEPTION
+      WHEN OTHERS THEN
+        NULL;
+    END;
+  
+    UPDATE T_DESEMPLEOS
+       SET FEC_HASTA = SYSDATE - 1 / 24 / 60 / 60
+     WHERE ID_EMPADRONADO = V_EMPADRONADO
+       AND ID_ORIGEN = I_ORIGEN
+       AND FEC_HASTA IS NULL;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error en la baja el desempleo ' || SQLERRM);
+    
+  END SP_BAJA_DESEMPLEOS;
+
+  /******************************
+  * Alta de nuevo empleo formal*
+  ******************************/
+  PROCEDURE SP_ALTA_EMPLEO_FORMAL_MANUAL(I_ID_EMPADRONADO    IN T_EMPLEOS_FORMAL.ID_EMPADRONADO%TYPE,
+                                         I_CUIT_EMPLEADOR    IN T_EMPLEOS_FORMAL.CUIT_EMPLEADOR%TYPE,
+                                         I_DENOMINACION      IN T_EMPLEOS_FORMAL.DENOMINACION%TYPE,
+                                         I_SITUACION_LABORAL IN T_EMPLEOS_FORMAL.SITUACION_LABORAL%TYPE DEFAULT NULL,
+                                         I_ACTIV_TRABAJADOR  IN T_EMPLEOS_FORMAL.ACTIV_TRABAJADOR%TYPE,
+                                         I_PROVINCIA         IN T_EMPLEOS_FORMAL.PROVINCIA%TYPE,
+                                         I_MONTO_BRUTO       IN T_EMPLEOS_FORMAL.MONTO_BRUTO%TYPE,
+                                         I_FEC_HASTA         IN T_EMPLEOS_FORMAL.FEC_HASTA%TYPE DEFAULT NULL,
+                                         I_ORIGEN_DATOS      IN T_EMPLEOS_FORMAL.ID_ORIGEN%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    INSERT INTO T_EMPLEOS_FORMAL
+      (ID_EMPLEO_FORMAL,
+       ID_EMPADRONADO,
+       CUIT_EMPLEADOR,
+       DENOMINACION,
+       SITUACION_LABORAL,
+       ACTIV_TRABAJADOR,
+       PROVINCIA,
+       MONTO_BRUTO,
+       FEC_DESDE,
+       FEC_HASTA,
+       ID_ORIGEN,
+       FEC_CONSULTA)
+    VALUES
+      (SEQ_PADRON.NEXTVAL,
+       I_ID_EMPADRONADO,
+       I_CUIT_EMPLEADOR,
+       I_DENOMINACION,
+       I_SITUACION_LABORAL,
+       I_ACTIV_TRABAJADOR,
+       I_PROVINCIA,
+       I_MONTO_BRUTO,
+       SYSDATE,
+       I_FEC_HASTA,
+       I_ORIGEN_DATOS,
+       SYSDATE);
+  
+    COMMIT;
+  
+  END SP_ALTA_EMPLEO_FORMAL_MANUAL;
+
+  /************************
+  * Baja de empleo formal *
+  *************************/
+  PROCEDURE SP_BAJA_EMPLEO_FORMAL_MANUAL(I_ID_EMPLEO_FORMAL IN T_EMPLEOS_FORMAL.ID_EMPLEO_FORMAL%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_EMPLEOS_FORMAL E
+       SET E.FEC_HASTA = SYSDATE
+     WHERE E.ID_EMPLEO_FORMAL = I_ID_EMPLEO_FORMAL;
+  
+    COMMIT;
+  
+  END SP_BAJA_EMPLEO_FORMAL_MANUAL;
+
+  /********************************
+  * Modificacion de empleo formal *
+  *********************************/
+  PROCEDURE SP_MODIF_EMPLEO_FORMAL_MANUAL(I_ID_EMPLEO_FORMAL  IN T_EMPLEOS_FORMAL.ID_EMPLEO_FORMAL%TYPE,
+                                          I_CUIT_EMPLEADOR    IN T_EMPLEOS_FORMAL.CUIT_EMPLEADOR%TYPE,
+                                          I_DENOMINACION      IN T_EMPLEOS_FORMAL.DENOMINACION%TYPE,
+                                          I_SITUACION_LABORAL IN T_EMPLEOS_FORMAL.SITUACION_LABORAL%TYPE DEFAULT NULL,
+                                          I_ACTIV_TRABAJADOR  IN T_EMPLEOS_FORMAL.ACTIV_TRABAJADOR%TYPE,
+                                          I_PROVINCIA         IN T_EMPLEOS_FORMAL.PROVINCIA%TYPE,
+                                          I_MONTO_BRUTO       IN T_EMPLEOS_FORMAL.MONTO_BRUTO%TYPE,
+                                          I_ORIGEN_DATOS      IN T_EMPLEOS_FORMAL.ID_ORIGEN%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    R_EMPLEOS_FORMALES T_EMPLEOS_FORMAL%ROWTYPE;
+  
+  BEGIN
+  
+    SELECT *
+      INTO R_EMPLEOS_FORMALES
+      FROM T_EMPLEOS_FORMAL
+     WHERE ID_EMPLEO_FORMAL = I_ID_EMPLEO_FORMAL;
+  
+    SP_BAJA_EMPLEO_FORMAL_MANUAL(I_ID_EMPLEO_FORMAL => I_ID_EMPLEO_FORMAL);
+  
+    SP_ALTA_EMPLEO_FORMAL_MANUAL(I_ID_EMPADRONADO    => R_EMPLEOS_FORMALES.ID_EMPADRONADO,
+                                 I_CUIT_EMPLEADOR    => NVL(I_CUIT_EMPLEADOR,
+                                                            R_EMPLEOS_FORMALES.CUIT_EMPLEADOR),
+                                 I_DENOMINACION      => NVL(I_DENOMINACION,
+                                                            R_EMPLEOS_FORMALES.DENOMINACION),
+                                 I_SITUACION_LABORAL => NVL(I_SITUACION_LABORAL,
+                                                            R_EMPLEOS_FORMALES.SITUACION_LABORAL),
+                                 I_ACTIV_TRABAJADOR  => NVL(I_ACTIV_TRABAJADOR,
+                                                            R_EMPLEOS_FORMALES.ACTIV_TRABAJADOR),
+                                 I_PROVINCIA         => NVL(I_PROVINCIA,
+                                                            R_EMPLEOS_FORMALES.PROVINCIA),
+                                 I_MONTO_BRUTO       => NVL(I_MONTO_BRUTO,
+                                                            R_EMPLEOS_FORMALES.MONTO_BRUTO),
+                                 I_ORIGEN_DATOS      => I_ORIGEN_DATOS);
+  
+    COMMIT;
+  
+  END SP_MODIF_EMPLEO_FORMAL_MANUAL;
+
+  /*******************************
+  * Alta de nuevo empleo presunto*
+  ********************************/
+  PROCEDURE SP_ALTA_EMPLEO_PRESUNTO_MANUAL(I_ID_EMPADRONADO       IN T_EMPLEOS_PRESUNTO.ID_EMPADRONADO%TYPE,
+                                           I_CATEGORIA            IN T_EMPLEOS_PRESUNTO.CATEGORIA%TYPE DEFAULT NULL,
+                                           I_FEC_INICIO_ACTIVIDAD IN T_EMPLEOS_PRESUNTO.FEC_INICIO_ACTIVIDAD%TYPE,
+                                           I_FEC_HASTA            IN T_EMPLEOS_PRESUNTO.FEC_HASTA%TYPE DEFAULT NULL,
+                                           I_ORIGEN_DATOS         IN T_EMPLEOS_PRESUNTO.ID_ORIGEN%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    INSERT INTO T_EMPLEOS_PRESUNTO
+      (ID_EMPLEO_PRESUNTO,
+       ID_EMPADRONADO,
+       CATEGORIA,
+       FEC_INICIO_ACTIVIDAD,
+       FEC_DESDE,
+       FEC_HASTA,
+       ID_ORIGEN,
+       FEC_CONSULTA)
+    VALUES
+      (SEQ_PADRON.NEXTVAL,
+       I_ID_EMPADRONADO,
+       I_CATEGORIA,
+       I_FEC_INICIO_ACTIVIDAD,
+       SYSDATE,
+       I_FEC_HASTA,
+       I_ORIGEN_DATOS,
+       SYSDATE);
+  
+    COMMIT;
+  
+  END SP_ALTA_EMPLEO_PRESUNTO_MANUAL;
+
+  /**************************
+  * Baja de empleo presunto *
+  ***************************/
+  PROCEDURE SP_BAJA_EMPLEO_PRESUNTO_MANUAL(I_ID_EMPLEO_PRESUNTO IN T_EMPLEOS_PRESUNTO.ID_EMPLEO_PRESUNTO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_EMPLEOS_PRESUNTO E
+       SET E.FEC_HASTA = SYSDATE
+     WHERE E.ID_EMPLEO_PRESUNTO = I_ID_EMPLEO_PRESUNTO;
+  
+    COMMIT;
+  
+  END SP_BAJA_EMPLEO_PRESUNTO_MANUAL;
+
+  /**********************************
+  * Modificacion de empleo presunto *
+  ***********************************/
+  PROCEDURE SP_MODIF_EMPLEO_PRES_MANUAL(I_ID_EMPLEO_PRESUNTO   IN T_EMPLEOS_PRESUNTO.ID_EMPLEO_PRESUNTO%TYPE,
+                                        I_CATEGORIA            IN T_EMPLEOS_PRESUNTO.CATEGORIA%TYPE DEFAULT NULL,
+                                        I_FEC_INICIO_ACTIVIDAD IN T_EMPLEOS_PRESUNTO.FEC_INICIO_ACTIVIDAD%TYPE,
+                                        I_ORIGEN_DATOS         IN T_EMPLEOS_PRESUNTO.ID_ORIGEN%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    R_EMPLEOS_PRESUNTOS T_EMPLEOS_PRESUNTO%ROWTYPE;
+  
+  BEGIN
+  
+    SELECT *
+      INTO R_EMPLEOS_PRESUNTOS
+      FROM T_EMPLEOS_PRESUNTO
+     WHERE ID_EMPLEO_PRESUNTO = I_ID_EMPLEO_PRESUNTO;
+  
+    SP_BAJA_EMPLEO_PRESUNTO_MANUAL(I_ID_EMPLEO_PRESUNTO => I_ID_EMPLEO_PRESUNTO);
+  
+    SP_ALTA_EMPLEO_PRESUNTO_MANUAL(I_ID_EMPADRONADO       => R_EMPLEOS_PRESUNTOS.ID_EMPADRONADO,
+                                   I_CATEGORIA            => NVL(I_CATEGORIA,
+                                                                 R_EMPLEOS_PRESUNTOS.CATEGORIA),
+                                   I_FEC_INICIO_ACTIVIDAD => NVL(I_FEC_INICIO_ACTIVIDAD,
+                                                                 R_EMPLEOS_PRESUNTOS.FEC_INICIO_ACTIVIDAD),
+                                   I_ORIGEN_DATOS         => I_ORIGEN_DATOS);
+  
+    COMMIT;
+  
+  END SP_MODIF_EMPLEO_PRES_MANUAL;
+
+  /*******************************
+  * Alta de nuevo desempleo      *
+  ********************************/
+  PROCEDURE SP_ALTA_DESEMPLEO_MANUAL(I_ID_EMPADRONADO         IN T_DESEMPLEOS.ID_EMPADRONADO%TYPE,
+                                     I_CANT_CUOTAS            IN T_DESEMPLEOS.CANT_CUOTAS%TYPE DEFAULT NULL,
+                                     I_CANT_CUOTAS_LIQUIDADAS IN T_DESEMPLEOS.CANT_CUOTAS_LIQUIDADAS%TYPE,
+                                     I_FEC_LIQUIDACION        IN T_DESEMPLEOS.FEC_LIQUIDACION%TYPE,
+                                     I_FEC_HASTA              IN T_EMPLEOS_PRESUNTO.FEC_HASTA%TYPE DEFAULT NULL,
+                                     I_ORIGEN_DATOS           IN T_DESEMPLEOS.ID_ORIGEN%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    INSERT INTO T_DESEMPLEOS
+      (ID_DESEMPLEO,
+       ID_EMPADRONADO,
+       CANT_CUOTAS,
+       CANT_CUOTAS_LIQUIDADAS,
+       FEC_LIQUIDACION,
+       FEC_DESDE,
+       FEC_HASTA,
+       ID_ORIGEN,
+       FEC_CONSULTA)
+    VALUES
+      (SEQ_PADRON.NEXTVAL,
+       I_ID_EMPADRONADO,
+       I_CANT_CUOTAS,
+       I_CANT_CUOTAS_LIQUIDADAS,
+       I_FEC_LIQUIDACION,
+       SYSDATE,
+       I_FEC_HASTA,
+       I_ORIGEN_DATOS,
+       SYSDATE);
+  
+    COMMIT;
+  
+  END SP_ALTA_DESEMPLEO_MANUAL;
+
+  /***************************
+  * Baja de empleo desempleo *
+  ***************************/
+  PROCEDURE SP_BAJA_DESEMPLEO_MANUAL(I_ID_DESEMPLEO IN T_DESEMPLEOS.ID_DESEMPLEO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_DESEMPLEOS E
+       SET E.FEC_HASTA = SYSDATE
+     WHERE E.ID_DESEMPLEO = I_ID_DESEMPLEO;
+  
+    COMMIT;
+  
+  END SP_BAJA_DESEMPLEO_MANUAL;
+
+  /****************************
+  * Modificacion de desempleo *
+  *****************************/
+  PROCEDURE SP_MODIF_DESEMPLEO_MANUAL(I_ID_DESEMPLEO           IN T_DESEMPLEOS.ID_DESEMPLEO%TYPE,
+                                      I_CANT_CUOTAS            IN T_DESEMPLEOS.CANT_CUOTAS%TYPE DEFAULT NULL,
+                                      I_CANT_CUOTAS_LIQUIDADAS IN T_DESEMPLEOS.CANT_CUOTAS_LIQUIDADAS%TYPE,
+                                      I_FEC_LIQUIDACION        IN T_DESEMPLEOS.FEC_LIQUIDACION%TYPE,
+                                      I_ORIGEN_DATOS           IN T_DESEMPLEOS.ID_ORIGEN%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+    R_DESEMPLEOS T_DESEMPLEOS%ROWTYPE;
+  
+  BEGIN
+  
+    SELECT *
+      INTO R_DESEMPLEOS
+      FROM T_DESEMPLEOS
+     WHERE ID_DESEMPLEO = I_ID_DESEMPLEO;
+  
+    SP_BAJA_DESEMPLEO_MANUAL(I_ID_DESEMPLEO => I_ID_DESEMPLEO);
+  
+    SP_ALTA_DESEMPLEO_MANUAL(I_ID_EMPADRONADO         => R_DESEMPLEOS.ID_EMPADRONADO,
+                             I_CANT_CUOTAS            => NVL(I_CANT_CUOTAS,
+                                                             R_DESEMPLEOS.CANT_CUOTAS),
+                             I_CANT_CUOTAS_LIQUIDADAS => NVL(I_CANT_CUOTAS_LIQUIDADAS,
+                                                             R_DESEMPLEOS.CANT_CUOTAS_LIQUIDADAS),
+                             I_FEC_LIQUIDACION        => NVL(I_FEC_LIQUIDACION,
+                                                             R_DESEMPLEOS.FEC_LIQUIDACION),
+                             I_ORIGEN_DATOS           => I_ORIGEN_DATOS);
+  
+    COMMIT;
+  
+  END SP_MODIF_DESEMPLEO_MANUAL;
+  
+  /*******************************
+  * Alta de nuevo BAM      *
+  ********************************/
+  PROCEDURE SP_ALTA_BAM(I_ID_EMPADRONADO         IN T_OTROS_BENEFICIARIO.ID_EMPADRONADO%TYPE,
+                        I_JUBILADO               IN T_OTROS_BENEFICIARIO.JUBILADO_SN%TYPE,                             
+                        I_PENSIONADO             IN T_OTROS_BENEFICIARIO.PENSIONADO_SN%TYPE,
+                        I_PROGRAMA               IN T_OTROS_BENEFICIARIO.ID_PROGRAMA%TYPE,
+                        I_MONTO                  IN T_OTROS_BENEFICIARIO.MONTO_ULTIMO%TYPE,
+                        I_ORIGEN_DATOS           IN T_DESEMPLEOS.ID_ORIGEN%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    INSERT INTO T_OTROS_BENEFICIARIO
+      (ID_OTROS_BENEFICIARIO,
+       ID_EMPADRONADO,
+       JUBILADO_SN,
+       PENSIONADO_SN,
+       ID_PROGRAMA,
+       MONTO_ULTIMO,
+       MONTO_INFORMADO,
+       FEC_DESDE,
+       ID_ORIGEN)
+    VALUES
+      (SEQ_PADRON.NEXTVAL,
+       I_ID_EMPADRONADO,
+       I_JUBILADO,
+       I_PENSIONADO,
+       I_PROGRAMA,
+       I_MONTO,
+       I_MONTO,
+       SYSDATE,
+       I_ORIGEN_DATOS);
+  
+    COMMIT;
+  
+  END SP_ALTA_BAM;
+  
+  /***************************
+  * Baja de BAM              *
+  ***************************/
+  PROCEDURE SP_BAJA_BAM(I_ID_OTROS_BENEFICIARIO IN T_OTROS_BENEFICIARIO.ID_OTROS_BENEFICIARIO%TYPE) IS
+  
+    PRAGMA AUTONOMOUS_TRANSACTION;
+  
+  BEGIN
+  
+    UPDATE T_OTROS_BENEFICIARIO E
+       SET E.FEC_HASTA = SYSDATE
+     WHERE E.ID_OTROS_BENEFICIARIO = I_ID_OTROS_BENEFICIARIO;
+  
+    COMMIT;
+  
+  END SP_BAJA_BAM;
+
+  /* EMERGENCIA*/
+  PROCEDURE SP_LIST_NIVEL_EDUCATIVOS(I_ID_TIPO_SOLICITANTE NUMBER,
+                                     O_RESULTADO           OUT VARCHAR,
+                                     O_CURSOR              OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+    /*
+    1 ALUMNO
+    2 DOCENTE
+    3 PERSONAL DE APOYO
+    */
+  
+    CASE
+      WHEN I_ID_TIPO_SOLICITANTE = 1 THEN
+        OPEN O_CURSOR FOR
+          SELECT -10 ID_NIVEL_EDUCATIVO,
+                 'Especial - Inicial - Primario- Secundario' N_NIVEL_EDUCATIVO
+            FROM DUAL
+          /*
+                   SELECT 1 id_nivel_educativo, 'Alumno - Especial' n_Nivel_educativo from dual 
+                   union
+                   SELECT 2 id_nivel_educativo,'Alumno - Inicial' n_Nivel_educativo from dual 
+                   union
+                   SELECT 3 id_nivel_educativo,'Alumno - Primario' n_Nivel_educativo from dual 
+                   union
+                   SELECT 4 id_nivel_educativo,'Alumno - Secundario' n_Nivel_educativo from dual 
+          */
+          UNION
+          SELECT 3 ID_NIVEL_EDUCATIVO, 'Superior'
+            FROM DUAL
+          UNION
+          SELECT 6 ID_NIVEL_EDUCATIVO, 'Universitario' FROM DUAL;
+      
+    /* WHEN I_ID_TIPO_SOLICITANTE=2 THEN
+                                                                                                                                                                                                                                                                                                                                                                                OPEN O_CURSOR FOR
+                                                                                                                                                                                                                                                                                                                                                                                   SELECT 7 id_nivel_educativo,'Docente' n_Nivel_educativo from dual ;
+                                                                                                                                                                                                                                                                                                                                                                               WHEN I_ID_TIPO_SOLICITANTE=3 THEN
+                                                                                                                                                                                                                                                                                                                                                                                OPEN O_CURSOR FOR
+                                                                                                                                                                                                                                                                                                                                                                                   SELECT 8 id_nivel_educativo,'Personal de Apoyo' n_Nivel_educativo from dual ;*/
+    END CASE;
+  
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'Error al consultar los nivel educativo ' || SQLERRM;
+    
+  END SP_LIST_NIVEL_EDUCATIVOS;
+
+  PROCEDURE SP_LIST_TIPO_SOLICITANTE(O_RESULTADO OUT VARCHAR,
+                                     O_CURSOR    OUT SYS_REFCURSOR) IS
+  
+  BEGIN
+  
+    OPEN O_CURSOR FOR
+      SELECT T.ID_TIPO_SOLICITANTE, T.N_TIPO_SOLICITANTE
+        FROM T_TIPOS_SOLICITANTE T
+       WHERE ID_PROGRAMA = 1;
+  
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR AL CONSULTAR LOS TIPOS DE SOLICITANTE' ||
+                     SQLERRM;
+    
+  END SP_LIST_TIPO_SOLICITANTE;
+
+  PROCEDURE SP_ERROR_CONS_BENF(I_CUIL        IN NUMBER,
+                               O_N_ERROR_ORA VARCHAR2,
+                               O_ORIGEN      VARCHAR2) IS
+  
+    VCANT NUMBER(1);
+  
+  BEGIN
+  
+    SELECT COUNT(*)
+      INTO VCANT
+      FROM T_ERRORES_CONSULTA_BENEF
+     WHERE CUIL = I_CUIL;
+  
+    IF VCANT = 0 THEN
+      INSERT INTO T_ERRORES_CONSULTA_BENEF
+        (ID_ERROR, CUIL, N_ERROR_ORA, ORIGEN)
+      VALUES
+        (SEQ_ERROR_BENF.NEXTVAL, I_CUIL, O_N_ERROR_ORA, O_ORIGEN);
+    ELSE
+      UPDATE T_ERRORES_CONSULTA_BENEF
+         SET N_ERROR_ORA = O_N_ERROR_ORA, ORIGEN = O_ORIGEN
+       WHERE CUIL = I_CUIL;
+    END IF;
+  
+    COMMIT;
+  
+  END SP_ERROR_CONS_BENF;
+
+  PROCEDURE SP_LIST_MENSAJES_CONSULTA(I_INSTITUCION        VARCHAR2,
+                                      I_CUIL               VARCHAR2,
+                                      I_TIPO_SOLICITANTE   NUMBER,
+                                      I_ID_NIVEL_EDUCATIVO NUMBER,
+                                      O_MENSAJE            OUT VARCHAR2,
+                                      O_RESULTADO          OUT VARCHAR) IS
+  
+    VMENSAJE      VARCHAR2(4000) := '';
+    VCANT         NUMBER := 0;
+    VFECHA_INICIO VARCHAR2(10);
+    --  V_CUIL        PEOPLENET.M4CBA_VW_SEC_TRAN.CUIL%TYPE;
+    V_ERR    VARCHAR2(400);
+    V_ORIGEN T_ERRORES_CONSULTA_BENEF.ORIGEN%TYPE;
+  
+  BEGIN
+  
+    SELECT B.VALOR_MINIMO
+      INTO VFECHA_INICIO
+      FROM T_PARAMETROS_BENEFICIO B
+     WHERE B.COD_PARAMETRO = I_INSTITUCION
+       AND SYSDATE BETWEEN B.FEC_DESDE AND NVL(B.FEC_HASTA, SYSDATE);
+  
+    IF I_TIPO_SOLICITANTE = 1 THEN
+    
+      /*BUSCO EN CONVENIO*/
+      SELECT COUNT(*)
+        INTO VCANT
+        FROM T_CONVENIOS         C,
+             T_TIPOS_SOLICITANTE T,
+             T_PROGRAMAS         P,
+             T_PERSONAS_CONVENIO PC
+       WHERE PC.ID_TIPO_SOLICITANTE = T.ID_TIPO_SOLICITANTE
+         AND T.ID_PROGRAMA = P.ID_PROGRAMA
+         AND T.ID_PROGRAMA = 1
+         AND PC.ID_CONVENIO = C.ID_CONVENIO
+         AND PC.CUIL = I_CUIL
+         AND T.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+         AND PC.ID_NIVEL IN (1, 2, 3, 6)
+         AND SYSDATE BETWEEN PC.FEC_DESDE AND NVL(PC.FEC_HASTA, SYSDATE);
+    
+      IF VCANT = 0 THEN
+        /*BUSCO EN PADRON*/
+        SELECT COUNT(*)
+          INTO VCANT
+          FROM T_EMPADRONADOS E, T_EDUCACION_ACTUAL N
+         WHERE E.ID_EMPADRONADO = N.ID_EMPADRONADO
+           AND N.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+           AND N.ID_NIVEL IN (1, 2, 3, 6)
+           AND E.CUIL = I_CUIL;
+      
+      END IF;
+    
+      IF VCANT = 0 THEN
+      
+        /*BUSCO EN EDUCACION*/
+        -- #################
+        DECLARE
+        
+          O_CUR SYS_REFCURSOR;
+          TYPE R_CUR IS RECORD(
+            CUIL            VARCHAR2(500),
+            DNI             VARCHAR2(500),
+            SEXO            VARCHAR2(500),
+            NOMBRE          VARCHAR2(500),
+            APELLIDO        VARCHAR2(500),
+            CODIGO_EMPRESA  VARCHAR2(500),
+            EMPRESA         VARCHAR2(500),
+            NIVEL_EDUCATIVO VARCHAR2(500),
+            CICLO           VARCHAR2(500),
+            SECTOR          VARCHAR2(500),
+            GRADO_ANIO      VARCHAR2(500),
+            DIVISION        VARCHAR2(500),
+            TURNO           VARCHAR2(500));
+          V_CUR R_CUR;
+        BEGIN
+        
+          PKG_INTEGRACIONES.SP_GET_DATOS_ESTUDIANTE_GEDUC(I_CUIL   => I_CUIL,
+                                                          O_CURSOR => O_CUR);
+        
+          LOOP
+          
+            FETCH O_CUR
+              INTO V_CUR;
+          
+            EXIT WHEN O_CUR%NOTFOUND;
+          
+            VCANT := 1;
+            EXIT;
+          
+          END LOOP;
+        
+        END;
+        -- ####################
+      
+      END IF;
+    
+    ELSIF I_TIPO_SOLICITANTE = 2 OR I_TIPO_SOLICITANTE = 3 THEN
+    
+      /*BUSCO EN CONVENIO*/
+      SELECT COUNT(*)
+        INTO VCANT
+        FROM T_CONVENIOS         C,
+             T_TIPOS_SOLICITANTE T,
+             T_PROGRAMAS         P,
+             T_PERSONAS_CONVENIO PC
+       WHERE PC.ID_TIPO_SOLICITANTE = T.ID_TIPO_SOLICITANTE
+         AND T.ID_PROGRAMA = P.ID_PROGRAMA
+         AND T.ID_PROGRAMA = 1
+         AND PC.ID_CONVENIO = C.ID_CONVENIO
+         AND PC.CUIL = I_CUIL
+         AND T.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+         AND PC.ID_NIVEL = I_ID_NIVEL_EDUCATIVO
+         AND SYSDATE BETWEEN PC.FEC_DESDE AND NVL(PC.FEC_HASTA, SYSDATE);
+    
+      IF VCANT = 0 THEN
+        /*BUSCO EN PADRON*/
+        SELECT COUNT(*)
+          INTO VCANT
+          FROM T_EMPADRONADOS E, T_EDUCACION_ACTUAL N
+         WHERE E.ID_EMPADRONADO = N.ID_EMPADRONADO
+           AND N.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+              --   AND N.ID_NIVEL=I_ID_NIVEL_EDUCATIVO          
+           AND E.CUIL = I_CUIL;
+      
+      END IF;
+      IF VCANT = 0 THEN
+        /*BUSCO EN META4*/
+        V_ORIGEN := 'META4';
+        SELECT COUNT(*)
+          INTO VCANT
+          FROM PEOPLENET.M4CBA_VW_SEC_TRAN B
+         WHERE B.CUIL = SUBSTR(I_CUIL, 1, 2) || '-' ||
+               SUBSTR(I_CUIL, 3, LENGTH(I_CUIL) - 3) || '-' ||
+               SUBSTR(I_CUIL, -1)
+           AND B.DOCENTE =
+               REPLACE(REPLACE(I_TIPO_SOLICITANTE, '2', 'S'), '3', 'N');
+      END IF;
+    END IF;
+  
+    --ESPECIAL -INICIAL -PRIMARIO -SECUNDARIO OR I_ID_NIVEL_EDUCATIVO=2 OR I_ID_NIVEL_EDUCATIVO=3 OR I_ID_NIVEL_EDUCATIVO=4 
+    IF I_ID_NIVEL_EDUCATIVO = -10 THEN
+      IF VCANT = 0 THEN
+        VMENSAJE := 'NO ESTÁS INSCRIPTO PARA EL CICLO LECTIVO 2019. DIRIGITE A TU ESTABLECIMIENTO EDUCATIVO.';
+      ELSE
+        VMENSAJE := 'PODÉS TRAMITAR TU BEG. DIRIGITE A LA EMPRESA DE TRANSPORTE CON TU DNI A PARTIR DEL ' ||
+                    VFECHA_INICIO || '.';
+      END IF;
+      -- SUPERIOR - UNIVERSITARIO  
+    ELSIF I_ID_NIVEL_EDUCATIVO = 3 OR I_ID_NIVEL_EDUCATIVO = 6 THEN
+      IF TO_date(VFECHA_INICIO, 'dd/mm/rrrr') >
+         TO_date(sysdate, 'dd/mm/rrrr') then
+        VMENSAJE := 'PODRÁS CONSULTAR A PARTIR DEL ' || VFECHA_INICIO || '.';
+      else
+        VMENSAJE := 'YA TE PUEDES DIRIGIR A TU EMPRESA DE TRANSPORTE.';
+      end if;
+      ---DOCENTE - PERSONAL DE APOYO 
+    
+    ELSIF I_ID_NIVEL_EDUCATIVO = 0 THEN
+      IF VCANT = 0 THEN
+        VMENSAJE := 'NO SE REGISTRAN DATOS. DEBERÁS DIRIGIRTE A TU INSTITUCIÓN PARA REGULARIZAR TU SITUACIÓN DE REVISTA. RECORDÁ QUE, PARA SER BENEFICIARIO, DEBERÁS CUMPLIR FUNCIONES EN UN ESTABLECIMIENTO EDUCATIVO. Y SI PERTENECES A UNA ENTIDAD PRIVADA SIN APORTE ESTATAL, TU EMPLEADOR DEBERÁ INGRESAR A LA WEB DE TRABAJO.CBA.GOV.AR Y CONFIRMAR TU BEG.';
+      ELSE
+        VMENSAJE := 'PODÉS TRAMITAR TU BEG. DIRIGITE A LA EMPRESA DE TRANSPORTE CON TU DNI A PARTIR DEL ' ||
+                    VFECHA_INICIO || '.';
+      END IF;
+    END IF;
+  
+    O_MENSAJE   := VMENSAJE;
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+      O_MENSAJE   := 'NO ESTÁS INSCRIPTO PARA EL CICLO LECTIVO 2019. DIRIGITE A TU ESTABLECIMIENTO EDUCATIVO.';
+      O_RESULTADO := 'OK';
+    
+    WHEN OTHERS THEN
+      V_ERR := SQLERRM;
+      SP_ERROR_CONS_BENF(I_CUIL        => I_CUIL,
+                         O_N_ERROR_ORA => V_ERR,
+                         O_ORIGEN      => V_ORIGEN);
+      O_MENSAJE   := 'ERROR: EXISTEN DATOS INCONSISTENTES, POR FAVOR DIRIGITE A LA SECRETARIA DE TRANSPORTE.';
+      O_RESULTADO := 'OK';
+    
+  END SP_LIST_MENSAJES_CONSULTA;
+
+  PROCEDURE SP_BUSCAR_PADRON_BEGT(I_CUIL             IN T_EMPADRONADOS.CUIL%TYPE,
+                                  I_NIVEL_EDUCATIVO  IN ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS.ID_NIVEL_EDUCATIVO%TYPE,
+                                  I_TIPO_SOLICITANTE IN T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                  O_CURSOR           OUT SYS_REFCURSOR,
+                                  O_RESULTADO        OUT VARCHAR) IS
+  
+    VCANT NUMBER := 0;
+  BEGIN
+  
+    SELECT COUNT(*)
+      INTO VCANT
+      FROM T_AGENDA_EDUCATIVA A, T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+     WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+       AND B.ID_EDUCACION_ACTUAL = A.ID_EDUCACION_ACTUAL
+       AND C.CUIL = I_CUIL
+       AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+       AND B.ID_NIVEL = I_NIVEL_EDUCATIVO;
+  
+    IF VCANT <> 0 THEN
+    
+      OPEN O_CURSOR FOR
+        SELECT C.CUIL,
+               DECODE(A.ID_DIA,
+                      '01',
+                      'L',
+                      '02',
+                      'M',
+                      '03',
+                      'X',
+                      '04',
+                      'J',
+                      '05',
+                      'V',
+                      '06',
+                      'S',
+                      '07',
+                      'D') CodDia,
+               A.HORA_DESDE,
+               A.HORA_HASTA
+          FROM T_AGENDA_EDUCATIVA A, T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+         WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+           AND B.ID_EDUCACION_ACTUAL = A.ID_EDUCACION_ACTUAL
+           AND C.CUIL = I_CUIL
+           AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+           AND B.ID_NIVEL = I_NIVEL_EDUCATIVO;
+    ELSE
+    
+      OPEN O_CURSOR FOR
+        SELECT CUIL, CodDia, HORA_DESDE, HORA_HASTA
+          FROM (
+                
+                select I_CUIL CUIL,
+                        'L' CodDia,
+                        '04:00' HORA_DESDE,
+                        '20:00' HORA_HASTA
+                  from dual
+                
+                union all
+                select I_CUIL CUIL,
+                       'M' CodDia,
+                       '04:00' HORA_DESDE,
+                       '20:00' HORA_HASTA
+                  from dual
+                
+                union all
+                select I_CUIL CUIL,
+                       'X' CodDia,
+                       '04:00' HORA_DESDE,
+                       '20:00' HORA_HASTA
+                  from dual
+                
+                union all
+                select I_CUIL CUIL,
+                       'J' CodDia,
+                       '04:00' HORA_DESDE,
+                       '20:00' HORA_HASTA
+                  from dual
+                
+                union all
+                select I_CUIL CUIL,
+                       'V' CodDia,
+                       '04:00' HORA_DESDE,
+                       '20:00' HORA_HASTA
+                  from dual) D
+         where exists (select 1
+                  from T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+                 WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                   AND C.CUIL = I_CUIL
+                   AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+                   AND B.ID_NIVEL = I_NIVEL_EDUCATIVO);
+    END IF;
+  
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR: NO EXISTEN DATOS DEL EMPADRONADO EN LA AGENDA.' ||
+                     SQLERRM;
+    
+  END SP_BUSCAR_PADRON_BEGT;
+
+  PROCEDURE SP_BUSCAR_PADRON_BEGT2(I_CUIL             IN T_EMPADRONADOS.CUIL%TYPE,
+                                   I_NIVEL_EDUCATIVO  IN ABONO_ESTUDIANTIL.T_NIVELES_EDUCATIVOS.ID_NIVEL_EDUCATIVO%TYPE,
+                                   I_TIPO_SOLICITANTE IN T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                   I_INSTITUCION      IN VARCHAR2,
+                                   O_CURSOR           OUT SYS_REFCURSOR,
+                                   O_MENSAJE          OUT VARCHAR,
+                                   O_RESULTADO        OUT VARCHAR,
+                                   O_APISN            OUT VARCHAR) IS
+  
+    VCANT   NUMBER := 0;
+    V_APISN VARCHAR(1);
+    V_FECHA VARCHAR(50);
+    VCANT2  NUMBER := 0;
+    /* VID_FACULTAD number(15);
+    
+    V_UNIVERSIDAD VARCHAR(1);*/
+  
+  BEGIN
+  
+    /*
+    SELECT NVL(B.API_SN,'S') , B.VALOR_MAXIMO2, B.TEXTO_MSJ INTO V_APISN, VID_FACULTAD , V_UNIVERSIDAD 
+           FROM t_parametros_beneficio b 
+           where b.cod_parametro=I_INSTITUCION;  */
+  
+    SELECT NVL(B.API_SN, 'S'), B.VALOR_MINIMO
+      INTO V_APISN, V_FECHA
+      FROM t_parametros_beneficio b
+     where b.cod_parametro = I_INSTITUCION;
+  
+    O_APISN := V_APISN;
+    /*
+    IF O_APISN='S' THEN
+      RETURN;
+    END IF;*/
+  
+    IF TO_date(V_FECHA, 'dd/mm/rrrr') > TO_date(sysdate, 'dd/mm/rrrr') then
+      O_MENSAJE   := 'A partir de ' || V_FECHA ||
+                     ' podrás tramitar tu BEG.';
+      O_RESULTADO := 'OK';
+      O_APISN     := 'N';
+      RETURN;
+    end if;
+  
+    /*if VID_FACULTAD=0 then */
+  
+    SELECT COUNT(*)
+      INTO VCANT
+      FROM T_AGENDA_EDUCATIVA A, T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+     WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+       AND B.ID_EDUCACION_ACTUAL = A.ID_EDUCACION_ACTUAL
+       AND C.CUIL = I_CUIL
+       AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+       AND B.ID_NIVEL = I_NIVEL_EDUCATIVO;
+  
+    IF VCANT <> 0 THEN
+    
+      OPEN O_CURSOR FOR
+        SELECT C.CUIL,
+               DECODE(A.ID_DIA,
+                      '01',
+                      'L',
+                      '02',
+                      'M',
+                      '03',
+                      'X',
+                      '04',
+                      'J',
+                      '05',
+                      'V',
+                      '06',
+                      'S',
+                      '07',
+                      'D') CodDia,
+               A.HORA_DESDE,
+               A.HORA_HASTA
+          FROM T_AGENDA_EDUCATIVA A, T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+         WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+           AND B.ID_EDUCACION_ACTUAL = A.ID_EDUCACION_ACTUAL
+           AND C.CUIL = I_CUIL
+           AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+           AND B.ID_NIVEL = I_NIVEL_EDUCATIVO;
+    ELSE
+    
+      OPEN O_CURSOR FOR
+        SELECT CUIL, CodDia, HORA_DESDE, HORA_HASTA
+          FROM (
+                
+                select I_CUIL CUIL,
+                        'L' CodDia,
+                        '04:00' HORA_DESDE,
+                        '20:00' HORA_HASTA
+                  from dual
+                
+                union all
+                select I_CUIL CUIL,
+                       'M' CodDia,
+                       '04:00' HORA_DESDE,
+                       '20:00' HORA_HASTA
+                  from dual
+                
+                union all
+                select I_CUIL CUIL,
+                       'X' CodDia,
+                       '04:00' HORA_DESDE,
+                       '20:00' HORA_HASTA
+                  from dual
+                
+                union all
+                select I_CUIL CUIL,
+                       'J' CodDia,
+                       '04:00' HORA_DESDE,
+                       '20:00' HORA_HASTA
+                  from dual
+                
+                union all
+                select I_CUIL CUIL,
+                       'V' CodDia,
+                       '04:00' HORA_DESDE,
+                       '20:00' HORA_HASTA
+                  from dual) D
+         where exists (select 1
+                  from T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+                 WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                   AND C.CUIL = I_CUIL
+                   AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+                   AND B.ID_NIVEL = I_NIVEL_EDUCATIVO);
+    END IF;
+    /*elsif V_UNIVERSIDAD='N' then
+                  SELECT COUNT(*) INTO VCANT
+                    FROM T_AGENDA_EDUCATIVA A, T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+                   WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                     AND B.ID_EDUCACION_ACTUAL = A.ID_EDUCACION_ACTUAL
+                     AND C.CUIL = I_CUIL
+                     AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+                     AND B.ID_NIVEL = I_NIVEL_EDUCATIVO
+                    and b.id_facultad_ext=VID_FACULTAD;
+                
+              
+              IF VCANT <>0 THEN 
+              
+                OPEN O_CURSOR FOR
+                  SELECT C.CUIL,
+                         DECODE(A.ID_DIA,
+                                '01',
+                                'L',
+                                '02',
+                                'M',
+                                '03',
+                                'X',
+                                '04',
+                                'J',
+                                '05',
+                                'V',
+                                '06',
+                                'S',
+                                '07',
+                                'D') CodDia,
+                         A.HORA_DESDE,
+                         A.HORA_HASTA
+                    FROM T_AGENDA_EDUCATIVA A, T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+                   WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                     AND B.ID_EDUCACION_ACTUAL = A.ID_EDUCACION_ACTUAL
+                     AND C.CUIL = I_CUIL
+                     AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+                     AND B.ID_NIVEL = I_NIVEL_EDUCATIVO
+                    and b.id_facultad_ext=VID_FACULTAD;
+              ELSE
+                    
+               OPEN O_CURSOR FOR
+               SELECT CUIL ,CodDia,HORA_DESDE,HORA_HASTA  FROM (     
+    
+                                select I_CUIL CUIL , 'L'  CodDia, '04:00'  HORA_DESDE, '20:00' HORA_HASTA  from dual  
+                                         
+                                union all 
+                                select I_CUIL CUIL , 'M'  CodDia, '04:00'  HORA_DESDE, '20:00' HORA_HASTA  from dual  
+                                         
+                                union all 
+                                select I_CUIL CUIL , 'X'  CodDia, '04:00'  HORA_DESDE, '20:00' HORA_HASTA  from dual  
+                                         
+                                union all 
+                                select I_CUIL CUIL , 'J'  CodDia, '04:00'  HORA_DESDE, '20:00' HORA_HASTA  from dual  
+                                         
+                                union all 
+                                select I_CUIL CUIL , 'V'  CodDia, '04:00'  HORA_DESDE, '20:00' HORA_HASTA  from dual ) D
+                 where exists (select 1 from    T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+                   WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                     AND C.CUIL = I_CUIL
+                     AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+                     AND B.ID_NIVEL = I_NIVEL_EDUCATIVO
+                     and b.id_facultad_ext=VID_FACULTAD
+                         )                 
+                                ;
+              END IF;
+    else
+              SELECT COUNT(*) INTO VCANT
+                    FROM T_AGENDA_EDUCATIVA A, T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+                   WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                     AND B.ID_EDUCACION_ACTUAL = A.ID_EDUCACION_ACTUAL
+                     AND C.CUIL = I_CUIL
+                     AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+                     AND B.ID_NIVEL = I_NIVEL_EDUCATIVO
+                    and b.id_establecimiento_ext=VID_FACULTAD;
+                
+              
+              IF VCANT <>0 THEN 
+              
+                OPEN O_CURSOR FOR
+                  SELECT C.CUIL,
+                         DECODE(A.ID_DIA,
+                                '01',
+                                'L',
+                                '02',
+                                'M',
+                                '03',
+                                'X',
+                                '04',
+                                'J',
+                                '05',
+                                'V',
+                                '06',
+                                'S',
+                                '07',
+                                'D') CodDia,
+                         A.HORA_DESDE,
+                         A.HORA_HASTA
+                    FROM T_AGENDA_EDUCATIVA A, T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+                   WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                     AND B.ID_EDUCACION_ACTUAL = A.ID_EDUCACION_ACTUAL
+                     AND C.CUIL = I_CUIL
+                     AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+                     AND B.ID_NIVEL = I_NIVEL_EDUCATIVO
+                    and b.id_establecimiento_ext=VID_FACULTAD;
+              ELSE
+                    
+               OPEN O_CURSOR FOR
+               SELECT CUIL ,CodDia,HORA_DESDE,HORA_HASTA  FROM (     
+    
+                                select I_CUIL CUIL , 'L'  CodDia, '04:00'  HORA_DESDE, '20:00' HORA_HASTA  from dual  
+                                         
+                                union all 
+                                select I_CUIL CUIL , 'M'  CodDia, '04:00'  HORA_DESDE, '20:00' HORA_HASTA  from dual  
+                                         
+                                union all 
+                                select I_CUIL CUIL , 'X'  CodDia, '04:00'  HORA_DESDE, '20:00' HORA_HASTA  from dual  
+                                         
+                                union all 
+                                select I_CUIL CUIL , 'J'  CodDia, '04:00'  HORA_DESDE, '20:00' HORA_HASTA  from dual  
+                                         
+                                union all 
+                                select I_CUIL CUIL , 'V'  CodDia, '04:00'  HORA_DESDE, '20:00' HORA_HASTA  from dual ) D
+                 where exists (select 1 from    T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+                   WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                     AND C.CUIL = I_CUIL
+                     AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+                     AND B.ID_NIVEL = I_NIVEL_EDUCATIVO
+                     and b.id_establecimiento_ext=VID_FACULTAD
+                         )                 
+                                ;
+              END IF;  
+    
+    end if;*/
+  
+    SELECT COUNT(*)
+      INTO VCANT2
+      FROM T_EDUCACION_ACTUAL B, T_EMPADRONADOS C
+     WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+       AND C.CUIL = I_CUIL
+       AND B.ID_TIPO_SOLICITANTE = I_TIPO_SOLICITANTE
+       AND B.ID_NIVEL = I_NIVEL_EDUCATIVO;
+  
+    IF VCANT2 = 0 THEN
+      O_MENSAJE := 'USTED NO ESTA MATRICULADO.';
+    END IF;
+  
+    O_RESULTADO := 'OK';
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR: NO EXISTEN DATOS DEL EMPADRONADO EN LA AGENDA.' ||
+                     SQLERRM;
+    
+  END SP_BUSCAR_PADRON_BEGT2;
+
+
+----BOS
+
+PROCEDURE SP_LIST_MENSAJES_CONSULTA_BOS(I_CUIL             VARCHAR2,
+                                        I_TIPO_SOLICITANTE NUMBER,
+                                        O_MENSAJE          OUT VARCHAR2,
+                                        O_RESULTADO        OUT VARCHAR,
+                                        O_COLOR           OUT VARCHAR) IS
+
+  VMENSAJE VARCHAR2(4000) := '';
+  VCANT    NUMBER := 0;
+  V_ERR    VARCHAR2(400);
+  V_ORIGEN VARCHAR2(400);
+  V_COLOR VARCHAR2(1):='V';
+  V_CUIL VARCHAR2(20) :=  SUBSTR(I_CUIL, 1, 2) || '-' ||
+               SUBSTR(I_CUIL, 3, LENGTH(I_CUIL) - 3) || '-' ||
+               SUBSTR(I_CUIL, -1);
+               -- REPLACE(I_CUIL, '-', '');
+  vSN varchar2(100);
+BEGIN
+
+  /*
+    4 DESEMPLEADO 
+    5 AUTONOMO  
+    6 EMPLEADO PRIVADO  
+    7 EMPLEADO PUBLICO  
+  
+  */
+
+  IF I_TIPO_SOLICITANTE = 5 THEN
+    V_ORIGEN := 'AFIP';
+  
+    /*BUSCO EN PADRON*/
+    SELECT COUNT(*)
+      INTO VCANT
+      FROM maasp_tuni_tpte.T_EMPADRONADOS     E,
+           maasp_tuni_tpte.t_empleos_presunto p
+     WHERE E.ID_EMPADRONADO = p.id_empadronado
+       AND E.CUIL = I_CUIL;
+  
+    IF VCANT = 0 THEN
+    
+      /*BUSCO EN AFIP*/
+    
+      SELECT COUNT(*)
+        INTO VCANT
+       FROM ENTES_AUTARQUICOS.VT_PADRON_AFIP t
+         WHERE TRIM(T.MONOTRIBUTO) IN ('A','B','C','D')
+           and t.PROVINCIA='03'
+           and    (months_between(sysdate,to_date( t.ALTA_AFIP,'dd/mm/rrrr')))>= 
+           (select p.valor_minimo  
+                            from maasp_tuni_tpte.t_parametros_beneficio p 
+                            where p.id_parametro=759)  
+       AND t.CUIT = I_CUIL;
+    
+    END IF;
+    IF VCANT > 1 THEN
+      VMENSAJE := 'TIENES INCONSISTENCIA EN TUS DATOS, POR FAVOR DIRIGITE A LA SECRETARIA DE TRANSPORTE.';
+    END IF;
+  ELSIF I_TIPO_SOLICITANTE = 7 THEN
+    V_ORIGEN := 'META4';
+  
+    /*BUSCO EN PADRON*/
+    SELECT COUNT(*)
+      INTO VCANT
+      FROM maasp_tuni_tpte.T_EMPADRONADOS   E,
+           maasp_tuni_tpte.t_empleos_formal p
+     WHERE E.ID_EMPADRONADO = p.id_empadronado
+      and E.id_origen=19 AND E.ID_ORIGEN=P.ID_ORIGEN
+       AND E.CUIL = I_CUIL;
+  
+    IF VCANT = 0 THEN
+      /*BUSCO EN META4*/
+      
+      SELECT COUNT(*)
+        INTO VCANT
+        FROM peoplenet.M4CBA_VW_AG_BOS b
+      WHERE b.CUIl = V_CUIL 
+      and rownum=1
+      ;
+       if VCANT=1 then
+          SELECT COUNT(*),b.SUELDO
+        INTO VCANT, vSN
+        FROM peoplenet.M4CBA_VW_AG_BOS b
+      WHERE b.CUIl = V_CUIL --and b.SUELDO='NO SUPERA'  
+      and rownum=1 
+      group by b.SUELDO
+      ;  
+       
+       end if;
+       
+    
+    END IF;
+  
+    IF VCANT > 1 THEN
+      VMENSAJE := 'TIENES INCONSISTENCIA EN TUS DATOS, POR FAVOR DIRIGITE A LA SECRETARIA DE TRANSPORTE.';
+    END IF;
+  ELSIF I_TIPO_SOLICITANTE = 4 THEN
+  
+    V_ORIGEN := 'DESEMPLEO';
+  
+    /*BUSCO EN DESEMPLEO EMPADRONADO*/
+    SELECT COUNT(*)
+      INTO VCANT
+      FROM maasp_tuni_tpte.T_EMPADRONADOS E, maasp_tuni_tpte.t_Desempleos p
+     WHERE E.ID_EMPADRONADO = p.id_empadronado
+       AND E.CUIL = I_CUIL;
+       
+  IF VCANT > 1 THEN
+      VMENSAJE := 'TIENES INCONSISTENCIA EN TUS DATOS, POR FAVOR DIRIGITE A LA SECRETARIA DE TRANSPORTE.';
+    END IF;
+  
+  ELSIF I_TIPO_SOLICITANTE = 6 THEN
+    V_ORIGEN := 'MINISTERIO TRABAJO';
+  
+    /*BUSCO EN PADRON*/
+    SELECT COUNT(*)
+      INTO VCANT
+      FROM maasp_tuni_tpte.T_EMPADRONADOS   E,
+           maasp_tuni_tpte.t_empleos_formal P
+     WHERE E.ID_EMPADRONADO = p.id_empadronado
+      and P.id_origen=18 AND P.ID_ORIGEN=E.ID_ORIGEN
+       AND E.CUIL = I_CUIL;
+  
+    IF VCANT = 0 THEN
+      /*BUSCO EN MINISTERIO TRABAJO*/
+      SELECT COUNT(*)
+        INTO VCANT
+       FROM doc_laboral.vt_empleados_beg_bos t
+           WHERE 
+           to_date(t.VIGENCIA_BENEFICIO_HASTA,'dd/mm/rrrr') >= to_date(sysdate,'dd/mm/rrrr')
+           and t.CUIl = I_CUIL and t.BENEFICIO='BOS'
+                  and   
+                   (select sum (t.SUELDO_BRUTO) 
+                    FROM doc_laboral.vt_empleados_beg_bos t
+                         WHERE t.CUIl = I_CUIL and t.BENEFICIO='BOS'
+                   )
+                    <=  
+                    (select p.valor_minimo  
+                            from maasp_tuni_tpte.t_parametros_beneficio p 
+                            where p.id_parametro=742) ;
+    
+    END IF;
+    IF VCANT > 1 THEN
+      VMENSAJE := 'TIENES INCONSISTENCIA EN TUS DATOS, POR FAVOR DIRIGITE A LA SECRETARIA DE TRANSPORTE.';
+    END IF;
+  
+  END IF;
+
+ 
+  --DESEMPLEADO 
+  IF I_TIPO_SOLICITANTE = 4 THEN
+    IF VCANT = 0 THEN
+      VMENSAJE := 'NO SE REGISTRAN DATOS. DIRIGITE A LA SECRETARIA DE TRANSPORTE.';
+      V_COLOR:='R';
+   ELSIF VCANT =1 THEN
+         VMENSAJE := 'PODÉS TRAMITAR TU BOS. DIRIGITE A LA EMPRESA DE TRANSPORTE CON TU DNI.';
+    END IF;
+    -- AUTONOMO  
+  ELSIF I_TIPO_SOLICITANTE = 5 THEN
+    IF VCANT = 0 THEN
+      VMENSAJE := 'NO SE REGISTRAN DATOS EN EL AFIP.';
+      V_COLOR:='R';
+    ELSIF VCANT =1 THEN
+         VMENSAJE := 'PODÉS TRAMITAR TU BOS. DIRIGITE A LA EMPRESA DE TRANSPORTE CON TU DNI.';
+    END IF;
+    ---EMPLEADO PRIVADO  
+  
+  ELSIF I_TIPO_SOLICITANTE = 6 THEN
+    IF VCANT = 0 THEN
+      VMENSAJE := 'NO SE REGISTRAN DATOS. VERIFICA QUE TU EMPLEADOR REGISTRO TUS DATOS EN EL MINISTERIO DE TRABAJO.';
+      V_COLOR:='R';
+    ELSIF VCANT =1 THEN
+         VMENSAJE := 'PODÉS TRAMITAR TU BOS. DIRIGITE A LA EMPRESA DE TRANSPORTE CON TU DNI.';
+    END IF;
+    ---EMPLEADO PUBLICO  
+  ELSIF I_TIPO_SOLICITANTE = 7 THEN
+    IF VCANT = 0 THEN
+      VMENSAJE := 'NO SE REGISTRAN DATOS.';
+      V_COLOR:='R';
+    ELSIF VCANT =1 THEN
+      if vSN='NO SUPERA' then
+         VMENSAJE := 'PODÉS TRAMITAR TU BOS. DIRIGITE A LA EMPRESA DE TRANSPORTE CON TU DNI.';
+      else
+        VMENSAJE := 'NO CUMPLES CON LOS REQUISITOS.';
+         V_COLOR:='R';
+      end if;     
+    END IF;
+  
+  END IF;
+
+  O_MENSAJE   := VMENSAJE;
+  O_RESULTADO := 'OK';
+  O_COLOR:= V_COLOR;
+
+EXCEPTION
+ 
+  WHEN OTHERS THEN
+    V_ERR := SQLERRM;
+    SP_ERROR_CONS_BENF(I_CUIL        => I_CUIL,
+                       O_N_ERROR_ORA => V_ERR,
+                       O_ORIGEN      => V_ORIGEN);
+    O_MENSAJE   := 'ERROR: EXISTEN DATOS INCONSISTENTES, POR FAVOR DIRIGITE A LA SECRETARIA DE TRANSPORTE.';
+    O_RESULTADO := 'OK';
+    O_COLOR:= 'R';
+  
+END SP_LIST_MENSAJES_CONSULTA_BOS;
+
+ PROCEDURE SP_BUSCAR_PADRON_BOS(I_CUIL             IN T_EMPADRONADOS.CUIL%TYPE,
+                                   I_TIPO_SOLICITANTE IN T_TIPOS_SOLICITANTE.ID_TIPO_SOLICITANTE%TYPE,
+                                   O_CURSOR           OUT SYS_REFCURSOR,
+                                   O_MENSAJE          OUT VARCHAR,
+                                   O_RESULTADO        OUT VARCHAR) IS
+  
+    VCANT   NUMBER := 0;
+    
+  BEGIN
+  
+/*
+  4  DESEMPLEADO  
+  5  AUTONOMO  
+  6  EMPLEADO PRIVADO  
+  7  EMPLEADO PUBLICO  
+
+*/
+
+IF I_TIPO_SOLICITANTE =7 THEN 
+   --PUBLICO
+  
+       
+       select count(1) into VCANT
+                  from T_EMPLEOS_FORMAL B, T_EMPADRONADOS C
+                 WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                  and c.id_origen=19 AND B.ID_ORIGEN=C.ID_ORIGEN
+                   AND C.CUIL = I_CUIL
+                 
+                   ;
+      
+      OPEN O_CURSOR FOR
+         select c.cuil, c.id_empadronado
+                  from T_EMPLEOS_FORMAL B, T_EMPADRONADOS C
+                 WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                  and c.id_origen=19 AND B.ID_ORIGEN=C.ID_ORIGEN
+                   AND C.CUIL = I_CUIL
+                 
+                   ;
+      
+     /*   SELECT CUIL, CodDia, HORA_DESDE, HORA_HASTA
+          FROM (
+                
+                select I_CUIL CUIL,
+                        'L' CodDia,
+                        '04:00' HORA_DESDE,
+                        '20:00' HORA_HASTA
+                  from dual
+                
+                union all
+                select I_CUIL CUIL,
+                       'M' CodDia,
+                       '04:00' HORA_DESDE,
+                       '20:00' HORA_HASTA
+                  from dual
+                
+                union all
+                select I_CUIL CUIL,
+                       'X' CodDia,
+                       '04:00' HORA_DESDE,
+                       '20:00' HORA_HASTA
+                  from dual
+                
+                union all
+                select I_CUIL CUIL,
+                       'J' CodDia,
+                       '04:00' HORA_DESDE,
+                       '20:00' HORA_HASTA
+                  from dual
+                
+                union all
+                select I_CUIL CUIL,
+                       'V' CodDia,
+                       '04:00' HORA_DESDE,
+                       '20:00' HORA_HASTA
+                  from dual) D
+         where exists (select 1
+                  from T_EMPLEOS_FORMAL B, T_EMPADRONADOS C
+                 WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                   AND C.CUIL = I_CUIL);*/
+    
+   elsif  I_TIPO_SOLICITANTE =4 THEN 
+          select count(1) into VCANT
+          from maasp_tuni_tpte.t_desempleos B, T_EMPADRONADOS C
+                 WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                   AND C.CUIL = I_CUIL
+                 
+                   ;
+
+     OPEN O_CURSOR FOR
+         select c.cuil, c.id_empadronado
+                  from maasp_tuni_tpte.t_desempleos B, T_EMPADRONADOS C
+                 WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                   AND C.CUIL = I_CUIL
+                 
+                   ;
+
+   elsif  I_TIPO_SOLICITANTE =5 THEN 
+   
+       select count(1) into VCANT
+                     from maasp_tuni_tpte.t_empleos_presunto B, T_EMPADRONADOS C
+                 WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                   AND C.CUIL = I_CUIL
+                 
+                   ;
+     OPEN O_CURSOR FOR
+         select c.cuil, c.id_empadronado
+                  from maasp_tuni_tpte.t_empleos_presunto B, T_EMPADRONADOS C
+                 WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                   AND C.CUIL = I_CUIL
+                 
+                   ;
+    
+    elsif  I_TIPO_SOLICITANTE =6 THEN 
+   
+       select count(1) into VCANT
+    from maasp_tuni_tpte.T_EMPLEOS_FORMAL B, T_EMPADRONADOS C
+                 WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                 and c.id_origen=18 AND B.ID_ORIGEN=C.ID_ORIGEN
+                   AND C.CUIL = I_CUIL
+                 
+                   ;                
+     OPEN O_CURSOR FOR
+         select c.cuil, c.id_empadronado
+                  from maasp_tuni_tpte.T_EMPLEOS_FORMAL B, T_EMPADRONADOS C
+                 WHERE C.ID_EMPADRONADO = B.ID_EMPADRONADO
+                  and c.id_origen=18 AND B.ID_ORIGEN=C.ID_ORIGEN
+                   AND C.CUIL = I_CUIL
+                 
+                   ;                
+    END IF;
+    
+    IF VCANT = 0 THEN
+      O_MENSAJE := 'NO TIENE AGENDA.';
+    END IF;
+  
+   
+  
+    O_RESULTADO := 'OK';
+  
+  
+    
+  EXCEPTION
+   WHEN NO_DATA_FOUND THEN
+          O_MENSAJE := 'NO TIENE AGENDA.';
+  
+  
+  
+  
+    WHEN OTHERS THEN
+      O_RESULTADO := 'ERROR AL CONSULTAR LA AGENDA. ' ||
+                     SQLERRM;
+    
+  END SP_BUSCAR_PADRON_BOS;
+
+PROCEDURE SP_BUSCAR_SUELDO_BOS( O_RESULTADO        OUT VARCHAR)
+ IS 
+ VSUELDO  VARCHAR2(100);
+    
+  BEGIN
+    select TO_CHAR(p.valor_minimo)  INTO VSUELDO
+                            from maasp_tuni_tpte.t_parametros_beneficio p 
+                            where p.id_parametro=742;
+   
+    O_RESULTADO:=VSUELDO;
+ EXCEPTION
+    WHEN OTHERS THEN
+      O_RESULTADO := '20750';
+  
+  END SP_BUSCAR_SUELDO_BOS;
+
+PROCEDURE SP_EMPADRONAR_BOS(I_ID_TIPO_SOLICITANTE NUMBER,
+                            I_CUIL           IN T_EMPADRONADOS.CUIL%TYPE,
+                            I_ORIGEN         IN T_EMPADRONADOS.ID_ORIGEN%TYPE,
+                            I_ID_SEXO        IN T_EMPADRONADOS.ID_SEXO%TYPE DEFAULT NULL,
+                            I_NRO_DOCUMENTO  IN T_EMPADRONADOS.NRO_DOCUMENTO%TYPE DEFAULT NULL,
+                            I_PAI_COD_PAIS   IN T_EMPADRONADOS.PAI_COD_PAIS%TYPE DEFAULT NULL,
+                            I_ID_NUMERO      IN T_EMPADRONADOS.ID_NUMERO%TYPE DEFAULT NULL,
+                            -- DESEMPLEO
+                            D_CANT_CUOTAS            IN T_DESEMPLEOS.CANT_CUOTAS%TYPE,
+                            D_CANT_CUOTAS_LIQUIDADAS IN T_DESEMPLEOS.CANT_CUOTAS_LIQUIDADAS%TYPE,
+                            D_FEC_LIQUIDACION        IN T_DESEMPLEOS.FEC_LIQUIDACION%TYPE,
+                            ----FORMAL
+                            F_CUIT              IN T_EMPLEOS_FORMAL.CUIT_EMPLEADOR%TYPE,
+                            F_DENOMINACION      IN T_EMPLEOS_FORMAL.DENOMINACION%TYPE,
+                            F_SITUACION_LABORAL IN T_EMPLEOS_FORMAL.SITUACION_LABORAL%TYPE,
+                            F_ACTIV_TRABAJADOR  IN T_EMPLEOS_FORMAL.ACTIV_TRABAJADOR%TYPE,
+                            F_PROVINCIA         IN T_EMPLEOS_FORMAL.PROVINCIA%TYPE,
+                            F_MONTO             IN T_EMPLEOS_FORMAL.MONTO_BRUTO%TYPE,
+                            --- PRESUNTO
+                            P_CATEGORIA        IN T_EMPLEOS_PRESUNTO.CATEGORIA%TYPE,
+                            P_INICIO_ACTIVIDAD IN T_EMPLEOS_PRESUNTO.FEC_INICIO_ACTIVIDAD%TYPE
+                                     
+                               ) IS
+  
+   V_ID_EMPADRONADO T_EMPADRONADOS.ID_EMPADRONADO%TYPE := SEQ_PADRON.NEXTVAL;
+   V_ID_DESEMPLEO T_DESEMPLEOS.ID_DESEMPLEO%TYPE ;
+   V_ID_EMPLEO_FORMAL   T_EMPLEOS_FORMAL.ID_EMPLEO_FORMAL%TYPE ;
+   V_ID_EMPLEO_PRESUNTO T_EMPLEOS_PRESUNTO.ID_EMPLEO_PRESUNTO%TYPE;
+   
+  BEGIN
+  
+    INSERT INTO T_EMPADRONADOS
+      (ID_EMPADRONADO,
+       CUIL,
+       FEC_CONSULTA,
+       ID_ORIGEN,
+       ID_SEXO,
+       NRO_DOCUMENTO,
+       PAI_COD_PAIS,
+       ID_NUMERO)
+    VALUES
+      (V_ID_EMPADRONADO,
+       I_CUIL,
+       SYSDATE,
+       I_ORIGEN,
+       I_ID_SEXO,
+       I_NRO_DOCUMENTO,
+       I_PAI_COD_PAIS,
+       I_ID_NUMERO);
+  
+  IF I_ID_TIPO_SOLICITANTE=4 THEN  
+  
+     V_ID_DESEMPLEO  := SEQ_PADRON.NEXTVAL;
+     
+     INSERT INTO T_DESEMPLEOS
+      (ID_DESEMPLEO,
+       ID_EMPADRONADO,
+       CANT_CUOTAS,
+       CANT_CUOTAS_LIQUIDADAS,
+       FEC_LIQUIDACION,
+       ID_ORIGEN,
+       FEC_DESDE,
+       FEC_HASTA,
+       FEC_CONSULTA)
+    VALUES
+      (V_ID_DESEMPLEO,
+       V_ID_EMPADRONADO,
+       D_CANT_CUOTAS,
+       D_CANT_CUOTAS_LIQUIDADAS,
+       D_FEC_LIQUIDACION,
+       I_ORIGEN,
+       SYSDATE,
+       NULL,
+       SYSDATE);
+    
+   ELSIF I_ID_TIPO_SOLICITANTE=7 OR I_ID_TIPO_SOLICITANTE=6  THEN  
+
+   V_ID_EMPLEO_FORMAL  := SEQ_PADRON.NEXTVAL;
+  
+    INSERT INTO T_EMPLEOS_FORMAL
+      (ID_EMPLEO_FORMAL,
+       ID_EMPADRONADO,
+       CUIT_EMPLEADOR,
+       DENOMINACION,
+       SITUACION_LABORAL,
+       ACTIV_TRABAJADOR,
+       PROVINCIA,
+       MONTO_BRUTO,
+       FEC_DESDE,
+       FEC_HASTA,
+       ID_ORIGEN,
+       FEC_CONSULTA)
+    VALUES
+      (V_ID_EMPLEO_FORMAL,
+       V_ID_EMPADRONADO,
+       F_CUIT,
+       F_DENOMINACION,
+       F_SITUACION_LABORAL,
+       F_ACTIV_TRABAJADOR,
+       F_PROVINCIA,
+       F_MONTO,
+       SYSDATE,
+       NULL,
+       I_ORIGEN,
+       SYSDATE);
+  
+  
+    ELSIF I_ID_TIPO_SOLICITANTE=5 THEN  
+
+    V_ID_EMPLEO_PRESUNTO := SEQ_PADRON.NEXTVAL;
+  
+    INSERT INTO T_EMPLEOS_PRESUNTO
+      (ID_EMPLEO_PRESUNTO,
+       ID_EMPADRONADO,
+       CATEGORIA,
+       FEC_DESDE,
+       FEC_HASTA,
+       ID_ORIGEN,
+       FEC_INICIO_ACTIVIDAD,
+       FEC_CONSULTA)
+    VALUES
+      (V_ID_EMPLEO_PRESUNTO,
+       V_ID_EMPADRONADO,
+       P_CATEGORIA,
+       SYSDATE,
+       NULL,
+       I_ORIGEN,
+       P_INICIO_ACTIVIDAD,
+       SYSDATE);
+ END IF;
+  
+ COMMIT;
+  
+ 
+ 
+  EXCEPTION
+    WHEN OTHERS THEN
+      ROLLBACK;
+      RAISE_APPLICATION_ERROR(-20002,
+                              'Error al insertar empadronado bos' || SQLERRM);
+    
+  END SP_EMPADRONAR_BOS;
+  
+   
+END PKG_PADRON;
+/
